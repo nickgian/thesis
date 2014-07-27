@@ -1,0 +1,16 @@
+\select@language {english}
+\select@language {greek}
+\select@language {english}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces The architecture of the interpreter\relax }}{47}{figure.4.1}
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Overview of the interface component\relax }}{65}{figure.4.2}
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Format of the binary data sent throw the Erlang - Python pipe\relax }}{65}{figure.4.3}
+\contentsline {figure}{\numberline {4.4}{\ignorespaces \texttt {gen\textunderscore fsm} state diagram\relax }}{66}{figure.4.4}
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Sequence diagram for the scenario where Z3 can solve the constraints\relax }}{67}{figure.4.5}
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Sequence diagram for the scenario where Z3 cannot solve the constraints\relax }}{68}{figure.4.6}
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Implementation of the breadth-first search in the computation tree.\relax }}{70}{figure.4.7}
+\addvspace {10\p@ }
+\addvspace {10\p@ }

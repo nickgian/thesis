@@ -1,0 +1,216 @@
+\chapter{Concolic Testing}\label{ch:concolic_testing}
+
+\section{The Basic Idea}\label{sec:conc_basic_idea}
+
+The word "concolic" is a portmanteau of the words concrete and symbolic and it
+depicts the hybrid nature of the concolic software testing technique. Concolic testing
+interleaves concrete execution with symbolic execution in order to achieve high
+path coverage. The basic idea is to use symbolic execution to generate inputs
+that will hopefully steer the program to alternate execution paths whilst
+concrete execution is used to guide the symbolic execution along a concrete
+path~\cite{Larson:2003:HCD:1251353.1251362}.
+
+During the execution, we keep a concrete and a symbolic state. The concrete
+state maps the variables to their concrete values whereas the symbolic state
+maps the variables that have non-concrete values to their symbolic
+representation. In order to start the process we need a seed concrete input,
+that is either provided by the user or is randomly generated. We then execute
+the program with this input and gather symbolic constraints at all the
+conditional statements along the execution. Each constraint is essentially a
+logical formula which is expressed as a function of the input symbolic
+variables and denotes the boolean value of the respective conditional statement
+during the execution. The conjunction of all the constraints is the path
+predicate. The next step is to feed the path predicate to a constraint solver
+in order to infer new variants of the input that will likely guide the program
+to a different feasible execution path. We, then, use the generated input as
+our new seed. This process is repeated systematically until every feasible
+execution path is explored.
+
+In the concurrent version, a new path may be explored by producing a different 
+interleaving of the program threads instead of generating a different input. 
+This instrumentation records and permutes the various events that lead to 
+data and lock races~\cite{Sen:2006:SAM:1269231, Sen:2006:AST:2182061.2182094}.
+
+Concolic testing is also widely used for verification purposes~\cite{Li:2012:GCV:2370036.2145844} as it can assist 
+eliminate the false positive warnings of the static analyzers~\cite{Tillmann:2008:PWB:1792786.1792798, Ge:2011:DDS:1985793.1985971, TAP13_APex}.
+
+\subsection{A Simple Example}\label{subsec:conc_simple_example}
+
+Consider the following simple Erlang function (Listing~\ref{lst:concolic_example}) 
+that has an erroneous branch:
+
+\includecode[erlang]{lst:concolic_example}{Simple Erlang function}{%
+  listings/concolic_example.erl
+}
+
+Any black-box testing technique would most likely require a lot of time, if ever, 
+to locate and reproduce the failure. 
+
+Let's see how concolic testing will help locate promptly the error. As we said, 
+we need a seed input to initialize our search. We arbitrary choose the input 
+\texttt{X = 0} and \texttt{Y = 0} and execute the code with these concrete 
+values. In line 2, we get \texttt{Z = 2 * Y = 0}. In line 3, the condition 
+evaluates to \texttt{false} as \texttt{X =/= 100000} and 
+\texttt{erlang:andalso/2} is short-circuited. Therefore, we follow the 
+"false" branch and the function returns \texttt{ok} and ends normally. At the 
+same time we execute the function symbolically following the same path as the 
+concrete execution. This yields the path constraint \texttt{(X =/= 100000)}.
+
+In order to force the program to follow a different a execution path in the next 
+iteration, we negate the only predicate in the patch constraint. This yields 
+the binding \texttt{X = 100000}, so we execute the function again with the 
+concrete values \texttt{X = 100000} and \texttt{Y = 0}. In line 2, we still get 
+\texttt{Z = 0}. In line 3, the expression \texttt{X =:= 100000} evaluates 
+to \texttt{true} but the expression \texttt{X < Z} evaluates to \texttt{false}, 
+thus making the whole condition evaluate to \texttt{false} again. The function 
+again returns \texttt{ok} and ends normally. After the symbolic execution we 
+get the path constraint \texttt{(X =:= 100000) $\land$ (X >= 2 * Y)}.
+
+This time we invoke the solver to negate the second predicate while keeping 
+the first predicate true. The solution may be possibly be \texttt{X = 100000} 
+and \texttt{Y = 50001}. By running the function with this concrete input, we 
+manage to reach the branch that raises the exception.
+
+As we see, this approach manages to locate the error in only three iterations.
+
+\subsection{Strengths and Limitations}\label{subsec:concolic_strength_limitation}
+
+The concolic approach, as any approach that has an internal perspective of a system, 
+allows for thorough testing and is able to reveal errors that would otherwise remain 
+hidden with random testing. It has also the prospect of providing test suites with high 
+code coverage.
+
+However, this approach has a number of challenges and there is a lot of research on 
+how to tackle them.
+
+\subsubsection{Incompleteness of Constraint Solving.}
+The main bottleneck of a concolic execution is the constraint solving. Real world 
+software may produce quite complex and non-linear constraints that will require 
+a lot of time for the SMT solver to process and solve them. In many cases, the 
+solver may actually be unable to solve the given set of constraints. This limits the
+efficiency and may lead to poor coverage as there will be no testcases generated for 
+some feasible execution paths~\cite{Sen:2005:CCU:1081706.1081750, Sen:2006:CJC:2135909.2135962}.
+
+\subsubsection{Path Explosion.}
+Even the smallest programs will most likely generate huge amounts of trace data and 
+subsequently create long path predicates. The length of the path is exponential to 
+the number of the branches in the program. It is obvious that, even if some paths are 
+deemed to be infeasible, there need to be some search heuristics~\cite{Majumdar:2007:HCT:1248820.1248874} in order to steer the 
+concolic execution to possible bugs given that we want to get results in a reasonable 
+amount of time~\cite{Burnim:2008:HSD:1642931.1642995,klee_init_paper,Cadar:2008:EAG:1455518.1455522}.
+
+\subsubsection{Non-deterministic Behaviour of Programs.}
+The main reason why we use an SMT solver is our belief that the testcases it will 
+generate will exercise a new execution path of the code~\cite{sage_tech_report}. So there is a big problem when 
+we predict that the program will follow a specific path and it turns out that we were 
+disillusioned. This may be the case with programs that show non-deterministic behaviour and 
+will cause the concolic testing to be extremely ineffective.
+
+
+\subsection{Challenges in Erlang}\label{subsec:concolic_chalenges_in_erlang}
+
+Erlang provides unique challenges to implementing a concolic testing tool. First of all, 
+there is hardly any shared memory so there are few data races for such a technique to 
+find. In addition, Erlang is mainly used for concurrent applications, and concolic 
+execution is much more complicated for multi-process systems~\cite{conc_test_generation}.
+
+In addition, Erlang is a functional language that heavily uses algebraic datatypes. 
+There is a very small number of SMT solvers that support algebraic datatypes. Still, 
+this theory is not as advanced and efficient as the theories of bitvectors and arrays 
+that are mainly used for imperative languages~\cite{DeMoura:2011:SMT:1995376.1995394}.
+
+\subsection{Z3 SMT Solver}\label{subsec:z3_smt_solver}
+
+The theorem prover we chose to use is Z3 from Microsoft Research~\cite{DeMoura:2008:ZES:1792734.1792766}. It is an 
+efficient SMT solver that is targeted at solving problems in software analysis 
+and software verification~\cite{DeMoura:2011:SMT:1995376.1995394}. It supports the SMT-LIBv2 standard and it provides 
+APIs for C/C++, .NET, OCaml and Python. We used the Python API, namely Z3Py.
+
+We use Z3 to check the satisfiability of logical formulas and get an instance of the 
+universe in which these formulas are satisfiable. Z3 is based on first-order logic 
+and decision procedures~\cite{Ganesh:2007:DPB:1770351.1770421}.
+
+We should note that we used it under the Microsoft Research License Agreement for 
+Non-Commercial use.
+
+\subsubsection{Datatypes}
+
+In Z3, expressions are directed acyclic graphs. Every expression has a \texttt{sort}, 
+i.e. a type. For example, we can define $x$ to be an integer variable with $x = Int(`x`)$, 
+which is equal to $x = Const(`x`, IntSort())$. Z3 supports all the basic types you will 
+need in a language like C, i.e. booleans, integers, floats, arrays and bitvectors. 
+It also supports algebraic datatypes. It is a convenient way to define finite lists, 
+trees, tuples, records, enumerations, mutually recursive datatypes etc.
+
+For example, in Listing~\ref{lst:z3_define_list} we see how we can a define a finite list 
+of integers. There are two phases.
+
+\begin{itemize}
+  \item At first, we declare the $List$ datatype and create a placeholder for the definitions 
+    of its constructors and accessors. Then, we declare all the constructors with their 
+    respective accessors. Each accessor is associated with a sort or a reference to the 
+    datatypes being declared. In our case, we declare $cons$ that builds a $List$ using 
+    an $Integer$ and a $List$, and $nil$ that takes no arguments.
+  \item After all the constructors have been declared, we create the actual datatype in Z3.
+\end{itemize}
+
+\includecode[python]{lst:z3_define_list}{Define Finite List of Integers in Z3}{%
+  listings/z3/define_list.py
+}
+
+\subsubsection{Functions}
+
+Z3 supports most of Python operators such as $+, -, <$ and has some simple built-in functions 
+that help in type conversions, like $ToInt$. For more complex operations, one can define one's 
+own functions. However, functions in pure first-order logic are uninterpreted which means that 
+there is no interpretation attached when declared. In addition, they have no side-effects and 
+are total. For example, in Listing~\ref{lst:z3_simple_func} we declare a function 
+$f : Int \rightarrow Int$ and two integer variables $x$ and $y$. We then define an empty 
+universe and assert the constraints $x > 42$, $x < y$ and $f(f(10)) = 1$. Functions are total 
+so we are certain that $f(10)$ is in $f$'s set of inputs and therefore $f(f(10))$ is valid.
+
+\includecode[python]{lst:z3_simple_func}{Simple function in Z3}{%
+  listings/z3/funcs.py
+}
+
+A valid model that Z3 returns and that satisfies the above constraints is
+
+\begin{center}
+  $[y = 44, x = 43, f = [10 \rightarrow 0, 0 \rightarrow 1, else \rightarrow 0]]$
+\end{center}
+
+As we see, $f$ is defined on all integers.
+
+SMT-LIBv2 does not allow recursive function definitions without the use of quantifiers. 
+In Listing~\ref{lst:z3_recursive_len}, we see how we can define the length of a list. 
+First, we declare an uninterpreted function $len$ and then add its definition as a 
+quantified axiom. If we try to prove 
+
+\begin{center}
+  $len(x::xs) = 1 + len(xs)$, where $x : Int$ and $xs : List$, 
+\end{center}
+
+the prover will not be able to respond $sat$ or $unsat$ as it cannot yet prove theorems 
+that require induction. However, if we try to prove the negation, 
+
+\begin{center}
+  $\lnot (len(x::xs) = 1 + len(xs))$
+\end{center}
+
+it will respond $unsat$ so the first theorem is satisfiable. This is the trick for simple 
+goals, like this one, but for more complex ones, Z3 will start responding with $unknown$ 
+or $timeout$.
+
+\includecode[python]{lst:z3_recursive_len}{Recursive functions in Z3}{%
+  listings/z3/list_length.py
+}
+
+\subsubsection{Suitability for Erlang}
+
+Z3 has the huge advantage of supporting algebraic datatypes. This feature allows us to 
+describe at a higher level the basic linear constructs of Erlang, such as lists and tuples. 
+In addition, it provides a user-friendly Python API that you can easily invoke 
+from Erlang ports.
+
+However, it does not allow the definition of recursive functions thus hindering the 
+emulation of the semantics of any Erlang function that operates on recursive data structures. 

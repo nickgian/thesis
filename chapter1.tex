@@ -1,0 +1,68 @@
+\chapter{Introduction}\label{ch:introduction}
+
+\section{Motivation}\label{sec:motivation}
+
+Computer hardware and software continuously grow in size and complexity and as a
+result ensuring the absence of exploitable behaviors is becoming increasingly 
+difficult. In the era when \FEEDBACK{where?}computer systems are used extensively to
+carry important information (e.g. credit card numbers, national security
+documents), it has been widely accepted that security of these systems is a
+priority. Researchers have identified a number of potential vulnerabilities
+which arise from the violation of known but in-practice unenforceable safety
+and security policies.
+ 
+So far, computer security has been delegated mostly to software, while the 
+hardware is being almost completely controlled by the software. Programming
+languages have evolved, from low-level unmanaged languages, to high-level
+languages with features such as strong type systems and automatic memory
+management, making programming less error prone and reducing the number of
+exploitable bugs. Furthermore, in order to strengthen the security of computing
+systems a variety of mitigation techniques \TODO{reference some?} have been
+proposed, however these are mostly ad-hoc solutions designed to prevent specific
+known attacks, rather than enforcing a security policy along with a well defined
+class of attacks that are prevented, thus making it hard to reason about their
+effectiveness. In fact most of these mitigation techniques can be circumvented
+by attackers, \TODO{reference} which has lead to a continuous ``chase''
+between attackers and security researchers.
+
+One common attack technique is to deploy new code in the memory of the
+vulnerable program and then exploit some low-level vulnerability such as a
+buffer overflow to redirect the control flow to this attacker code. This attack
+can be stopped by a simple protection scheme known as $W \oplus X$, which
+enforces that a memory region is either executable or writable but not both.
+Unfortunately, new attack techniques can easily bypass $W \oplus X$. In
+particular, attackers have been using code-reuse attacks
+(e.g. return/jump - oriented programming) that allows them to chain together
+existing pieces of code to achieve malicious behavior without directly
+introducing new code.
+
+The goal of this thesis is to describe and formalize in Coq a novel
+hardware-assisted implementation of an effective mitigation technique called
+Control Flow Integrity (CFI). CFI enforces that any execution of a program will
+respect a statically computed control flow graph (CFG), thus stopping a wide
+range of attacks that attempt to modify the control flow. As part of the
+formalization effort, following the work of Abadi \ETAL \cite{abadi2005}, we 
+provide an attacker model and prove a variant of the CFI property described in
+\cite{abadi2005}.
+
+\section{Thesis Outline}\label{sec:outline}
+Map
+1. Intro
+2a. Safety and Security Policies
+2b. Micropolicies
+3. CFI description
+4. CFI formalization
+5. Conclusions and Future work
+6. Related work
+
+Chapter 2 of this thesis briefly describes the basic requirments a security
+policy must satisfy and puts into context the framework we utilize in order
+to formalize and enforce a Control-Flow Integrity (CFI) policy.
+Chapter 3 discusses the current state of research on Control-Flow Integrity 
+and clarifies our goals and contributions to it.
+Chapter 4 describes in detail the design of a fine-grained CFI policy and
+how we used the framework from Chapter 2 in order to enfore the policy
+and formally reason about it's security properties.
+Chapter 5.. conclusions, future work?
+Chapter 6.. related work and bibliography?
+Appendix with code and/or step relations etc.?

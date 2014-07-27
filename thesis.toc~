@@ -1,0 +1,73 @@
+\select@language {english}
+\contentsline {chapter}{Abstract}{5}{chapter*.1}
+\select@language {greek}
+\contentsline {chapter}{Ευχαριστίες}{7}{chapter*.3}
+\select@language {english}
+\contentsline {chapter}{Contents}{10}{chapter*.4}
+\contentsline {chapter}{List of Figures}{11}{chapter*.5}
+\contentsline {section}{Listings}{14}{chapter*.6}
+\contentsline {chapter}{\numberline {1}Introduction}{15}{chapter.1}
+\contentsline {section}{\numberline {1.1}Motivation}{15}{section.1.1}
+\contentsline {section}{\numberline {1.2}Thesis Outline}{16}{section.1.2}
+\contentsline {chapter}{\numberline {2}Safety and Security Policies}{17}{chapter.2}
+\contentsline {section}{\numberline {2.1}A Programmable Unit for Metadata Processing}{17}{section.2.1}
+\contentsline {section}{\numberline {2.2}Micro-policies: A Framework for Verified, Hardware-Assisted Security Monitors}{19}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}Correctness of micro-policies}{19}{subsection.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}Basic Machine}{20}{subsection.2.2.2}
+\contentsline {subsection}{\numberline {2.2.3}Symbolic Machine}{20}{subsection.2.2.3}
+\contentsline {subsection}{\numberline {2.2.4}Concrete Machine}{21}{subsection.2.2.4}
+\contentsline {subsection}{\numberline {2.2.5}Concrete Policy Monitor}{21}{subsection.2.2.5}
+\contentsline {section}{\numberline {2.3}Core Erlang}{22}{section.2.3}
+\contentsline {subsection}{\numberline {2.3.1}The Core Erlang Abstract Syntax Tree}{22}{subsection.2.3.1}
+\contentsline {subsubsection}{Root Node of a Syntax Tree}{23}{section*.7}
+\contentsline {subsubsection}{Expressions}{24}{section*.9}
+\contentsline {subsubsection}{Clauses and Pattern Matching}{30}{section*.28}
+\contentsline {section}{\numberline {2.4}Erlang Types and Function Specifications}{31}{section.2.4}
+\contentsline {subsection}{\numberline {2.4.1}Predefined Types}{31}{subsection.2.4.1}
+\contentsline {subsection}{\numberline {2.4.2}User Defined Types}{32}{subsection.2.4.2}
+\contentsline {subsection}{\numberline {2.4.3}Representation of the Types on the Core Erlang AST}{32}{subsection.2.4.3}
+\contentsline {subsubsection}{Notation of Predefined Types}{33}{section*.31}
+\contentsline {subsubsection}{Notation of User Defined Types}{35}{section*.32}
+\contentsline {subsection}{\numberline {2.4.4}Function Specifications}{36}{subsection.2.4.4}
+\contentsline {chapter}{\numberline {3}Concolic Testing}{37}{chapter.3}
+\contentsline {section}{\numberline {3.1}The Basic Idea}{37}{section.3.1}
+\contentsline {subsection}{\numberline {3.1.1}A Simple Example}{37}{subsection.3.1.1}
+\contentsline {subsection}{\numberline {3.1.2}Strengths and Limitations}{38}{subsection.3.1.2}
+\contentsline {subsubsection}{Incompleteness of Constraint Solving.}{38}{section*.34}
+\contentsline {subsubsection}{Path Explosion.}{39}{section*.35}
+\contentsline {subsubsection}{Non-deterministic Behaviour of Programs.}{39}{section*.36}
+\contentsline {subsection}{\numberline {3.1.3}Challenges in Erlang}{39}{subsection.3.1.3}
+\contentsline {subsection}{\numberline {3.1.4}Z3 SMT Solver}{39}{subsection.3.1.4}
+\contentsline {subsubsection}{Datatypes}{40}{section*.37}
+\contentsline {subsubsection}{Functions}{40}{section*.39}
+\contentsline {subsubsection}{Suitability for Erlang}{41}{section*.42}
+\contentsline {chapter}{\numberline {4}CutEr}{45}{chapter.4}
+\contentsline {section}{\numberline {4.1}Core Erlang Interpreter}{45}{section.4.1}
+\contentsline {subsection}{\numberline {4.1.1}Why Core Erlang?}{45}{subsection.4.1.1}
+\contentsline {subsection}{\numberline {4.1.2}Architecture of the Interpreter}{46}{subsection.4.1.2}
+\contentsline {subsubsection}{Supervisor}{47}{section*.43}
+\contentsline {subsubsection}{Code Server}{48}{section*.44}
+\contentsline {subsubsection}{Monitor Server}{48}{section*.45}
+\contentsline {subsubsection}{Interpreter Process}{49}{section*.46}
+\contentsline {section}{\numberline {4.2}Z3 Interface}{60}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}Implementing the Erlang Type System}{60}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}Emulating the Semantics of Erlang Built-in Functions}{61}{subsection.4.2.2}
+\contentsline {subsubsection}{Example 1: \texttt {erlang:'+'/2}}{61}{section*.56}
+\contentsline {subsubsection}{Example 2: \texttt {erlang:hd/1}}{62}{section*.57}
+\contentsline {subsubsection}{Example 3: \texttt {erlang:is\textunderscore tuple/1}}{62}{section*.58}
+\contentsline {subsubsection}{Example 4: \texttt {erlang:length/1}}{63}{section*.59}
+\contentsline {subsection}{\numberline {4.2.3}Encoding the Symbolic Constraints}{63}{subsection.4.2.3}
+\contentsline {subsection}{\numberline {4.2.4}Interfacing Erlang with z3Py}{64}{subsection.4.2.4}
+\contentsline {subsubsection}{\texttt {gen\textunderscore fsm} States}{64}{section*.61}
+\contentsline {subsubsection}{Scenario I: Z3 Can Solve the Set of Symbolic Costraints}{66}{section*.62}
+\contentsline {subsubsection}{Scenario II: Z3 Cannot Solve the Set of Symbolic Constraints}{67}{section*.63}
+\contentsline {section}{\numberline {4.3}Instrumentation Algorithm}{68}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}Concurrent and Distributed Programs}{68}{subsection.4.3.1}
+\contentsline {subsection}{\numberline {4.3.2}Presentation of the Algorithm}{69}{subsection.4.3.2}
+\contentsline {chapter}{\numberline {5}Examples}{71}{chapter.5}
+\contentsline {section}{\numberline {5.1}A Toy Example}{71}{section.5.1}
+\contentsline {section}{\numberline {5.2}A Depth-First Search Example}{72}{section.5.2}
+\contentsline {section}{\numberline {5.3}An Abstract Datatype Example}{75}{section.5.3}
+\contentsline {chapter}{\numberline {6}Conclusion and Future Work}{79}{chapter.6}
+\contentsline {chapter}{Bibliography}{81}{section*.73}
+\contentsline {subparagraph}{}{81}{section*.75}

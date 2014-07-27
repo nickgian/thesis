@@ -1,0 +1,166 @@
+\chapter{Control-Flow Integrity}\label{ch:cfi}
+
+Restricting the control-flow of a program in some way is a technique widely
+spread among security researchers. For example non-executable data (NXD)
+can be considered as a form of (very) coarse-grained \CFI where control-flow is
+not allowed to reach any memory region that holds non-executable data. Other
+mitigation techniques such as protecting return addresses on the stack enforce
+a form of coarse-grained \CFI.
+
+Moreover it is common that security properties are enforced dynamically by code
+that is statically injected to the program (\EG Inlined Reference Monitors (IRM)
+\cite{Erlingsson04} follow that approach), thus some form of \CFI is required in
+order to ensure that these checks are not circumvented. 
+
+\TODO{Think about title}
+\section{Balancing between performance and security}\label{sec:security_cfi}
+
+Abadi \ETAL first proposed a technique to enforce \CFI based on IRMs. 
+In particular, they proposed to mark all valid targets of \emph{indirect} 
+control transfers with a unique identifier and inject checks before all 
+indirect jumps (including return instructions). However they assume that any 
+two destinations are equivalent, in the sense that they share the same 
+identifier, if the CFG contains edges from the same  set of sources, which may
+significantly reduce the precision of the CFG. 
+The authors also note that a 2-ID approach where one identifier is used for 
+calls and another for returns could provide adequate security in many cases. 
+
+The work of Abadi \ETAL sparked interest of researchers who tried to improve
+some of the weaknesses of the initial implementation, usually by choosing 
+between performance against precision and vice-versa.
+
+Bletsch \ETAL \cite{Bletsch:2011:MCA:2076732.2076783} followed the work
+of Abadi \ETAL, but changed their checking mechanism to perform the check
+after the control flow transfer has occurred which, as the authors claim,
+reduced the cache pressure and resulted in better performance. Precision remains
+the same with the implementation of Abadi \ETAL.
+
+Zhang \ETAL \cite{Zhang2013} proposed \emph{Compact Control Flow Integrity
+and Randomization} (CCFIR), a new efficient way to enforce coarse-grained \CFI.
+CCFIR collects all valid targets of indirect control-transfers and stores them
+in a random order, in a protected section called ``Springboard section''. 
+Indirect control-transfers are only allowed to addresses that are in the
+Springboard. Their implementation uses a 3-ID approach where one identifier is
+used for calls and the two other identifiers are for returns, separating them
+between returns to sensitive and non-sensitive functions. Their implementation
+also supports interaction between protected and un-protected modules, which
+makes it an attractive solution to coarse-grained \CFI.
+
+The above techniques are evaluated in \cite{outofcontrol_ieeesp2014} where
+the authors demonstrate code-reuse attacks against binaries protected by
+coarse-grained \CFI. These attacks illustrate the need for fine-grained
+\CFI which however incurs a high runtime-overhead penalty making deployment
+of such a mechanism unlikely.
+
+\subsection{Standard assumptions for effective \CFI}\label{sec:cfi_assumptions}
+
+Most -if not all- \CFI implementations also come with a set of assumptions under
+which \CFI holds. Two standard assumptions for all mechanisms that attempt to
+enforce \CFI are:
+\begin{itemize}
+\item \emph{NXD} is an abbreviation for Non-Executable Data, a security
+mechanism that disallows execution of data. 
+\item \emph{NWC} stands for Non-Writable Code. Changing the code of a
+program would allow an attacker to circumvent dynamic checks.
+\end{itemize}
+
+Both assumptions are fairly standard for modern computers and are enforced
+through hardware or software. In some cases \emph{NXD} can be lifted, but
+additional security risks and complexity is not worth the minor advantages
+offered by such an action.
+
+Many implementations that attempt to do fine-grained \CFI also require that
+identifiers used to mark nodes in the CFG are unique.
+
+\section{Formal verification of Control-Flow Integrity}\label{sec:cfi_verif}
+
+In \cite{AbadiBEL09} Abadi \ETAL extended their original paper, with
+-among other things- a more detailed formal study of \CFI. Their formalization
+regarded a much simpler machine than the x86 omitting all the complexity in
+modern systems. The machine has a few instructions, a separate data memory and
+instruction memory which by the operational semantics of the machine are 
+non-executable and non-writable (enforcing \NXD and \NWC by construction), and a
+small set of registers.
+Moreover, their attacker model permits arbitrary changes to the data memory,
+arbitrary changes to all the registers but a few distinguished ones that are
+used during the dynamic checks and no changes to the instruction memory.
+The authors proof that under some assumptions \CFI is preserved for every step
+even in the presence of an attacker as powerful as the one described above. 
+Their formal study served as a guideline for the implementation, but as it is 
+done on paper their proofs cannot be machine checked. Furthermore, their 
+formalization omits less interesting but important details such as instruction 
+encoding and decoding which as shown in \cite{MorrisettTTTG12} are far from 
+trivial for the x86.
+
+Machine-checked formal verification efforts include \cite{ZhaoLSR11}, which is
+a SFI formalization for the ARM architecture that also enforces \CFI.
+Their formalization was developed using the HOL theorem prover and a program
+logic framework they created. However their benchmarks report a 240\% runtime
+overhead. The authors of \cite{CriswellDA14} claim partial proofs for a \CFI
+enforcement mechanism focused on the kernel of an operating system. Their
+runtime overhead can also reach 100\%.
+
+\section{Control-Flow Integrity over PUMP}\label{sec:cfi_pump}
+
+The PUMP hardware allows us to avoid taking the difficult decision between
+performance and security. As shown in \cite{pump_ccs2014}, we can enforce a
+\emph{fine-grained} \CFI policy with an average overhead of 8\%.
+\TODO{Is this number right?}
+
+In our design, we take the standard approach and claim \CFI under \NXD and
+\NWC. We considered designs that lifted these assumptions but
+we rejected them, for the time being, as there did not seem to be any
+considerable advantage \IE{compatibility with self-modifying programs,
+JIT compilers, \ETC} Allowing the code of the program to change, would in
+practice require for the CFG to change as well, which unless done in
+a controlled, ``safe'' way, would invalidate the enforcement of \CFI.
+However, we do not have to rely on special hardware or software to enforce
+\NXDname and \NWCname. We can achieve this easily and efficiently by
+creating a separate micro-policy.
+
+\subsection{Enforcing Non-Writable Code \& Non-Executable Data}
+\label{sec:nwc_nxd}
+
+Consider the set of tags \TAGS{\DATA , \INSTRname}. If we initially tag
+all executable regions in memory as \INSTR{} and all non-executable as \DATAname
+then we can enforce \NWCname by two rules of the form
+
+\begin{figure}[!htpb]
+\begin{align*}
+ & (Store, \_,\_, \_, \_,\INSTR) \rightarrow \varnothing \\
+ & (Store, \_,\_, \_, \_,\DATA) \rightarrow (\_, \DATA)
+\end{align*}
+\caption{Rules enforcing \NWC}
+\end{figure}
+
+The \_ in the vectors, represent \textit{don't care} values. In the context of
+the input vector their behavior is the same as \textit{don't care} values in
+match expressions in ML languages. In the context of the output vector it just
+captures the intuition that we will not really use the result tags, so anything
+could be returned as a result tag (\IE \DATAname or we can copy-through tags
+from the input vector).
+Informally the above rules reads as ``If the current opcode is Store and the
+content of the memory location we are trying to write is tagged \INSTRname
+then the memory write is not allowed. Otherwise if it is tagged \DATAname then
+the write is permitted and the new value will also be tagged \DATA.''
+
+We can enforce \NXDname in a similar fashion
+\begin{figure}[!htpb]
+\begin{align*}
+ & (-, -,\DATA, -, -, -) \rightarrow \varnothing \\
+ & (-, -,\INSTR, -, -,-) \rightarrow (-, -)
+\end{align*}
+\caption{Rules enforcing \NXD}
+\end{figure}
+
+Informally the above rules reads as ``If the tag on the current instruction is
+\DATAname then execution is not allowed. Otherwise if it is \INSTRname then
+execution is allowed''.
+
+\FEEDBACK{Used \_ and -, I think the second one looks better, opinions?}\\
+\TODO{Perhaps explain what each tag means for each opcode earlier -- or maybe 
+just in appendix?}\\
+\FEEDBACK{These tuple-vectors make it hard for people not familiar with them
+to remember what each field is, any better ways to represent them?}
+
+\subsection{Enforcing Control-Flow Integrity}\label{sec:cfi_enforce}

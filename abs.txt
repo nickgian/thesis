@@ -1,0 +1,24 @@
+(Title)
+Software testing by combining concrete and symbolic execution for automatic generation of input values.
+
+(Abstract)
+In a world where software is everywhere, from space shuttles to insulin pumps,
+software testing has a prominent role. However, software testing is largely 
+still manual since it is very difficult to create high code coverage test 
+suites with automated black-box tools.
+
+In this thesis, we present CutEr, a testing tool for Erlang that implements a dynamic
+white-box technique called concolic testing. This technique combines concrete and symbolic 
+execution of a program in order to generate inputs that will explore its different execution paths.
+
+(Περίληψη)
+Σε ένα κόσμο όπου το λογισμικό υπάρχει παντού, από διαστημικά λεωφορεία μέχρι αντλίες ινσουλίνης, 
+η δοκιμή λογισμικού έχει προεξέχουσα θέση. Παρόλαυτα, η δοκιμή λογισμικού γίνεται ακόμα σε 
+μεγάλο βαθμό χειροκίνητα καθώς είναι αρκετά δύσκολο να παραχθούν σουίτες δοκιμών υψηλής κάλυψης 
+κώδικα με αυτοματοποιημένα εργαλεία που χρησιμοποιούν την προσέγγιση "μαύρο κουτί".
+
+
+Σε αυτή τη διπλωματική, παρουσιάζουμε το CutEr, ένα εργαλείο δοκιμών για τη γλώσσα Erlang που υλοποιεί 
+μια δυναμική τεχνική της προσέγγισης "λευκό κουτί" που ονομάζεται συμπαγο-συμβολική δοκιμή. 
+Αυτή η τεχνική συνδυάζει συμπαγή και συμβολική εκτέλεση ενός προγράμματος έτσι ώστε να δημιουργούμε 
+τιμές εισόδου που θα εξερευνούν διαφορετικά μονοπάτια εκτέλεσης του.
