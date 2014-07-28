@@ -107,7 +107,7 @@ performance and security. As shown in \cite{pump_ccs2014}, we can enforce a
 \emph{fine-grained} \CFI policy with an average overhead of 8\%.
 \TODO{Is this number right?}
 
-In our design, we take the standard approach and claim \CFI under \NXD and
+In our design, we take the standard approach and claim \CFI under \NXDname and
 \NWC. We considered designs that lifted these assumptions but
 we rejected them, for the time being, as there did not seem to be any
 considerable advantage \IE{compatibility with self-modifying programs,
@@ -115,13 +115,13 @@ JIT compilers, \ETC} Allowing the code of the program to change, would in
 practice require for the CFG to change as well, which unless done in
 a controlled, ``safe'' way, would invalidate the enforcement of \CFI.
 However, we do not have to rely on special hardware or software to enforce
-\NXDname and \NWCname. We can achieve this easily and efficiently by
+\NXDname and \NWC. We can achieve this easily and efficiently by
 creating a separate micro-policy.
 
 \subsection{Enforcing Non-Writable Code \& Non-Executable Data}
 \label{sec:nwc_nxd}
 
-Consider the set of tags \TAGS{\DATA , \INSTRname}. If we initially tag
+Consider the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
 all executable regions in memory as \INSTR{} and all non-executable as \DATAname
 then we can enforce \NWCname by two rules of the form
 
@@ -140,7 +140,7 @@ captures the intuition that we will not really use the result tags, so anything
 could be returned as a result tag (\IE \DATAname or we can copy-through tags
 from the input vector).
 Informally the above rules reads as ``If the current opcode is Store and the
-content of the memory location we are trying to write is tagged \INSTRname
+content of the memory location we are trying to write is tagged \INSTR{}
 then the memory write is not allowed. Otherwise if it is tagged \DATAname then
 the write is permitted and the new value will also be tagged \DATA.''
 
@@ -164,3 +164,96 @@ just in appendix?}\\
 to remember what each field is, any better ways to represent them?}
 
 \subsection{Enforcing Control-Flow Integrity}\label{sec:cfi_enforce}
+
+\subsubsection{Coarse-grained Control-Flow Integrity}\label{sec:cfi_coarse}
+We can use the PUMP to implement the coarse-grained \CFI mechanisms described
+earlier. Suppose we want to implement 1-ID \CFI, we tag all indirect flow 
+destinations and sources with a tag \MARK and the rest of the instructions as 
+\UNMARK. Executing instructions that are sources of indirect flows, propagates
+their instruction tag to the \pc. We then have to check that the tag on the
+destination matches the tag on the tag on the \pc.
+
+\begin{figure}[!htpb]
+\begin{align}
+ & (Jump/Jal, -,\MARK, -, -, -) \rightarrow (\MARK,-) \label{coarse_rule1} 
+\tag{1} \\
+ & (-, \MARK, \MARK, -, -, -) \rightarrow (\UNMARK, -) \label{coarse_rule2}
+\tag{2} \\
+ & (-, \MARK, \UNMARK, -, -, -) \rightarrow \varnothing \label{coarse_rule3} 
+\tag{3}
+\end{align}
+\caption{Rules enforcing coarse-grained \CFI}
+\end{figure}
+
+\TODO{align all elements of the rules above}
+
+Rule \ref{coarse_rule1} is used in the case the opcode is Jump or Jal (the only 
+indirect jumps in the RISC machine we examine) and propagates the \MARKname tag on
+the tag of the new \pc. Rule \ref{coarse_rule2} applies when the tag on the \pc
+is set to \MARKname and corresponds to a legal destination and rule
+\ref{coarse_rule3} corresponds to an illegal destination (\IE one that is 
+tagged \UNMARK) and is not allowed.
+
+We do not further study this coarse-grained approach as we consider it 
+ineffective since attacks against it has already been demonstrated in 
+\cite{outofcontrol_ieeesp2014}. Instead we are going to focus on implementing
+and formalizing a fine-grained \CFI micro-policy.
+
+\subsubsection{Fine-grained Control-Flow Integrity}\label{sec:cfi_fine}
+
+The micro-policy we implemented and studied is a composition of a fine-grained
+\CFI micro-policy and the \NWC, \NXDname micro-policies explained above.
+
+Our approach uses tags to uniquely identify the contents of the memory that 
+corresponds to sources and potential destinations of indirect flows according to
+a binary relation $\mathcal{CFG}$.
+
+Consider the set of tags 
+\TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}} where \ii{id} is a unique identifier 
+(\IE used to tag the contents of only one location in the memory). 
+Adapting the rules from \ref{sec:nwc_nxd}, we shall use \DATAname to tag all 
+contents in memory that are considered non-executable data, \INSTR{\ii{id}}
+to tag all contents in memory that are considered executable instructions and 
+are sources or targets of indirect control flows and \INSTR{$\bot$} to tag all
+other instructions.
+The rules to enforce \NWCname and \NXDname are intuitively the same and only
+change to account for the splitting of the \INSTRname tag.
+
+We follow the same idea as with coarse-grained \CFI, propagating the instruction
+tag of instructions that are sources of indirect flows to the tag on the \pc of
+the next state and upon execution of the next instruction, checking that the tag
+on the \pc and on the instruction are in some relation. In the case of
+coarse-grained \CFI we required that they match but for fine-grained \CFI we
+require that they are in the \CFG relation.
+
+\begin{figure}[!htpb]
+\begin{align}
+ & (Jump/Jal, -,-, -, -, -) \rightarrow (- ,-) 
+ \text{ if (n,m) } \in \CFGm \label{fine_rule1} \tag{1} \\
+ & (Jump/Jal, \DATA, \INSTR{m}, -, -, -) \rightarrow (\INSTR{m},-) 
+ \text{ if (n,m) } \in \CFGm \label{fine_rule2} \tag{2} \\
+ & (Store, \DATA, \INSTR{\_}, -, -, \DATA) \rightarrow (\DATA,\DATA) 
+ \label{fine_rule3} \tag{3} \\
+ & (Store, \INSTR{n}, \INSTR{m}, -, -, \DATA) \rightarrow (\DATA,\DATA)
+ \text{ if (n,m) } \in \CFGm \label{fine_rule4} \tag{4} \\
+ & (Store, -, -, -, -, \INSTR{\_}) \rightarrow \varnothing
+  \label{fine_rule5} \tag{5} \\
+ & (-, \INSTR{n}, \INSTR{m}, -, -, -) \rightarrow (\DATA,-)
+ \text{ if (n,m) } \in \CFGm \label{fine_rule6} \tag{6} \\
+ & (-, \DATA, \INSTR{m}, -, -, -) \rightarrow (\DATA,-) \label{fine_rule7} 
+ \tag{7}\\
+ & (-, -, -, -, -, -) \rightarrow \varnothing \label{fine_rule8} 
+ \tag{8}
+\end{align}
+\caption{Rules enforcing fine-grained \CFI, \NXDname and \NWC}
+\end{figure}
+
+\TODO{Try out writing the rules in inference form, definitely tweak them
+somehow, they look like crap now}
+
+
+
+
+
+
+
