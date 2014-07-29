@@ -226,31 +226,77 @@ on the \pc and on the instruction are in some relation. In the case of
 coarse-grained \CFI we required that they match but for fine-grained \CFI we
 require that they are in the \CFG relation.
 
+% \begin{figure}[!htpb]
+% \begin{align}
+%  & (Jump/Jal, -,-, -, -, -) \rightarrow (- ,-) 
+%  \text{ if (n,m) } \in \CFGm \label{fine_rule1} \tag{1} \\
+%  & (Jump/Jal, \DATA, \INSTR{m}, -, -, -) \rightarrow (\INSTR{m},-) 
+%  \text{ if (n,m) } \in \CFGm \label{fine_rule2} \tag{2} \\
+%  & (Store, \DATA, \INSTR{\_}, -, -, \DATA) \rightarrow (\DATA,\DATA) 
+%  \label{fine_rule3} \tag{3} \\
+%  & (Store, \INSTR{n}, \INSTR{m}, -, -, \DATA) \rightarrow (\DATA,\DATA)
+%  \text{ if (n,m) } \in \CFGm \label{fine_rule4} \tag{4} \\
+%  & (Store, -, -, -, -, \INSTR{\_}) \rightarrow \varnothing
+%   \label{fine_rule5} \tag{5} \\
+%  & (-, \INSTR{n}, \INSTR{m}, -, -, -) \rightarrow (\DATA,-)
+%  \text{ if (n,m) } \in \CFGm \label{fine_rule6} \tag{6} \\
+%  & (-, \DATA, \INSTR{m}, -, -, -) \rightarrow (\DATA,-) \label{fine_rule7} 
+%  \tag{7}\\
+%  & (-, -, -, -, -, -) \rightarrow \varnothing \label{fine_rule8} 
+%  \tag{8}
+% \end{align}
+% \caption{Rules enforcing fine-grained \CFI, \NXDname and \NWC}
+% \end{figure}
+
 \begin{figure}[!htpb]
-\begin{align}
- & (Jump/Jal, -,-, -, -, -) \rightarrow (- ,-) 
- \text{ if (n,m) } \in \CFGm \label{fine_rule1} \tag{1} \\
- & (Jump/Jal, \DATA, \INSTR{m}, -, -, -) \rightarrow (\INSTR{m},-) 
- \text{ if (n,m) } \in \CFGm \label{fine_rule2} \tag{2} \\
- & (Store, \DATA, \INSTR{\_}, -, -, \DATA) \rightarrow (\DATA,\DATA) 
- \label{fine_rule3} \tag{3} \\
- & (Store, \INSTR{n}, \INSTR{m}, -, -, \DATA) \rightarrow (\DATA,\DATA)
- \text{ if (n,m) } \in \CFGm \label{fine_rule4} \tag{4} \\
- & (Store, -, -, -, -, \INSTR{\_}) \rightarrow \varnothing
-  \label{fine_rule5} \tag{5} \\
- & (-, \INSTR{n}, \INSTR{m}, -, -, -) \rightarrow (\DATA,-)
- \text{ if (n,m) } \in \CFGm \label{fine_rule6} \tag{6} \\
- & (-, \DATA, \INSTR{m}, -, -, -) \rightarrow (\DATA,-) \label{fine_rule7} 
- \tag{7}\\
- & (-, -, -, -, -, -) \rightarrow \varnothing \label{fine_rule8} 
- \tag{8}
-\end{align}
+\infrule[Flow/Check]{
+  opcode \in \lbrace Jump, Jal \rbrace \andalso 
+  (src,dst) \in \CFGm
+  }{
+  \frule{opcode}{\INSTR{src}}{\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
+  }\medskip
+
+\infrule[Flow/NoCheck]{
+  opcode \in \lbrace Jump, Jal \rbrace
+  }{
+  \frule{opcode}{\DATA}{\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
+  }\medskip
+
+\infrule[Store/Check]{
+  (src,dst) \in \CFGm
+  }{
+  \frule{Store}{\INSTR{src}}{\INSTR{dst}}{-}{-}{\DATA} {\DATA}{\DATA}
+  }\medskip
+
+\infrule[Store/NoCheck]{
+  ti \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
+  }{
+  \frule{Store}{\DATA}{ti}{-}{-}{\DATA} {\DATA}{\DATA}
+  }\medskip
+
+\infrule[Rest/Check]{
+  opcode \not \in \lbrace Jump, Jal, Store \rbrace \andalso
+  (src,dst) \in \CFGm
+  }{
+  \frule{opcode}{\INSTR{src}}{\INSTR{dst}}{-}{-}{-} {\DATA}{-}
+  }\medskip
+
+\infrule[Rest/NoCheck]{
+  opcode \not \in \lbrace Jump, Jal, Store \rbrace
+  ti \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
+  }{
+  \frule{opcode}{\DATA}{ti}{-}{-}{-} {\DATA}{-}
+  }
 \caption{Rules enforcing fine-grained \CFI, \NXDname and \NWC}
 \end{figure}
 
-\TODO{Try out writing the rules in inference form, definitely tweak them
-somehow, they look like crap now}
-
+We note in the above rules that the tag on the \PCname is \DATAname when
+no check for a control-flow violation is required and \INSTR{\textit{src}} where
+\textit{src} is some id when an indirect flow instruction is executed and a
+check for a control-flow violation is required. An important observation is that
+the rules above allow for one control-flow violation to occur, but the rules
+disallow the next step and therefore the machine will certainly halt after a
+violation.
 
 
 

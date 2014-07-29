@@ -44,6 +44,7 @@
 \usepackage[format=hang,textformat=simple]{caption}
 \usepackage{wrapfig}
 \usepackage{float}
+\usepackage{bcprules}
 \restylefloat{table}
 \restylefloat{figure}
 
@@ -100,7 +101,9 @@
 \newcommand{\rd}[2]{#1[#2]}
 \newcommand{\upd}[3]{#1[#2{\leftarrow}#3]}
 \newcommand{\pc}[0]{\ii{pc}}
-\newcommand{\epc}[0]{\ii{epc}\xspace}
+\newcommand{\epc}[0]{\ii{epc}}
+\newcommand{\PCname}[0]{\ii{pc}\xspace}
+\newcommand{\EPCname}[0]{\ii{epc}\xspace}
 \newcommand{\ra}[0]{\ii{ra}}
 \newcommand{\tpc}[0]{t_\ii{pc}}
 \newcommand{\tra}[0]{t_\ii{ra}}
@@ -131,6 +134,8 @@
 %   #7 [0..5 \leftarrow ({#1},{#2},{#3},{#4},{#5},{#6})]}
 % \newcommand{\savestateshort}[2]{%
 %   #2 [0..5 \leftarrow {#1}]}
+
+\newcommand{\frule}[8]{(#1,#2,#3,#4,#5,#6) \mapsto (#7,#8)}
 
 \newcommand{\DATA}[0]{\ii{Data}}
 \newcommand{\INSTRname}[0]{\ii{Instr}}
