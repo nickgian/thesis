@@ -2,16 +2,15 @@
 Currently the hardware provides only a small number of security mechanisms \TODO{name some}, 
 leaving most of the work to the software. This requires that the software 
 performs various sanity-checks during an execution and that it carefully 
-maintains various safety and security invariants, resulting in high runtime 
-performance overheads.  
+maintains various safety and security invariants, a tedious and error-prone task
+that results in high runtime performance overheads.  
 
 Many potentially effective mitigation techniques are not deployed because of the
 performance overhead they incur. Another requirement for deployment of a 
 protection mechanism is the compatibility with existing executables and 
 the degree of intervention required by a human. 
-Usually even making slight changes to a code (e.g. binary rewriting) and 
-redistributing has high cost and the protection mechanism is likely to see very
-low adoption. 
+Usually even making slight changes to a code and redistributing has high cost
+and the protection mechanism is likely to see very low adoption. 
 
 The lack of efficient and effective generic ways to enforce security policies, 
 forces programmers to protect their own code, a task which is not trivial even 
@@ -48,7 +47,7 @@ to $tag_{pc'}$ and any new data created by the instruction should be tagged
 $tag_{result}$''.
 
 On the hardware level, the PUMP is an extension to a conventional RISC 
-architecture. Every word of data in the machine - whether in the memory 
+architecture. Every word of data in the machine - whether in memory 
 or a register, is extended with a word-sized metadata tag.
 These tags are not interpreted by hardware, instead the interpretation of the 
 tags is left to the software, thus making it easy to implement new policies on 
@@ -61,7 +60,7 @@ according to the rules defined by the software.
 A hardware rule cache mapping sets of input tags to sets of output tags is used 
 for common case efficiency. On each instruction dispatch, in parallel 
 with the usual behavior of an instruction 
-(e.g.execution of an addition in the ALU), the hardware forms the set of input 
+(\EG execution of an addition in the ALU), the hardware forms the set of input 
 tags and a lookup is performed on the rule cache. If the lookup is successful
 a set of output tags is returned and combined with the results of the normal 
 execution of the  instruction a new state is produced. On the other hand, 
@@ -72,7 +71,7 @@ a set of result tags, a pair of set of input and output tags is formed and
 inserted into the rules cache, while the faulting instruction is restarted 
 and will now hit the cache. Otherwise, execution of this instruction violated 
 some rules of the enforced policy and execution should not continue normally 
-(e.g. should be halted).
+(\EG should be halted).
 
 As described in the original PUMP paper by Dehon \ETAL \cite{pump_hasp2014} and 
 in more detail in the follow-up \cite{pump_ccs2014} a rich set of effective 
@@ -191,7 +190,7 @@ to with the notation \atom{\ii{w}}{\ii{t}}, where \ii{w} is the value (word) and
 \ii{t} is the tag.
 
 At each step, a record named \emph{mvector} is formed. It consists of the 
-current opcode,the tag on the \pc, the tag on the current instruction and 
+current opcode, the tag on the \pc, the tag on the current instruction and 
 optionally up to three tags depending on the opcode of the instruction.
 The \emph{mvector} is passed to the transfer function
 which decides whether the step violated the policy enforced by the \TRANSFER
@@ -199,7 +198,36 @@ function and in this case halts the machine, or if no violation occurred returns
 a tag for the new \pc and a tag for any results the instruction execution 
 produced.
 
-\TODO{example rules, full rules in appendix?}
+We write, in form of inference rules, the stepping relation for the Store and 
+Jump instructions, in order to demonstrate the above mechanism. The complete
+definition of the stepping relation can be found at \TODO{cite appendix}
+
+\begin{figure}[!htpb]
+\infrule[Store]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s  \\
+  \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
+  \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
+  \rd{\mem}{w_p} {=} \atom{w\old}{t\old} \\
+  \handler{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
+  \mem' = \upd{\mem}{w_p}{w_s@t_d'}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem'}{\reg}{\atom{\pc + 1}{\tpc'}}{int}}
+  }
+\bigskip
+
+\infrule[Jump]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jump}~r \andalso
+  \rd{\reg}{r} {=} \atom{w}{t_w} \\
+  \handler{\ii{Jump}}{\tpc}{\ti}{t_w}{-}{-} {\tpc'}{-}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg}{\atom{w}{\tpc'}}{int}}
+  }
+\caption{Symbolic stepping relation for Store and Jump}
+\end{figure}
+
+Notice that when a store instruction executed, the tag on the memory location to
+be overwritten is fetched, allowing the \TRANSFER function to know what kind of
+data we are trying to overwrite.
 
 \subsection{Concrete Machine}\label{sec:concrete}
 
@@ -256,8 +284,10 @@ and a few reserved registers. The \pc is tagged with \MONITOR when a monitor
 execution takes place and \USER{\ii{st}} when user-code is executed. The tag
 \ENTRY{\ii{st}} is used to tag the first instruction of a monitor service and 
 serves as an indication that execution will continue under the privileged
-\MONITOR mode.
+\MONITOR mode. 
 
+The miss handler is a composed policy monitor that protects itself from
+\USERname code and that enforces a desired micro-policy.
 One important thing to note is that the miss handler for the concrete machine
 can take an arbitrary number of steps before deciding that no violation occurred
 and returning to \USERname  mode, unlike the symbolic \TRANSFER function that

@@ -98,9 +98,10 @@
 \newcommand{\imem}[0]{\ii{im}}
 \newcommand{\dmem}[0]{\ii{dm}}
 \newcommand{\reg}[0]{\ii{reg}}
+\newcommand{\ok}[0]{\ii{ok}\xspace}
 \newcommand{\rd}[2]{#1[#2]}
 \newcommand{\upd}[3]{#1[#2{\leftarrow}#3]}
-\newcommand{\pc}[0]{\ii{pc}}
+\newcommand{\pc}[0]{\ii{pc}\xspace}
 \newcommand{\epc}[0]{\ii{epc}}
 \newcommand{\PCname}[0]{\ii{pc}\xspace}
 \newcommand{\EPCname}[0]{\ii{epc}\xspace}
@@ -118,10 +119,10 @@
 
 % \newcommand{\rret}{r_{\!\ii{ret}}}
 % \newcommand{\rarg}[1]{r_{\!\ii{arg#1}}}
-% \newcommand{\old}{_{\mathit{old}}}
+\newcommand{\old}{_{\mathit{old}}}
 % \newcommand{\undefined}{\uparrow}
 % \newcommand{\trapaddr}{\ii{trapaddr}}
-% \newcommand{\handler}[8]{\ii{transfer}(#1,#2,#3,#4,#5,#6) = (#7,#8)}
+ \newcommand{\handler}[8]{\ii{transfer}(#1,#2,#3,#4,#5,#6) = (#7,#8)}
 % \newcommand{\rulelookup}[8]{%
 %    \cache \vdash (#1,#2,#3,#4,#5,#6) \mapsto (#7,#8)}
 % \newcommand{\rulelookupshort}[2]{%
@@ -135,7 +136,12 @@
 % \newcommand{\savestateshort}[2]{%
 %   #2 [0..5 \leftarrow {#1}]}
 
-\newcommand{\frule}[8]{(#1,#2,#3,#4,#5,#6) \mapsto (#7,#8)}
+\newcommand{\astat}[4]{\ensuremath{(#1,#2,#3,#4)}}
+\newcommand{\acfistat}[5]{\ensuremath{(#1,#2,#3,#4,#5)}}
+\newcommand{\cstat}[5]{\ensuremath{(#1,#2,#3,#4,#5)}}
+\newcommand{\stat}[5]{\ensuremath{(#1,#2,#3,#4,#5)}}
+
+\newcommand{\frule}[8]{(#1,#2,#3,#4,#5,#6) \to (#7,#8)}
 
 \newcommand{\DATA}[0]{\ii{Data}}
 \newcommand{\INSTRname}[0]{\ii{Instr}}
@@ -154,11 +160,12 @@
 \newcommand{\CFG}[0]{$\mathcal{CFG}$}
 \newcommand{\CFGm}[0]{\mathcal{CFG}}
 
-\newcommand{\NXD}[0]{\emph{NXD}}
-\newcommand{\NWC}[0]{\emph{NWC}}
+\newcommand{\J}[0]{$\mathcal{J}$\xspace}
+\newcommand{\Jm}[0]{\mathcal{J}}
 
-\newcommand{\NXDname}[0]{\emph{NXD}\xspace}
-\newcommand{\NWCname}[0]{\emph{NWC}\xspace}
+
+\newcommand{\NXD}[0]{\emph{NXD}\xspace}
+\newcommand{\NWC}[0]{\emph{NWC}\xspace}
 
 \newcommand{\MARK}[0]{\emph{Marked}}
 \newcommand{\UNMARK}[0]{\emph{Unmarked}}

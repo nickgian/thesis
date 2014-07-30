@@ -107,7 +107,7 @@ performance and security. As shown in \cite{pump_ccs2014}, we can enforce a
 \emph{fine-grained} \CFI policy with an average overhead of 8\%.
 \TODO{Is this number right?}
 
-In our design, we take the standard approach and claim \CFI under \NXDname and
+In our design, we take the standard approach and claim \CFI under \NXD and
 \NWC. We considered designs that lifted these assumptions but
 we rejected them, for the time being, as there did not seem to be any
 considerable advantage \IE{compatibility with self-modifying programs,
@@ -115,7 +115,7 @@ JIT compilers, \ETC} Allowing the code of the program to change, would in
 practice require for the CFG to change as well, which unless done in
 a controlled, ``safe'' way, would invalidate the enforcement of \CFI.
 However, we do not have to rely on special hardware or software to enforce
-\NXDname and \NWC. We can achieve this easily and efficiently by
+\NXD and \NWC. We can achieve this easily and efficiently by
 creating a separate micro-policy.
 
 \subsection{Enforcing Non-Writable Code \& Non-Executable Data}
@@ -123,7 +123,7 @@ creating a separate micro-policy.
 
 Consider the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
 all executable regions in memory as \INSTR{} and all non-executable as \DATAname
-then we can enforce \NWCname by two rules of the form
+then we can enforce \NWC by two rules of the form
 
 \begin{figure}[!htpb]
 \begin{align*}
@@ -144,7 +144,7 @@ content of the memory location we are trying to write is tagged \INSTR{}
 then the memory write is not allowed. Otherwise if it is tagged \DATAname then
 the write is permitted and the new value will also be tagged \DATA.''
 
-We can enforce \NXDname in a similar fashion
+We can enforce \NXD in a similar fashion
 \begin{figure}[!htpb]
 \begin{align*}
  & (-, -,\DATA, -, -, -) \rightarrow \varnothing \\
@@ -202,7 +202,7 @@ and formalizing a fine-grained \CFI micro-policy.
 \subsubsection{Fine-grained Control-Flow Integrity}\label{sec:cfi_fine}
 
 The micro-policy we implemented and studied is a composition of a fine-grained
-\CFI micro-policy and the \NWC, \NXDname micro-policies explained above.
+\CFI micro-policy and the \NWC, \NXD micro-policies explained above.
 
 Our approach uses tags to uniquely identify the contents of the memory that 
 corresponds to sources and potential destinations of indirect flows according to
@@ -216,7 +216,7 @@ contents in memory that are considered non-executable data, \INSTR{\ii{id}}
 to tag all contents in memory that are considered executable instructions and 
 are sources or targets of indirect control flows and \INSTR{$\bot$} to tag all
 other instructions.
-The rules to enforce \NWCname and \NXDname are intuitively the same and only
+The rules to enforce \NWC and \NXD are intuitively the same and only
 change to account for the splitting of the \INSTRname tag.
 
 We follow the same idea as with coarse-grained \CFI, propagating the instruction
@@ -245,7 +245,7 @@ require that they are in the \CFG relation.
 %  & (-, -, -, -, -, -) \rightarrow \varnothing \label{fine_rule8} 
 %  \tag{8}
 % \end{align}
-% \caption{Rules enforcing fine-grained \CFI, \NXDname and \NWC}
+% \caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
 % \end{figure}
 
 \begin{figure}[!htpb]
@@ -254,32 +254,37 @@ require that they are in the \CFG relation.
   (src,dst) \in \CFGm
   }{
   \frule{opcode}{\INSTR{src}}{\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
-  }\medskip
+  }
+\bigskip
 
 \infrule[Flow/NoCheck]{
   opcode \in \lbrace Jump, Jal \rbrace
   }{
   \frule{opcode}{\DATA}{\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
-  }\medskip
+  }
+\bigskip
 
 \infrule[Store/Check]{
   (src,dst) \in \CFGm
   }{
   \frule{Store}{\INSTR{src}}{\INSTR{dst}}{-}{-}{\DATA} {\DATA}{\DATA}
-  }\medskip
+  }
+\bigskip
 
 \infrule[Store/NoCheck]{
   ti \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
   }{
   \frule{Store}{\DATA}{ti}{-}{-}{\DATA} {\DATA}{\DATA}
-  }\medskip
+  }
+\bigskip
 
 \infrule[Rest/Check]{
   opcode \not \in \lbrace Jump, Jal, Store \rbrace \andalso
   (src,dst) \in \CFGm
   }{
   \frule{opcode}{\INSTR{src}}{\INSTR{dst}}{-}{-}{-} {\DATA}{-}
-  }\medskip
+  }
+\bigskip
 
 \infrule[Rest/NoCheck]{
   opcode \not \in \lbrace Jump, Jal, Store \rbrace
@@ -287,16 +292,20 @@ require that they are in the \CFG relation.
   }{
   \frule{opcode}{\DATA}{ti}{-}{-}{-} {\DATA}{-}
   }
-\caption{Rules enforcing fine-grained \CFI, \NXDname and \NWC}
+\caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
 \end{figure}
 
 We note in the above rules that the tag on the \PCname is \DATAname when
 no check for a control-flow violation is required and \INSTR{\textit{src}} where
-\textit{src} is some id when an indirect flow instruction is executed and a
+\textit{src} is some id, when an indirect flow instruction was executed and a
 check for a control-flow violation is required. An important observation is that
-the rules above allow for one control-flow violation to occur, but the rules
-disallow the next step and therefore the machine will certainly halt after a
-violation.
+the rules above allow for one control-flow violation to occur, but disallow the
+next step and therefore the machine will certainly halt after a violation.
+
+If the PUMP hardware fetched the tag on the memory address the machine is
+jumping to and passed it as an argument to input vector, as it does in the
+case of a Store instruction, we would be able to enforce \CFI with no violations
+at all. \TODO{It can't do that for efficiency reasons?}
 
 
 

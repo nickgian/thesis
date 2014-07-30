@@ -1,0 +1,79 @@
+\chapter{Formally Verified Control-Flow Integrity Micro-Policy}\label{ch:verified_cfi}
+
+Using the micro-policies framework described in \ref{sec:micropolicies} we 
+proved that the concrete machine instantiated with a \CFI micro-policy like the
+one described in \ref{sec:cfi_fine} \ii{simulates} an abstract machine that has
+\CFI by construction.
+
+Additionaly, we provide an attacker model for all the machines used and we prove
+that a property capturing the notion of \CFI holds even when the attacker
+tampers with the machine, similarly to what is proposed in \cite{abadi2005}, but
+adapted to the setting of our machines.
+
+\section{The Abstract Machine}\label{sec:abstract_cfi}
+
+The abstract machine is based on the basic machine explained in \ref{sec:basic},
+has \CFI, \NXD and \NWC by construction and will serve as a 
+specification for the symbolic and eventually the concrete machine that
+implement \CFI through the tag-based system explained in the previous chapter.
+
+Unlike the symbolic and the concrete machine, this abstract machine splits the 
+memory into two disjoint memories, an instruction memory and a data memory. The
+instruction memory is fixed (non-writable) and the machine uses this memory to
+fetch instructions to execute, so \NWC and \NXD. are enforced by construction.
+
+In addition the state of the machine includes an \ok bit, indicating 
+whether a control-flow violation has occured or not. The rest of the machine
+state is completed by a set of registers and a \pc register. We use a 5-tuple
+notation for the state, \acfistat{\imem,\dmem,\reg,\pc,\ok}, where the first
+field is the instruction memory, the second the data memory, the third the
+registers, the fourth is the pc register and the fifth is the \ok bit.
+
+Below is the step rule for the Store instruction, illustrating both \NWC and 
+\NXD. Notice that the instruction is fetched by the instruction memory and
+the store is done on the data memory.
+
+\begin{figure}[!htpb]
+\infrule[Store]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Store}~r_p~r_s \andalso
+  \rd{\reg}{r_p} = p \\
+  \rd{\reg}{r_s} = w \andalso
+  \dmem' = \upd{\dmem}{p}{w}
+  }{\step{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem'}{\reg'}{\pc+1}{\ii{true}}}}
+\caption{Step rule for Store instruction of abstract machine}
+\end{figure}
+
+In the above rule, the \ok bit is true for both the starting and the
+resulting state. In fact, the machine can take a step only when the \ok
+bit is set to true. In the abore rule, the \ok bit is set to true in the
+resulting state, indicating that no control-flow violation has happened, as
+expected by the execution of a Store instruction. Control-flow violations in the
+\NWC setting our machine is executing, can only occur from \emph{indirect} jump
+instructions, in our case the Jump and Jal instructions. On each step, these
+instructions are checked against a binary relation on words \J, which expresses
+the set of allowed jumps and is computed statically. If the jump is not allowed
+according to \J then the jump is taken but the \ok bit is set to false, which
+will halt the machine in the next step as it's only allowed to step when the
+\ok bit is set to true.
+
+\begin{figure}[!htpb]
+\infrule[Jal]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Jal}~r \andalso
+  \rd{\reg}{r} = \pc' \\
+  \reg' = \upd{\reg}{\ra}{pc+1} \andalso
+  \ii{ok} = (\pc,\pc') \in \Jm
+  }{\step{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg'}{\pc'}{\ii{ok}}}}
+\bigskip
+
+\infrule[Jump]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Jump}~r \andalso
+  \rd{\reg}{r} = \pc' \andalso
+  \ii{ok} = (\pc,\pc') \in \Jm
+  }{\step{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg'}{\pc'}{\ii{ok}}}}
+\caption{Step rule for Jump and Jal instruction of abstract machine}
+\end{figure}
+
+
