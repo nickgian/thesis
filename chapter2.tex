@@ -172,7 +172,7 @@ Specifically the symbolic machine is parameterized by the following:
 registers and the pc.
 \item A partial function \TRANSFER, that on every step checks whether the
 step is allowed according to opcode of the instruction executed and the tags on
-it. In the case it's allowed it returns a tag for the new pc and for any 
+it. In the case it's allowed it returns a tag for the new pc and a tag for any 
 resulting data from executing the instruction.
 \item A partial function \textit{get\_service}, mapping addresses to 
 \textit{symbolic monitor services}. In the symbolic machine, monitor services
