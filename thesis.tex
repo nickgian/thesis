@@ -1,5 +1,6 @@
 % DOCUMENT FORMAT ==============================================================
 
+\newif\ifdraft  \drafttrue
 
 \documentclass{ntua-thesis} % a4paper,11pt,twoside,titlepage already set
 % \pagestyle{plain} % pagestyle already set
@@ -27,6 +28,14 @@
 \usepackage{xltxtra}
 \usepackage{xspace}
 \usepackage{url}
+\usepackage{color}
+%% \usepackage{rotating}
+\usepackage[format=hang,textformat=simple]{caption}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{bcprules}
+\restylefloat{table}
+\restylefloat{figure}
 \usepackage{hyperref}
 \hypersetup{%
     xetex,
@@ -42,18 +51,11 @@
     pdfsubject={},
     pdfkeywords={}
 }
-%% \usepackage{rotating}
-\usepackage[format=hang,textformat=simple]{caption}
-\usepackage{wrapfig}
-\usepackage{float}
-\usepackage{bcprules}
-\restylefloat{table}
-\restylefloat{figure}
 
-\setromanfont[Mapping=tex-text]{CMU Concrete Roman}
-\setsansfont[Mapping=tex-text]{CMU Concrete Roman}
-\setmonofont[Mapping=tex-text]{CMU Concrete Roman}
-\setmainfont[Mapping=tex-text]{CMU Concrete Roman}
+%\setromanfont[Mapping=tex-text]{CMU Concrete Roman}
+%\setsansfont[Mapping=tex-text]{CMU Concrete Roman}
+%\setmonofont[Mapping=tex-text]{CMU Concrete Roman}
+%\setmainfont[Mapping=tex-text]{CMU Concrete Roman}
 
 
 % CUSTOM COMMANDS ==============================================================
@@ -97,6 +99,31 @@
 \newcommand{\TODO}[1]{(\textcolor{red}{\textbf{TODO:}}~#1)}
 \newcommand{\FEEDBACK}[1]{(\textcolor{green}{\textbf{Feedback:}}~#1)}
 \newcommand{\QUESTION}[1]{(\textcolor{blue}{\textbf{Question:}}~#1)}
+
+\definecolor{dkblue}{rgb}{0,0.1,0.5}
+\definecolor{bluegreen}{rgb}{0,0.5,0.5}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{dkred}{rgb}{0.6,0,0}
+\definecolor{dkpurple}{rgb}{0.7,0,0.4}
+\definecolor{purple}{rgb}{0.7,0,0.7}
+\definecolor{olive}{rgb}{0.5, 0.5, 0.0}
+\definecolor{teal}{rgb}{0.0,0.5,0.5}
+
+\newcommand{\feedback}[1]{\ifdraft{\color{dkred}\em (Feedback: #1)}\fi}
+\newcommand{\ch}[1]{\ifdraft{\color{dkblue}\em (CH: #1)}\fi}
+\newcommand{\chfoot}[1]{\ifdraft\footnote{\color{dkblue}\em (CH: #1)}\fi}
+\newcommand{\chrev}[1]{\ifdraft{\color{dkblue}#1}\else#1\fi}
+\newcommand{\chlater}[1]{\iflater\ifdraft{\color{dkblue}\em (CH: #1)}\fi\fi}
+\newcommand{\bcp}[1]{\ifdraft{\color{blue}\em (BCP: #1)}\fi}
+\newcommand{\bcpfoot}[1]{\ifdraft\footnote{\color{blue}\em (BCP: #1)}\fi}
+\newcommand{\bcprev}[1]{\ifdraft{\color{blue}\em #1}\else #1\fi}
+\newcommand{\bcprevision}[1]{\ifdraft{\color{blue}\em (BCP: #1)}\fi}
+\newcommand{\bcplater}[1]{\ifdraft\iflater{\color{blue}\em (BCP: #1)}\fi\fi}
+\newcommand{\amd}[1]{\ifdraft{\color{purple}\em (AMD: #1)}\fi}
+\newcommand{\amdrevision}[1]{\ifdraft{\color{purple} #1}\fi}
+\newcommand{\ud}[1]{\ifdraft{\color{cyan}[UD -- #1]}\fi}
+\newcommand{\udrev}[1]{\ifdraft{\color{cyan}#1}\else #1\fi}
+\newcommand{\aaa}[1]{\ifdraft{\color{dkgreen}\em (AAA: #1)}\fi}
 
 \newcommand*{\ii}[1]{\textit{#1}}
 
