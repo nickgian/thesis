@@ -12,38 +12,49 @@ which arise from the violation of known but in-practice unenforceable safety
 and security policies.
  
 So far, computer security has been delegated mostly to software, while the 
-hardware is being almost completely controlled by the software. Programming
-languages have evolved, from low-level unmanaged languages, to high-level
-languages with features such as strong type systems and automatic memory
+hardware is being almost completely controlled by the software.
+High-level languages are becoming more widely used,
+due to features such as strong type systems with type inference
+and automatic memory
 management, making programming less error prone and reducing the number of
 exploitable bugs. Furthermore, in order to strengthen the security of computing
-systems a variety of mitigation techniques \TODO{reference some?} have been
+systems a variety of low-level
+mitigation techniques \TODO{reference some? stack canaries, ASLR, $W \oplus X$}
+% http://prosecco.gforge.inria.fr/personal/hritcu/talks/05-control-hijacking-defenses.pdf
+% Úlfar Erlingsson: Low-Level Software Security: Attacks and Defenses. FOSAD 2007: 92-134
+have been
 proposed, however these are mostly ad-hoc solutions designed to prevent specific
-known attacks, rather than enforcing a security policy along with a well defined
-class of attacks that are prevented, thus making it hard to reason about their
+known attacks, rather than enforcing a security policy 
+by preventing a well-defined class of attacks,
+thus making it hard to reason about their
 effectiveness. In fact most of these mitigation techniques can be circumvented
-by attackers, \TODO{reference} which has lead to a continuous ``chase''
+by attackers, \TODO{reference; Overcoming CFI; Eternal War in Memory}
+which has lead to a continuous ``chase''
 between attackers and security researchers.
 
-One common attack technique is to deploy new code in the memory of the
-vulnerable program and then exploit some low-level vulnerability such as a
-buffer overflow to redirect the control flow to this attacker code. This attack
+One common attack technique is to 
+exploit some low-level vulnerability such as a
+buffer overflow to redirect the control flow to 
+attacker injected code. This attack
 can be stopped by a simple protection scheme known as $W \oplus X$, which
-enforces that a memory region is either executable or writable but not both.
-Unfortunately, new attack techniques can easily bypass $W \oplus X$. In
+enforces that a memory page is either executable or writable but not both.
+Unfortunately, clever attack techniques can bypass $W \oplus X$. In
 particular, attackers have been using code-reuse attacks
 (e.g. return/jump - oriented programming) that allows them to chain together
 existing pieces of code to achieve malicious behavior without directly
 introducing new code.
+Abadi~\ETAL\cite{abadi2005}
+introduced a property called Control Flow Integrity (CFI),
+which provides effective protection against control-flow hijacking attacks.
+CFI enforces that any execution of a program will
+respect a statically computed control flow graph (CFG).
+\FEEDBACK{missing references throughout}
 
-The goal of this thesis is to describe and formalize in Coq a novel
-hardware-assisted implementation of an effective mitigation technique called
-Control Flow Integrity (CFI). CFI enforces that any execution of a program will
-respect a statically computed control flow graph (CFG), thus stopping a wide
-range of attacks that attempt to modify the control flow. As part of the
-formalization effort, following the work of Abadi \ETAL \cite{abadi2005}, we 
-provide an attacker model and prove a variant of the CFI property described in
-\cite{abadi2005}.
+The goal of this thesis is to formalize and verify a reference monitor
+for CFI, based on a generic hardware-assisted dynamic enforcement
+mechanism.
+We provide a precise attacker model and prove a variant of the CFI property
+proposed by Abadi~\ETAL\cite{abadi2005}.
 
 \section{Thesis Outline}\label{sec:outline}
 Map
