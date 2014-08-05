@@ -1,5 +1,6 @@
-\chapter{Safety and Security Policies}\label{ch:policies}
-Currently the hardware provides only a small number of security mechanisms \TODO{name some}, 
+\chapter{Micro-policies: A Framework for Verified, Hardware-Assisted Security Monitors}\label{ch:policies}
+Currently the hardware provides very limited security mechanisms \TODO{name some;
+  4 protection rings, page-level memory protection via virtual memory}, 
 leaving most of the work to the software. This requires that the software 
 performs various sanity-checks during an execution and that it carefully 
 maintains various safety and security invariants, a tedious and error-prone task
@@ -25,7 +26,421 @@ or complete Memory Safety (spatial/temporal protection for heap and stack).
 In addition, we still need effective and efficient protection mechanisms for a 
 plethora of software written in unsafe languages such as C.
 
+\FEEDBACK{More text introducing micro-policies:
+instruction-level security monitoring mechanisms based
+on fine-grained metadata tags (PUMP is just a way of implementing this 
+  efficiently)
+}
+
+\FEEDBACK{Can the main idea of the CFI micro-policy be introduced here
+  already? See grant proposal.}
+
+Our key motivating insight is that a wide range of policies can
+be dynamically enforced by tagging all data with {\em metadata tags}
+describing its
+provenance or security restrictions (\EG ``this is an instruction,'' ``this
+came from the network,'' ``this is secret,'' ``this is sealed with key
+$k$''), propagating the metadata as instructions are executed, and checking
+that policy rules about the metadata are enforced throughout the
+computation.  We use the term {\em micro-policies} for such
+mechanisms---i.e., for instruction-level security-monitoring mechanisms
+based on fine-grained metadata.  Our goal is to develop a generic framework
+for defining, reasoning about, and implementing micro-policies.
+
+More precisely, a micro-policy consists of
+\begin{enumerate}
+\item a set of {\em metadata tags} that are used to tag each piece of data in
+the memory and registers (including the PC)
+\item a {\em transfer function} that, given the current opcode and the tags
+on the current instruction, the PC, and the operands of the instruction,
+specifies how the PC and the instruction's result should be tagged in the
+next machine state
+\item a description of how to annotate
+  the {\em initial state} of a process with tags
+\item for some micro-policies, a set of {\em monitor services} that can be
+invoked by user code.
+\end{enumerate}
+
+\ch{should at least mention that this can be done efficiently (and
+  maybe reference PUMP section)}
+
+\section{Control-Flow Integrity Micro-Policy}
+
+\ch{Make it clearer that this is informal and
+  you will return to the formalization later on}
+
+\ch{Could break up NXD+NWC from CFI; could keep only the NXD+NWC
+  part here, and have the CFI part in next chapter?}
+
+We begin with a micro-policy targeting control-flow hijacking attacks,
+in which an attacker exploits a low-level vulnerability (e.g. a buffer
+or integer overflow) to gain full control of a target program~\cite{
+  ShellcoderHandbook, Szekeres2013, Smashing1996, SkyLined, PincusB04,
+  Sotirov07, DanielHM08, AfekS07, Dobrovitski03}.
+%
+As a first line of defense, we can use tags to make code non-writable
+(NWC) and data non-executable (NXD), preventing the injection and
+execution of an attacker payload.
+%
+This useful defense appears in various forms in existing systems.
+However, it does not prevent code-reuse attacks~\cite{Newsham1997,
+  SolarDesigner1997, McDonald1999, Shacham07, Checkoway2010,
+  Buchanan2008, SnowMDDLS13, outofcontrol_ieeesp2014} such as return- or
+jump-oriented programming~\cite{Shacham07, Checkoway2010}, where the
+attacker chains together existing code snippets (``gadgets'') to induce
+arbitrary malicious behavior.
+%
+We therefore use tags to enforce fine-grained {\em control-flow integrity
+  (CFI)}~\cite{AbadiBEL09, ZhaoLSR11, Zhang2013, CriswellDA14, NiuT14,
+  ZhaoLSR11, CriswellDA14} on top of basic NWC and NXD protection.
+%
+This ensures that all indirect control flows (computed jumps) adhere
+to a fixed control flow graph (CFG).
+
+\newcommand{\CODEname}[0]{\ii{Code}}
+\newcommand{\CODE}[1]{\CODEname~#1}
+
+\makeatletter
+\newdimen\OPCODEwidth
+\OPCODEwidth .5in
+\newdimen\RULEwidth
+\newcommand{\TRUE}{\text{\tt true}}
+\newcommand{\RULE}[9]{
+\gdef\RULEARROW{\ifthenelse{\equal{#7}{}}{\Rightarrow}{\rightarrow}}  % HACK!
+\gdef\RULEINPUT{(#2,#3,#4,#5,#6)}
+\gdef\RULEOUTPUT{(#8,#9)}
+\gdef\RULECOND{%
+  \ifthenelse{\equal{#7}{}}{}%
+             {\ifthenelse{\equal{#7}{\TRUE}}{}%
+                         {\mathrm{\;if\;}#7}}%
+}
+&& \hspace*{-18.5em}
+  \hbox to 1in {
+      \hbox to \OPCODEwidth {\ifx&#1&\else$#1$\ : \fi}
+      % See how big it is on one line
+      \setbox \@tempboxa \hbox{$\RULEINPUT \RULEARROW \RULEOUTPUT \RULECOND$}
+      \RULEwidth \wd\@tempboxa
+      % Does it fit?
+      \ifdim \RULEwidth < 2.4in
+        % Use it
+        \box\@tempboxa
+      \else\ifdim \RULEwidth < 4.8in
+        % Put it on two lines
+        $ \hspace*{-1.3em}
+        \begin{array}[t]{@{}l@{\ }l}
+            & \RULEINPUT \\
+            \RULEARROW
+            & \RULEOUTPUT\RULECOND
+        \end{array}
+       $
+      \else
+        % Put it on three lines
+        $ \hspace*{-1.3em}
+        \begin{array}[t]{@{}l@{}l}
+            & \ \RULEINPUT \\
+            \RULEARROW
+            & \ \RULEOUTPUT \\
+            & \RULECOND
+        \end{array}
+       $
+     \fi\fi
+  }
+}
+
+\newcommand{\RULEWITHPREMISE}[9]{
+\typicallabel{}
+  \infrule{#7}{\ii{#1} : (#2, #3, #4, #5, #6) \to (#8,#9)}
+\typicallabel{MkKey}
+}
+
+We use tags to distinguish between code and data.
+%
+Tags on memory and the PC are drawn from the set
+%
+$
+\DATA \;|\; \CODE{\ii{addr}} \;|\; \CODE{\bot}
+$
+(registers are always tagged $\DATA$).
+%
+To simplify the CFG conformance checks, instructions that are the
+source or target of indirect control flows are tagged with
+$\CODE{\ii{addr}}$, where $\ii{addr}$ is the address of that
+instruction in memory.
+%
+For example, a $\ii{Jump}$ instruction stored at address $500$ is
+tagged $\CODE{500}$.
+%
+All other instructions are tagged $\CODE{\bot}$.
+%
+\aaa{Actually, we can't use the instruction's address on the tag if we
+  are to have the same number of bits on words and tags. Maybe change
+  to ``id''?}
+
+We write transfer functions as a collection of {\em
+  symbolic rules}~\cite{popl2015, pump_hasp2014}.
+% \ch{Should we remove all references to \cite{pump_ccs2014}?}
+% BCP: yes
+%
+(The PUMP hardware uses a lower-level {\em concrete rule} format, 
+described in \autoref{implementation}.)
+%
+Each symbolic rule has the form
+%
+% \begin{eqnarray*}
+% \RULE
+%   {\mathit{opcode}}
+%   {\mathit{PC}}{\mathit{CI}}{\mathit{OP_1}}{\mathit{OP_2}}{\mathit{OP_3}}
+%   {\TRUE}
+%   {\mathit{PC'}}{\mathit{R'}}
+% \end{eqnarray*}
+%
+\newcommand{\INLINERULE}[8]{\mathit{#1}
+\mathrel{:}\allowbreak
+ ({\mathit{#2}},\allowbreak{\mathit{#3}},\allowbreak{\mathit{#4}},\allowbreak{\mathit{#5}},\allowbreak{\mathit{#6}})
+ \rightarrow\allowbreak ({\mathit{#7}},\allowbreak{\mathit{#8}})
+}%
+``$\INLINERULE{opcode}{PC}{CI}{OP_1}{OP_2}{OP_3}{PC'}{R'}$,''
+%
+which says that the rule matches on the given {\it opcode} together
+with the metadata tags on the program counter ($\mathit{PC}$), the
+current instruction ($\mathit{CI}$), and on up to three operands
+($\mathit{OP_1}$ to $\mathit{OP_3}$).
+%
+\aaa{Eventually, it would be nice to have variadic rules with a number
+  of operands that depends on the opcode. The POPL symbolic machine is
+  soon going to support this new format}%
+If the rule applies, the right-hand side determines how to update the
+tags on the PC ($\mathit{PC'}$) and on the result of the operation
+($\mathit{R'}$).
+%
+We write ``$-$'' to indicate input or output fields that are ignored
+(``wildcard'').
+%
+\chrev{All instructions that are not explicitly allowed by the
+  symbolic rules are disallowed.}%
+\aaa{We should choose only one of $-$ or $\_$ for our wildcard and use
+  it consistently (cf. the ``Store'' rule below)}%
+
+The CFI transfer function enforces that only memory locations tagged
+$\DATA$ can be modified (NWC) and only instructions fetched from
+locations tagged $\CODEname$ can be executed (NXD).
+%
+The symbolic rule for the $\ii{Store}$ instruction illustrates both
+these points:
+%
+\begin{eqnarray*}
+\INLINERULE
+  {\ii{Store}}
+  {\DATA}{\CODE{\text{\textunderscore}\,}}{-}{-}{\DATA}
+  {\DATA}{-}
+\end{eqnarray*}
+%
+It requires the fetched $\ii{Store}$ instruction to be tagged
+$\CODEname$ and the written location to be tagged $\DATA$.
+%
+This rule only applies when the PC is also tagged $\DATA$, which is
+the case when the $\ii{Store}$ instruction was reached by direct
+control flow (not a computed jump).
+%
+The rule preserves the $\DATA$ tag on the PC, since $\ii{Store}$ is
+not a computed jump.
+%
+Performing a computed jump (\EG using \ii{Jal}, a
+jump-and-link instruction) requires that the current instruction be
+tagged $\CODE{\ii{src}}$ for some address $\ii{src}$.
+%
+\begin{eqnarray*}
+\INLINERULE
+  {\ii{Jal}}
+  {\DATA}{\CODE{\ii{src}}}{-}{-}{-}
+  {\CODE{\ii{src}}}{-}
+\end{eqnarray*}
+%
+This rule copies $\CODE{\ii{src}}$ to the PC tag to indicate
+that a jump from \ii{src} has just occurred.
+%
+Only on the next instruction do we have enough information about the
+destination in the tags to check that the jump is indeed allowed by
+the CFG.
+%
+For this we add a second rule for \ii{Store}, dealing with the case
+where it is the target of a jump and thus the PC is tagged
+$\CODE{\ii{src}}$.
+%
+\RULEWITHPREMISE
+  {\ii{Store}}
+  {\CODE{\ii{src}}}{\CODE{\ii{tgt}}}{-}{-}{\DATA}
+  {(\ii{src},\ii{tgt}) \in \ii{CFG}}
+  {\DATA}{-}
+%
+\aaa{Maybe we could discuss here a little bit why we verify the jump
+  on the next instruction, as opposed to when the jump is
+  performed. This might get some people confused, since this is not
+  very natural and fundamentally driven by our current design of the
+  PUMP. Even Nick wanted to know if we couldn't do it differently.}%
+  The premise of this rule ensures that the source and target of the
+  just-performed jump are allowed by the CFG.
+%
+  We add a similar rule for each instruction, including jumps (since
+  the target of a computed jump can itself be another computed
+  jump):
+%
+\RULEWITHPREMISE
+{\ii{Jal}}
+{\CODE{\ii{src}}}{\CODE{\ii{tgt-src}}}{-}{-}{-}
+{(\ii{src},\ii{tgt-src}) \in \ii{CFG}}
+{\CODE{\ii{tgt-src}}}{-}
+
+This micro-policy enforces fine-grained CFI~\cite{NiuT14,
+  outofcontrol_ieeesp2014, CriswellDA14}, not coarse-grained
+approximations~\cite{AbadiBEL09, Zhang2013} that are potentially vulnerable
+to attack~\cite{outofcontrol_ieeesp2014}.  Indeed, we recently
+proved~\cite{popl2015} that this micro-policy enforces a variant of the CFI
+property introduced by Abadi~\ETAL\cite{AbadiBEL09}, ensuring that all
+indirect control flows adhere to a fixed CFG.
+%
+Recent simulations of an optimized PUMP architecture~\cite{pump_asplos2015}
+show that the CFI policy can be enforced with around 3\% average runtime
+overhead.
+
+
+\section{Formalization and Verification of Micro-Policies}\label{sec:micropolicies}
+
+The software components that can be changed to enforce a security policy
+are collectively called a micro-policy.\FEEDBACK{Should be quite useless once
+  micro-policies are defined at the beginning of chapter}
+Unsurprisingly, designing a security policy, reasoning about it's effectiveness 
+against potential attackers and encoding it as a micro-policy can become a 
+complex task. Azevedo \ETAL \cite{pump_popl2015} built a generic framework for
+defining micro-policies on top of a simple machine modeling a RISC processor 
+augmented with the PUMP hardware (referred to as concrete machine), formalized
+this framework in Coq and used it to define and formally verify micro-policies
+for dynamic sealing, control-flow integrity, memory safety, compartmentalization
+and protecting the monitor code itself.
+\FEEDBACK{maybe I should mention the word monitor at some point earlier}
+
+The framework offers a high-level machine, called the symbolic machine, that
+abstracts away from unnecessary implementation details and can be used as an 
+interface to the concrete machine, simplifying the work of the micro-policy 
+designer. Additionally the symbolic machine is used to simplify correctness 
+proofs. To instantiate the symbolic machine, the micro-policy designer needs to
+provide a set of symbolic tags which will be used to tag the various values of
+the machine, a transfer function that monitors program execution and determines
+how tags are propagated in each step and optionally a set of monitor services 
+that are partial functions from machine states to machine states and can be used
+to control the monitor's behavior dynamically.
+
+In order to implement the micro-policy at the concrete machine level, one needs
+to additionally provide machine code that implements the transfer function, an
+encoding of tags to words and machine code for any monitor services that the
+micro-policy may use. The relation between the symbolic and the concrete machine
+is formally defined as a two-way refinement (forward and backward). This is a 
+generic refinement proof, parameterized by the encoding of the symbolic tags to
+words and a proof of correctness of the monitor code for a micro-policy.
+The designer of a micro-policy can use this two-way refinement simply by
+providing these two parameters.
+
+\subsection{Correctness of micro-policies}\label{sec:verification}
+
+For each micro-policy an abstract machine which serves as a specification to the
+invariants the policy designer wants to enforce is defined. The abstract machine 
+is ``correct'' by construction, meaning that it's designed to respect those 
+invariants. Using the symbolic machine as an intermediate step to simplify the
+proofs, by proving a refinement between the symbolic and the abstract machine 
+and by utilizing the the generic refinement between the symbolic and the
+concrete machine, we can prove a refinement between the abstract and
+the concrete machine, thus showing that every valid step for the concrete
+machine is also a valid step for the abstract machine. 
+\FEEDBACK{say smth about steps and refinement earlier..}
+
+All the machines introduced in the original paper by Azevedo \ETAL 
+\cite{pump_popl2015}, 
+as well as this thesis, have a similar structure. In particular, they share a
+common RISC-based instruction set (with a few - uninteresting for the scope of
+this thesis - exceptions) and they have a fixed number of general-purpose
+registers, along with a pc register. Of course the abstract machine defined
+by the policy designer can differ in various ways, but more similarities with
+the symbolic machine implies easier proofs of correctness.
+
+\FEEDBACK{Introduce the (names of the) various machines and
+  how they relate to each-other. Nice diagram?}
+
+\subsection{Symbolic Machine}\label{sec:symbolic}
+
+As mentioned above, the symbolic machine enables us to abstract away from 
+various low-level details of the concrete machine. We can express and reason
+about policies in terms of mathematical objects written in Gallina rather than
+machine code and the corresponding proofs for the concrete machine comes for 
+free under some assumptions. The symbolic machine follows the structure of the 
+basic machine but it's augmented to better match a PUMP architecture. 
+Specifically the symbolic machine is parameterized by the following:
+\begin{itemize}
+\item A set of symbolic tags, used to tag the contents of the memory, the
+registers and the pc.
+\item A partial function \TRANSFER, that on every step checks whether the
+step is allowed according to opcode of the instruction executed and the tags on
+it. In the case it's allowed it returns a tag for the new pc and a tag for any 
+resulting data from executing the instruction.
+\item A partial function \textit{get\_service}, mapping addresses to 
+\textit{symbolic monitor services}. In the symbolic machine, monitor services
+are represented as a tuple of a partial function on machine states and a
+symbolic tag.
+\item An internal machine state with an initial value, that can be used by 
+monitor services.
+\end{itemize}
+
+The states of the symbolic machine consists of a memory, registers, a \pc 
+register and an internal state.
+The memory  and register contents, as well as the \pc, are all tagged with a
+symbolic tag \textit{t}. We name their contents \textit{symbolic atoms} referred
+to with the notation \atom{\ii{w}}{\ii{t}}, where \ii{w} is the value (word) and
+\ii{t} is the tag.
+
+At each step, a record named \emph{mvector} is formed. It consists of the 
+current opcode, the tag on the \pc, the tag on the current instruction and 
+optionally up to three tags depending on the opcode of the instruction.
+The \emph{mvector} is passed to the transfer function
+which decides whether the step violated the policy enforced by the \TRANSFER
+function and in this case halts the machine, or if no violation occurred returns
+a tag for the new \pc and a tag for any results the instruction execution 
+produced.
+
+We write, in form of inference rules, the stepping relation for the Store and 
+Jump instructions, in order to demonstrate the above mechanism. The complete
+definition of the stepping relation can be found at \TODO{cite appendix}
+
+\begin{figure}[!htpb]
+\infrule[Store]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s  \\
+  \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
+  \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
+  \rd{\mem}{w_p} {=} \atom{w\old}{t\old} \\
+  \handler{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
+  \mem' = \upd{\mem}{w_p}{w_s@t_d'}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem'}{\reg}{\atom{\pc + 1}{\tpc'}}{int}}
+  }
+\bigskip
+
+\infrule[Jump]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jump}~r \andalso
+  \rd{\reg}{r} {=} \atom{w}{t_w} \\
+  \handler{\ii{Jump}}{\tpc}{\ti}{t_w}{-}{-} {\tpc'}{-}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg}{\atom{w}{\tpc'}}{int}}
+  }
+\caption{Symbolic stepping relation for Store and Jump}
+\end{figure}
+
+Notice that when a store instruction executed, the tag on the memory location to
+be overwritten is fetched, allowing the \TRANSFER function to know what kind of
+data we are trying to overwrite.
+
 \section{A Programmable Unit for Metadata Processing}\label{sec:pump}
+
+\ch{Could consider moving this one level up (turn it into chapter)}
+
+\subsection{Hardware Architecture}
 
 The Programmable Unit for Metadata Processing (PUMP) architecture
 \cite{pump_hasp2014}
@@ -95,139 +510,8 @@ In addition, the extra hardware and the rule cache along with potentially larger
 memories could result into a 400\% overhead on energy usage. \cite{pump_ccs2014}
 The authors claim that a careful and well-optimized implementation can reduce 
 these numbers, resulting in a 50\% energy overhead.
-
-\section{Micro-policies: A Framework for Verified, Hardware-Assisted Security 
-Monitors}\label{sec:micropolicies}
-
-The software components that can be changed to enforce a security policy
-are collectively called a micro-policy.
-Unsurprisingly, designing a security policy, reasoning about it's effectiveness 
-against potential attackers and encoding it as a micro-policy can become a 
-complex task. Azevedo \ETAL \cite{pump_popl2015} built a generic framework for
-defining micro-policies on top of a simple machine modeling a RISC processor 
-augmented with the PUMP hardware (referred to as concrete machine), formalized
-this framework in Coq and used it to define and formally verify micro-policies
-for dynamic sealing, control-flow integrity, memory safety, compartmentalization
-and protecting the monitor code itself.
-\FEEDBACK{maybe I should mention the word monitor at some point earlier}
-
-The framework offers a high-level machine, called the symbolic machine, that
-abstracts away from unnecessary implementation details and can be used as an 
-interface to the concrete machine, simplifying the work of the micro-policy 
-designer. Additionally the symbolic machine is used to simplify correctness 
-proofs. To instantiate the symbolic machine, the micro-policy designer needs to
-provide a set of symbolic tags which will be used to tag the various values of
-the machine, a transfer function that monitors program execution and determines
-how tags are propagated in each step and optionally a set of monitor services 
-that are partial functions from machine states to machine states and can be used
-to control the monitor's behavior dynamically.
-
-In order to implement the micro-policy at the concrete machine level, one needs
-to additionally provide machine code that implements the transfer function, an
-encoding of tags to words and machine code for any monitor services that the
-micro-policy may use. The relation between the symbolic and the concrete machine
-is formally defined as a two-way refinement (forward and backward). This is a 
-generic refinement proof, parameterized by the encoding of the symbolic tags to
-words and a proof of correctness of the monitor code for a micro-policy.
-The designer of a micro-policy can use this two-way refinement simply by
-providing these two parameters.
-
-\subsection{Correctness of micro-policies}\label{sec:verification}
-
-For each micro-policy an abstract machine which serves as a specification to the
-invariants the policy designer wants to enforce is defined. The abstract machine 
-is ``correct'' by construction, meaning that it's designed to respect those 
-invariants. Using the symbolic machine as an intermediate step to simplify the
-proofs, by proving a refinement between the symbolic and the abstract machine 
-and by utilizing the the generic refinement between the symbolic and the
-concrete machine, we can prove a refinement between the abstract and
-the concrete machine, thus showing that every valid step for the concrete
-machine is also a valid step for the abstract machine. 
-\FEEDBACK{say smth about steps and refinement earlier..}
-
-\subsection{Basic Machine}\label{sec:basic}
-
-All the machines introduced in the original paper by Azevedo \ETAL 
-\cite{pump_popl2015}, 
-as well as this thesis, have a similar structure. In particular, they share a
-common RISC-based instruction set (with a few - uninteresting for the scope of
-this thesis - exceptions) and they have a fixed number of general-purpose
-registers, along with a pc register. Of course the abstract machine defined
-by the policy designer can differ in various ways, but more similarities with
-the symbolic machine implies easier proofs of correctness.
-
-\TODO{write down a few rules?}
-
-\subsection{Symbolic Machine}\label{sec:symbolic}
-
-As mentioned above, the symbolic machine enables us to abstract away from 
-various low-level details of the concrete machine. We can express and reason
-about policies in terms of mathematical objects written in Gallina rather than
-machine code and the corresponding proofs for the concrete machine comes for 
-free under some assumptions.The symbolic machine follows the structure of the 
-basic machine but it's augmented to better match a PUMP architecture. 
-Specifically the symbolic machine is parameterized by the following:
-\begin{itemize}
-\item A set of symbolic tags, used to tag the contents of the memory, the
-registers and the pc.
-\item A partial function \TRANSFER, that on every step checks whether the
-step is allowed according to opcode of the instruction executed and the tags on
-it. In the case it's allowed it returns a tag for the new pc and a tag for any 
-resulting data from executing the instruction.
-\item A partial function \textit{get\_service}, mapping addresses to 
-\textit{symbolic monitor services}. In the symbolic machine, monitor services
-are represented as a tuple of a partial function on machine states and a
-symbolic tag.
-\item An internal machine state with an initial value, that can be used by 
-monitor services.
-\end{itemize}
-
-The states of the symbolic machine consists of a memory, registers, a \pc 
-register and an internal state.
-The memory  and register contents, as well as the \pc, are all tagged with a
-symbolic tag \textit{t}. We name their contents \textit{symbolic atoms} referred
-to with the notation \atom{\ii{w}}{\ii{t}}, where \ii{w} is the value (word) and
-\ii{t} is the tag.
-
-At each step, a record named \emph{mvector} is formed. It consists of the 
-current opcode, the tag on the \pc, the tag on the current instruction and 
-optionally up to three tags depending on the opcode of the instruction.
-The \emph{mvector} is passed to the transfer function
-which decides whether the step violated the policy enforced by the \TRANSFER
-function and in this case halts the machine, or if no violation occurred returns
-a tag for the new \pc and a tag for any results the instruction execution 
-produced.
-
-We write, in form of inference rules, the stepping relation for the Store and 
-Jump instructions, in order to demonstrate the above mechanism. The complete
-definition of the stepping relation can be found at \TODO{cite appendix}
-
-\begin{figure}[!htpb]
-\infrule[Store]{
-  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s  \\
-  \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
-  \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
-  \rd{\mem}{w_p} {=} \atom{w\old}{t\old} \\
-  \handler{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
-  \mem' = \upd{\mem}{w_p}{w_s@t_d'}
-  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
-  {\astat{\mem'}{\reg}{\atom{\pc + 1}{\tpc'}}{int}}
-  }
-\bigskip
-
-\infrule[Jump]{
-  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jump}~r \andalso
-  \rd{\reg}{r} {=} \atom{w}{t_w} \\
-  \handler{\ii{Jump}}{\tpc}{\ti}{t_w}{-}{-} {\tpc'}{-}
-  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
-  {\astat{\mem}{\reg}{\atom{w}{\tpc'}}{int}}
-  }
-\caption{Symbolic stepping relation for Store and Jump}
-\end{figure}
-
-Notice that when a store instruction executed, the tag on the memory location to
-be overwritten is fetched, allowing the \TRANSFER function to know what kind of
-data we are trying to overwrite.
+%
+\FEEDBACK{Cite ASPLOS instead of CCS; use optimized numbers}
 
 \subsection{Concrete Machine}\label{sec:concrete}
 
@@ -292,3 +576,4 @@ One important thing to note is that the miss handler for the concrete machine
 can take an arbitrary number of steps before deciding that no violation occurred
 and returning to \USERname  mode, unlike the symbolic \TRANSFER function that
 does not need to take any steps.
+
