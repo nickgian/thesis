@@ -50,11 +50,21 @@ CFI enforces that any execution of a program will
 respect a statically computed control flow graph (CFG).
 \FEEDBACK{missing references throughout}
 
-The goal of this thesis is to formalize and verify a reference monitor
-for CFI, based on a generic hardware-assisted dynamic enforcement
-mechanism.
-We provide a precise attacker model and prove a variant of the CFI property
-proposed by Abadi~\ETAL\cite{abadi2005}.
+The main contribution of this thesis is the formalization and
+verification of a dynamic monitor for CFI, based on a generic
+hardware-software security mechanism.
+%
+We provide a precise attacker model and prove in Coq that the monitor
+enforces a variant of the CFI property proposed by
+Abadi~\ETAL\cite{abadi2005}.
+%
+To obtain this result we prove refinement between a concrete
+machine running a monitor satisfying our Coq specification
+and an abstract machine having CFI by construction.
+%
+We conclude the proof using a novel generic result stating that under
+certain assumptions CFI is preserved by refinement.
+\FEEDBACK{Is there anything missing here?}
 
 \section{Thesis Outline}\label{sec:outline}
 Map
@@ -66,13 +76,13 @@ Map
 5. Conclusions and Future work
 6. Related work
 
-Chapter 2 of this thesis briefly describes the basic requirments a security
+Chapter 2 of this thesis briefly describes the basic requirements a security
 policy must satisfy and puts into context the framework we utilize in order
 to formalize and enforce a Control-Flow Integrity (CFI) policy.
 Chapter 3 discusses the current state of research on Control-Flow Integrity 
 and clarifies our goals and contributions to it.
 Chapter 4 describes in detail the design of a fine-grained CFI policy and
-how we used the framework from Chapter 2 in order to enfore the policy
+how we used the framework from Chapter 2 in order to enforce the policy
 and formally reason about it's security properties.
 Chapter 5.. conclusions, future work?
 Chapter 6.. related work and bibliography?
