@@ -1,4 +1,4 @@
-\chapter{Micro-policies: A Framework for Verified, Hardware-Assisted Security Monitors}\label{ch:policies}
+\chapter{Micro-policies: Verified, Hardware-Assisted Monitors}\label{ch:policies}
 Currently the hardware provides very limited security mechanisms \TODO{name some;
   4 protection rings, page-level memory protection via virtual memory}, 
 leaving most of the work to the software. This requires that the software 
@@ -25,6 +25,8 @@ more effective policies such as Control Flow Integrity
 or complete Memory Safety (spatial/temporal protection for heap and stack). 
 In addition, we still need effective and efficient protection mechanisms for a 
 plethora of software written in unsafe languages such as C.
+
+\section{Micro-Policies}
 
 \FEEDBACK{More text introducing micro-policies:
 instruction-level security monitoring mechanisms based
@@ -59,252 +61,72 @@ next machine state
   the {\em initial state} of a process with tags
 \item for some micro-policies, a set of {\em monitor services} that can be
 invoked by user code.
+%\ch{CFI doesn't use this itself, but virtualizes
+%  the mechanism!}
 \end{enumerate}
 
 \ch{should at least mention that this can be done efficiently (and
   maybe reference PUMP section)}
 
-\section{Control-Flow Integrity Micro-Policy}
+\section{Example:
+  Non-Writable Code \& Non-Executable Data}
+\label{sec:nwc_nxd}
 
 \ch{Make it clearer that this is informal and
   you will return to the formalization later on}
 
-\ch{Could break up NXD+NWC from CFI; could keep only the NXD+NWC
-  part here, and have the CFI part in next chapter?}
+\ch{Symbolic vs concrete rules ... should introduce symbolic rules first,
+  although this is a quite trivial example; ALT: write these as pseudo-Coq
+  functions?}
 
-We begin with a micro-policy targeting control-flow hijacking attacks,
-in which an attacker exploits a low-level vulnerability (e.g. a buffer
-or integer overflow) to gain full control of a target program~\cite{
-  ShellcoderHandbook, Szekeres2013, Smashing1996, SkyLined, PincusB04,
-  Sotirov07, DanielHM08, AfekS07, Dobrovitski03}.
-%
-As a first line of defense, we can use tags to make code non-writable
-(NWC) and data non-executable (NXD), preventing the injection and
-execution of an attacker payload.
-%
-This useful defense appears in various forms in existing systems.
-However, it does not prevent code-reuse attacks~\cite{Newsham1997,
-  SolarDesigner1997, McDonald1999, Shacham07, Checkoway2010,
-  Buchanan2008, SnowMDDLS13, outofcontrol_ieeesp2014} such as return- or
-jump-oriented programming~\cite{Shacham07, Checkoway2010}, where the
-attacker chains together existing code snippets (``gadgets'') to induce
-arbitrary malicious behavior.
-%
-We therefore use tags to enforce fine-grained {\em control-flow integrity
-  (CFI)}~\cite{AbadiBEL09, ZhaoLSR11, Zhang2013, CriswellDA14, NiuT14,
-  ZhaoLSR11, CriswellDA14} on top of basic NWC and NXD protection.
-%
-This ensures that all indirect control flows (computed jumps) adhere
-to a fixed control flow graph (CFG).
+\ch{Rename Instr to Code?}
 
-\newcommand{\CODEname}[0]{\ii{Code}}
-\newcommand{\CODE}[1]{\CODEname~#1}
+Consider the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
+all executable regions in memory as \INSTR{} and all non-executable as \DATAname
+then we can enforce \NWC by two rules of the form
 
-\makeatletter
-\newdimen\OPCODEwidth
-\OPCODEwidth .5in
-\newdimen\RULEwidth
-\newcommand{\TRUE}{\text{\tt true}}
-\newcommand{\RULE}[9]{
-\gdef\RULEARROW{\ifthenelse{\equal{#7}{}}{\Rightarrow}{\rightarrow}}  % HACK!
-\gdef\RULEINPUT{(#2,#3,#4,#5,#6)}
-\gdef\RULEOUTPUT{(#8,#9)}
-\gdef\RULECOND{%
-  \ifthenelse{\equal{#7}{}}{}%
-             {\ifthenelse{\equal{#7}{\TRUE}}{}%
-                         {\mathrm{\;if\;}#7}}%
-}
-&& \hspace*{-18.5em}
-  \hbox to 1in {
-      \hbox to \OPCODEwidth {\ifx&#1&\else$#1$\ : \fi}
-      % See how big it is on one line
-      \setbox \@tempboxa \hbox{$\RULEINPUT \RULEARROW \RULEOUTPUT \RULECOND$}
-      \RULEwidth \wd\@tempboxa
-      % Does it fit?
-      \ifdim \RULEwidth < 2.4in
-        % Use it
-        \box\@tempboxa
-      \else\ifdim \RULEwidth < 4.8in
-        % Put it on two lines
-        $ \hspace*{-1.3em}
-        \begin{array}[t]{@{}l@{\ }l}
-            & \RULEINPUT \\
-            \RULEARROW
-            & \RULEOUTPUT\RULECOND
-        \end{array}
-       $
-      \else
-        % Put it on three lines
-        $ \hspace*{-1.3em}
-        \begin{array}[t]{@{}l@{}l}
-            & \ \RULEINPUT \\
-            \RULEARROW
-            & \ \RULEOUTPUT \\
-            & \RULECOND
-        \end{array}
-       $
-     \fi\fi
-  }
-}
+\begin{figure}[!htpb]
+\begin{align*}
+ & (Store, \_,\_, \_, \_,\INSTR) \not\rightarrow
+\text{\ch{or better just leave out}}\\
+ & (Store, \_,\_, \_, \_,\DATA) \rightarrow (\_, \DATA)
+\\
+& \text{\ch{Missing allow non-Stores rule}}
+\end{align*}
+\caption{Rules enforcing \NWC}
+\end{figure}
 
-\newcommand{\RULEWITHPREMISE}[9]{
-\typicallabel{}
-  \infrule{#7}{\ii{#1} : (#2, #3, #4, #5, #6) \to (#8,#9)}
-\typicallabel{MkKey}
-}
+The \_ in the vectors, represent \textit{don't care} values. In the context of
+the input vector their behavior is the same as \textit{don't care} values in
+match expressions in ML languages. In the context of the output vector it just
+captures the intuition that we will not really use the result tags, so anything
+could be returned as a result tag (\IE \DATAname or we can copy-through tags
+from the input vector).
+Informally the above rules reads as ``If the current opcode is Store and the
+content of the memory location we are trying to write is tagged \INSTR{}
+then the memory write is not allowed. Otherwise if it is tagged \DATAname then
+the write is permitted and the new value will also be tagged \DATA.''
 
-We use tags to distinguish between code and data.
-%
-Tags on memory and the PC are drawn from the set
-%
-$
-\DATA \;|\; \CODE{\ii{addr}} \;|\; \CODE{\bot}
-$
-(registers are always tagged $\DATA$).
-%
-To simplify the CFG conformance checks, instructions that are the
-source or target of indirect control flows are tagged with
-$\CODE{\ii{addr}}$, where $\ii{addr}$ is the address of that
-instruction in memory.
-%
-For example, a $\ii{Jump}$ instruction stored at address $500$ is
-tagged $\CODE{500}$.
-%
-All other instructions are tagged $\CODE{\bot}$.
-%
-\aaa{Actually, we can't use the instruction's address on the tag if we
-  are to have the same number of bits on words and tags. Maybe change
-  to ``id''?}
+We can enforce \NXD in a similar fashion
+\begin{figure}[!htpb]
+\begin{align*}
+ & (-, -,\DATA, -, -, -) \rightarrow \varnothing \\
+ & (-, -,\INSTR, -, -,-) \rightarrow (-, -)
+\end{align*}
+\caption{Rules enforcing \NXD}
+\end{figure}
 
-We write transfer functions as a collection of {\em
-  symbolic rules}~\cite{popl2015, pump_hasp2014}.
-% \ch{Should we remove all references to \cite{pump_ccs2014}?}
-% BCP: yes
-%
-(The PUMP hardware uses a lower-level {\em concrete rule} format, 
-described in \autoref{implementation}.)
-%
-Each symbolic rule has the form
-%
-% \begin{eqnarray*}
-% \RULE
-%   {\mathit{opcode}}
-%   {\mathit{PC}}{\mathit{CI}}{\mathit{OP_1}}{\mathit{OP_2}}{\mathit{OP_3}}
-%   {\TRUE}
-%   {\mathit{PC'}}{\mathit{R'}}
-% \end{eqnarray*}
-%
-\newcommand{\INLINERULE}[8]{\mathit{#1}
-\mathrel{:}\allowbreak
- ({\mathit{#2}},\allowbreak{\mathit{#3}},\allowbreak{\mathit{#4}},\allowbreak{\mathit{#5}},\allowbreak{\mathit{#6}})
- \rightarrow\allowbreak ({\mathit{#7}},\allowbreak{\mathit{#8}})
-}%
-``$\INLINERULE{opcode}{PC}{CI}{OP_1}{OP_2}{OP_3}{PC'}{R'}$,''
-%
-which says that the rule matches on the given {\it opcode} together
-with the metadata tags on the program counter ($\mathit{PC}$), the
-current instruction ($\mathit{CI}$), and on up to three operands
-($\mathit{OP_1}$ to $\mathit{OP_3}$).
-%
-\aaa{Eventually, it would be nice to have variadic rules with a number
-  of operands that depends on the opcode. The POPL symbolic machine is
-  soon going to support this new format}%
-If the rule applies, the right-hand side determines how to update the
-tags on the PC ($\mathit{PC'}$) and on the result of the operation
-($\mathit{R'}$).
-%
-We write ``$-$'' to indicate input or output fields that are ignored
-(``wildcard'').
-%
-\chrev{All instructions that are not explicitly allowed by the
-  symbolic rules are disallowed.}%
-\aaa{We should choose only one of $-$ or $\_$ for our wildcard and use
-  it consistently (cf. the ``Store'' rule below)}%
+Informally the above rules reads as ``If the tag on the current instruction is
+\DATAname then execution is not allowed. Otherwise if it is \INSTRname then
+execution is allowed''.
 
-The CFI transfer function enforces that only memory locations tagged
-$\DATA$ can be modified (NWC) and only instructions fetched from
-locations tagged $\CODEname$ can be executed (NXD).
-%
-The symbolic rule for the $\ii{Store}$ instruction illustrates both
-these points:
-%
-\begin{eqnarray*}
-\INLINERULE
-  {\ii{Store}}
-  {\DATA}{\CODE{\text{\textunderscore}\,}}{-}{-}{\DATA}
-  {\DATA}{-}
-\end{eqnarray*}
-%
-It requires the fetched $\ii{Store}$ instruction to be tagged
-$\CODEname$ and the written location to be tagged $\DATA$.
-%
-This rule only applies when the PC is also tagged $\DATA$, which is
-the case when the $\ii{Store}$ instruction was reached by direct
-control flow (not a computed jump).
-%
-The rule preserves the $\DATA$ tag on the PC, since $\ii{Store}$ is
-not a computed jump.
-%
-Performing a computed jump (\EG using \ii{Jal}, a
-jump-and-link instruction) requires that the current instruction be
-tagged $\CODE{\ii{src}}$ for some address $\ii{src}$.
-%
-\begin{eqnarray*}
-\INLINERULE
-  {\ii{Jal}}
-  {\DATA}{\CODE{\ii{src}}}{-}{-}{-}
-  {\CODE{\ii{src}}}{-}
-\end{eqnarray*}
-%
-This rule copies $\CODE{\ii{src}}$ to the PC tag to indicate
-that a jump from \ii{src} has just occurred.
-%
-Only on the next instruction do we have enough information about the
-destination in the tags to check that the jump is indeed allowed by
-the CFG.
-%
-For this we add a second rule for \ii{Store}, dealing with the case
-where it is the target of a jump and thus the PC is tagged
-$\CODE{\ii{src}}$.
-%
-\RULEWITHPREMISE
-  {\ii{Store}}
-  {\CODE{\ii{src}}}{\CODE{\ii{tgt}}}{-}{-}{\DATA}
-  {(\ii{src},\ii{tgt}) \in \ii{CFG}}
-  {\DATA}{-}
-%
-\aaa{Maybe we could discuss here a little bit why we verify the jump
-  on the next instruction, as opposed to when the jump is
-  performed. This might get some people confused, since this is not
-  very natural and fundamentally driven by our current design of the
-  PUMP. Even Nick wanted to know if we couldn't do it differently.}%
-  The premise of this rule ensures that the source and target of the
-  just-performed jump are allowed by the CFG.
-%
-  We add a similar rule for each instruction, including jumps (since
-  the target of a computed jump can itself be another computed
-  jump):
-%
-\RULEWITHPREMISE
-{\ii{Jal}}
-{\CODE{\ii{src}}}{\CODE{\ii{tgt-src}}}{-}{-}{-}
-{(\ii{src},\ii{tgt-src}) \in \ii{CFG}}
-{\CODE{\ii{tgt-src}}}{-}
+\FEEDBACK{Used \_ and -, I think the second one looks better, opinions?}\\
+\TODO{Perhaps explain what each tag means for each opcode earlier -- or maybe 
+just in appendix?}\\
+\FEEDBACK{These tuple-vectors make it hard for people not familiar with them
+to remember what each field is, any better ways to represent them?}
 
-This micro-policy enforces fine-grained CFI~\cite{NiuT14,
-  outofcontrol_ieeesp2014, CriswellDA14}, not coarse-grained
-approximations~\cite{AbadiBEL09, Zhang2013} that are potentially vulnerable
-to attack~\cite{outofcontrol_ieeesp2014}.  Indeed, we recently
-proved~\cite{popl2015} that this micro-policy enforces a variant of the CFI
-property introduced by Abadi~\ETAL\cite{AbadiBEL09}, ensuring that all
-indirect control flows adhere to a fixed CFG.
-%
-Recent simulations of an optimized PUMP architecture~\cite{pump_asplos2015}
-show that the CFI policy can be enforced with around 3\% average runtime
-overhead.
-
-
-\section{Formalization and Verification of Micro-Policies}\label{sec:micropolicies}
+\section{Generic Verification Framework for Micro-Policies}\label{sec:micropolicies}
 
 The software components that can be changed to enforce a security policy
 are collectively called a micro-policy.\FEEDBACK{Should be quite useless once
@@ -513,7 +335,7 @@ these numbers, resulting in a 50\% energy overhead.
 %
 \FEEDBACK{Cite ASPLOS instead of CCS; use optimized numbers}
 
-\subsection{Concrete Machine}\label{sec:concrete}
+\subsection{Concrete Machine Modeling PUMP Architecture}\label{sec:concrete}
 
 The concrete machine is a model of the basic machine with PUMP hardware, 
 in particular a rules \cache and a software \emph{miss handler}. 

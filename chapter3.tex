@@ -13,7 +13,9 @@ that is statically injected to the program (\EG Inlined Reference Monitors (IRM)
 order to ensure that these checks are not circumvented. 
 
 \TODO{Think about title}
-\section{Balancing between performance and security}\label{sec:security_cfi}
+\section{Related Work}
+
+\subsection{Balancing between performance and security}\label{sec:security_cfi}
 
 Abadi \ETAL first proposed a technique to enforce \CFI based on IRMs. 
 In particular, they proposed to mark all valid targets of \emph{indirect} 
@@ -52,15 +54,15 @@ coarse-grained \CFI. These attacks illustrate the need for fine-grained
 \CFI which however incurs a high runtime-overhead penalty making deployment
 of such a mechanism unlikely.
 
-\subsection{Standard assumptions for effective \CFI}\label{sec:cfi_assumptions}
+\paragraph{Standard assumptions for effective \CFI}\label{sec:cfi_assumptions}
 
 Most -if not all- \CFI implementations also come with a set of assumptions under
 which \CFI holds. Two standard assumptions for all mechanisms that attempt to
 enforce \CFI are:
 \begin{itemize}
-\item \emph{NXD} is an abbreviation for Non-Executable Data, a security
+\item Non-Executable Data (\emph{NXD}), a security
 mechanism that disallows execution of data. 
-\item \emph{NWC} stands for Non-Writable Code. Changing the code of a
+\item Non-Writable Code (\emph{NWC}). Changing the code of a
 program would allow an attacker to circumvent dynamic checks.
 \end{itemize}
 
@@ -72,7 +74,45 @@ offered by such an action.
 Many implementations that attempt to do fine-grained \CFI also require that
 identifiers used to mark nodes in the CFG are unique.
 
-\section{Formal verification of Control-Flow Integrity}\label{sec:cfi_verif}
+\subsection{Coarse-grained CFI Micro-Policy}\label{sec:cfi_coarse}
+
+\ch{consider moving to appendix, or related work section}
+
+We can use the PUMP to implement the coarse-grained \CFI mechanisms described
+earlier. Suppose we want to implement 1-ID \CFI, we tag all indirect flow 
+destinations and sources with a tag \MARK{} and the rest of the instructions as 
+\UNMARK. Executing instructions that are sources of indirect flows, propagates
+their instruction tag to the \pc. We then have to check that the tag on the
+destination matches the tag on the tag on the \pc.
+
+\begin{figure}[!htpb]
+\begin{align}
+ & (\mathit{Jump/Jal}, -,\MARK, -, -, -) \rightarrow (\MARK,-) \label{coarse_rule1} 
+\tag{1} \\
+ & (-, \MARK, \MARK, -, -, -) \rightarrow (\UNMARK, -) \label{coarse_rule2}
+\tag{2} \\
+ & (-, \MARK, \UNMARK, -, -, -) \rightarrow \varnothing \label{coarse_rule3} 
+\tag{3}
+\end{align}
+\caption{Rules enforcing coarse-grained \CFI}
+\end{figure}
+
+\TODO{align all elements of the rules above}
+
+Rule \ref{coarse_rule1} is used in the case the opcode is Jump or Jal (the only 
+indirect jumps in the RISC machine we examine) and propagates the \MARKname tag on
+the tag of the new \pc. Rule \ref{coarse_rule2} applies when the tag on the \pc
+is set to \MARKname and corresponds to a legal destination and rule
+\ref{coarse_rule3} corresponds to an illegal destination (\IE one that is 
+tagged \UNMARK) and is not allowed.
+
+We do not further study this coarse-grained approach as we consider it 
+ineffective since attacks against it has already been demonstrated in 
+\cite{outofcontrol_ieeesp2014}. Instead we are going to focus on implementing
+and formalizing a fine-grained \CFI micro-policy.
+
+
+\subsection{Formal verification of Control-Flow Integrity}\label{sec:cfi_verif}
 
 In \cite{AbadiBEL09} Abadi \ETAL extended their original paper, with
 -among other things- a more detailed formal study of \CFI. Their formalization
@@ -100,15 +140,17 @@ overhead. The authors of \cite{CriswellDA14} claim partial proofs for a \CFI
 enforcement mechanism focused on the kernel of an operating system. Their
 runtime overhead can also reach 100\%.
 
-\section{Control-Flow Integrity over PUMP}\label{sec:cfi_pump}
+\section{Fine-Grained Control-Flow Integrity Micro-Policy}\label{sec:cfi_fine}
 
 The PUMP hardware allows us to avoid taking the difficult decision between
-performance and security. As shown in \cite{pump_ccs2014}, we can enforce a
-\emph{fine-grained} \CFI policy with an average overhead of 8\%.
-\TODO{Is this number right?}
+performance and security. As shown in \cite{pump_asplos2015}, we can enforce a
+\emph{fine-grained} \CFI policy with an average runtime overhead of less than 3\%
+(maximum overhead of less than 10\%), on the SPEC2006 benchmarks.
 
+\ch{Shrink and polish this}
 In our design, we take the standard approach and claim \CFI under \NXD and
-\NWC. We considered designs that lifted these assumptions but
+\NWC\ch{make it clear that we ENFORCE \NXD and \NWC}.
+We considered designs that lifted these assumptions but
 we rejected them, for the time being, as there did not seem to be any
 considerable advantage \IE{compatibility with self-modifying programs,
 JIT compilers, \ETC} Allowing the code of the program to change, would in
@@ -116,90 +158,9 @@ practice require for the CFG to change as well, which unless done in
 a controlled, ``safe'' way, would invalidate the enforcement of \CFI.
 However, we do not have to rely on special hardware or software to enforce
 \NXD and \NWC. We can achieve this easily and efficiently by
-creating a separate micro-policy.
+creating a separate\ch{could be separate, but we include it into
+ the \CFI one} micro-policy.
 
-\subsection{Enforcing Non-Writable Code \& Non-Executable Data}
-\label{sec:nwc_nxd}
-
-Consider the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
-all executable regions in memory as \INSTR{} and all non-executable as \DATAname
-then we can enforce \NWC by two rules of the form
-
-\begin{figure}[!htpb]
-\begin{align*}
- & (Store, \_,\_, \_, \_,\INSTR) \rightarrow \varnothing \\
- & (Store, \_,\_, \_, \_,\DATA) \rightarrow (\_, \DATA)
-\end{align*}
-\caption{Rules enforcing \NWC}
-\end{figure}
-
-The \_ in the vectors, represent \textit{don't care} values. In the context of
-the input vector their behavior is the same as \textit{don't care} values in
-match expressions in ML languages. In the context of the output vector it just
-captures the intuition that we will not really use the result tags, so anything
-could be returned as a result tag (\IE \DATAname or we can copy-through tags
-from the input vector).
-Informally the above rules reads as ``If the current opcode is Store and the
-content of the memory location we are trying to write is tagged \INSTR{}
-then the memory write is not allowed. Otherwise if it is tagged \DATAname then
-the write is permitted and the new value will also be tagged \DATA.''
-
-We can enforce \NXD in a similar fashion
-\begin{figure}[!htpb]
-\begin{align*}
- & (-, -,\DATA, -, -, -) \rightarrow \varnothing \\
- & (-, -,\INSTR, -, -,-) \rightarrow (-, -)
-\end{align*}
-\caption{Rules enforcing \NXD}
-\end{figure}
-
-Informally the above rules reads as ``If the tag on the current instruction is
-\DATAname then execution is not allowed. Otherwise if it is \INSTRname then
-execution is allowed''.
-
-\FEEDBACK{Used \_ and -, I think the second one looks better, opinions?}\\
-\TODO{Perhaps explain what each tag means for each opcode earlier -- or maybe 
-just in appendix?}\\
-\FEEDBACK{These tuple-vectors make it hard for people not familiar with them
-to remember what each field is, any better ways to represent them?}
-
-\subsection{Enforcing Control-Flow Integrity}\label{sec:cfi_enforce}
-
-\subsubsection{Coarse-grained Control-Flow Integrity}\label{sec:cfi_coarse}
-We can use the PUMP to implement the coarse-grained \CFI mechanisms described
-earlier. Suppose we want to implement 1-ID \CFI, we tag all indirect flow 
-destinations and sources with a tag \MARK and the rest of the instructions as 
-\UNMARK. Executing instructions that are sources of indirect flows, propagates
-their instruction tag to the \pc. We then have to check that the tag on the
-destination matches the tag on the tag on the \pc.
-
-\begin{figure}[!htpb]
-\begin{align}
- & (Jump/Jal, -,\MARK, -, -, -) \rightarrow (\MARK,-) \label{coarse_rule1} 
-\tag{1} \\
- & (-, \MARK, \MARK, -, -, -) \rightarrow (\UNMARK, -) \label{coarse_rule2}
-\tag{2} \\
- & (-, \MARK, \UNMARK, -, -, -) \rightarrow \varnothing \label{coarse_rule3} 
-\tag{3}
-\end{align}
-\caption{Rules enforcing coarse-grained \CFI}
-\end{figure}
-
-\TODO{align all elements of the rules above}
-
-Rule \ref{coarse_rule1} is used in the case the opcode is Jump or Jal (the only 
-indirect jumps in the RISC machine we examine) and propagates the \MARKname tag on
-the tag of the new \pc. Rule \ref{coarse_rule2} applies when the tag on the \pc
-is set to \MARKname and corresponds to a legal destination and rule
-\ref{coarse_rule3} corresponds to an illegal destination (\IE one that is 
-tagged \UNMARK) and is not allowed.
-
-We do not further study this coarse-grained approach as we consider it 
-ineffective since attacks against it has already been demonstrated in 
-\cite{outofcontrol_ieeesp2014}. Instead we are going to focus on implementing
-and formalizing a fine-grained \CFI micro-policy.
-
-\subsubsection{Fine-grained Control-Flow Integrity}\label{sec:cfi_fine}
 
 The micro-policy we implemented and studied is a composition of a fine-grained
 \CFI micro-policy and the \NWC, \NXD micro-policies explained above.
@@ -208,16 +169,20 @@ Our approach uses unique identifiers to tag the contents of the memory that
 correspond to sources and potential destinations of indirect flows according to
 a binary relation (on the identifiers) $\mathcal{CFG}$.
 
+%\ch{I have more intuition about addresses than about identifiers}
 Consider the set of tags 
 \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}} where \ii{id} is a unique identifier 
-(\IE used to tag the contents of only one location in the memory). 
+(\IE used to tag the contents of only one location in the memory).
+\ch{maybe add more intuition: for instance, we can
+  choose identifiers to be the addresses at which the
+  instructions are stored + example (POPL)}
 Adapting the rules from \ref{sec:nwc_nxd}, we shall use \DATAname to tag all 
 contents in memory that are considered non-executable data, \INSTR{\ii{id}}
 to tag all contents in memory that are considered executable instructions and 
 are sources or targets of indirect control flows and \INSTR{$\bot$} to tag all
 other instructions.
 The rules to enforce \NWC and \NXD are intuitively the same and only
-change to account for the splitting of the \INSTRname tag.
+change to account for the splitting of the \INSTRname{} tag.
 
 We follow the same idea as with coarse-grained \CFI, propagating the instruction
 tag of instructions that are sources of indirect flows to the tag on the \pc of
@@ -250,10 +215,10 @@ require that they are in the \CFG relation.
 
 \begin{figure}[!htpb]
 \infrule[Flow/Check]{
-  opcode \in \lbrace Jump, Jal \rbrace \andalso 
+  \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace \andalso 
   (src,dst) \in \CFGm
   }{
-  \frule{opcode}{\INSTR{src}}{\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
+  \frule{\ii{opcode}{=}\ii{op}}{\ii{PC}=\INSTR{src}}{\ii{CI}=\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
   }
 \bigskip
 
@@ -267,7 +232,7 @@ require that they are in the \CFG relation.
 \infrule[Store/Check]{
   (src,dst) \in \CFGm
   }{
-  \frule{Store}{\INSTR{src}}{\INSTR{dst}}{-}{-}{\DATA} {\DATA}{\DATA}
+  \frule{\ii{opcode}{=}\ii{Store}}{\ii{pc}{=}\INSTR{\ii{src}}}{\ii{ci}{=}\INSTR{\ii{dst}}}{-}{-}{\ii{op}_3{=}\DATA} {\DATA}{\DATA}
   }
 \bigskip
 
@@ -287,7 +252,7 @@ require that they are in the \CFG relation.
 \bigskip
 
 \infrule[Rest/NoCheck]{
-  opcode \not \in \lbrace Jump, Jal, Store \rbrace
+  opcode \not \in \lbrace Jump, Jal, Store \rbrace \andalso
   ti \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
   }{
   \frule{opcode}{\DATA}{ti}{-}{-}{-} {\DATA}{-}

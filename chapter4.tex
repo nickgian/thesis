@@ -10,7 +10,7 @@ that a property capturing the notion of \CFI holds even when the attacker
 tampers with the machine, similarly to what is proposed in \cite{abadi2005}, but
 adapted to the setting of our machines.
 
-\section{Expressing the control-flow through tags}\label{sec:cfi_tags}
+\section{Representing control-flow graphs}\label{sec:cfi_tags}
 
 Our approach for enforcing \CFI, as explained in \ref{sec:cfi_fine}, requires
 that we encode the nodes in the control-flow graph in terms of identifiers,
@@ -78,7 +78,17 @@ of type \word and \id, satisfying some constraints.
 \QUESTION{Should I give some intuition, as to why word\_to\_id is partial? Is it
 obvious?}
 
-\section{A Theorem About Control-Flow Integrity}\label{sec:cfi_property}
+\ch{moved here}
+As mentioned in \ref{sec:cfi_fine}, we check for violations of the control-flow
+with respect to a binary relation (on the identifiers) \CFG which represents
+the set of allowed (indirect) jumps. We can extend this relation to precisely
+describe the control-flow of a program, by lifting \CFG to a relation 
+\SUCC on machine states, that includes the set of allowed targets for the rest
+of the instructions. 
+
+\ch{TODO: give code for CFG, very simple}
+
+\section{Control-Flow Integrity Property}\label{sec:cfi_property}
 
 Our formalization includes a definition of \CFI, similar to the one found in
 \cite{abadi2005}, which we prove to be true of all our machines. The need for a
@@ -90,13 +100,6 @@ it can detect it after it has occurred by taking an arbitrary number of
 halt. This does not have any impact on the security effectiveness of our
 mechanism, it does however lead to a more complex definition and therefore
 more complex proofs.
-
-As mentioned in \ref{sec:cfi_fine}, we check for violations of the control-flow
-with respect to a binary relation (on the identifiers) \CFG which represents
-the set of allowed (indirect) jumps. We can extend this relation to precisely
-describe the control-flow of a program, by lifting \CFG to a relation 
-\SUCC on machine states, that includes the set of allowed targets for the rest
-of the instructions. 
 
 The definition of \CFI is further parameterized by an attacker model. We
 model the attacker as a step relation (\stepa{}{}). Intuitively the attacker is
@@ -203,7 +206,7 @@ weaker definition.
 
 \section{The Abstract Machine}\label{sec:abstract_cfi}
 
-The abstract machine is based on the basic machine explained in \ref{sec:basic},
+The abstract machine
 has \CFI, \NXD and \NWC by construction and will serve as a 
 specification for the symbolic and eventually the concrete machine that
 implement \CFI through the tag-based system explained in the previous chapter.
@@ -312,12 +315,13 @@ contents of the data memory and the registers but not the rest of the state.
 \caption{Attacker model for the abstract machine}
 \end{figure}
 
-\subsubsection{Legal control-flows for the abstract machine}
+\subsubsection{Allowed control-flows for the abstract machine}
 \label{sec:abstract_flow}
 
 Assuming a function \CFG that represents the set of allowed (indirect) jumps,
 we can construct a function \SUCC for the abstract machine that represents
-the set of allowed control-flows for all instructions.
+the set of allowed control-flows for all instructions.\ch{Make it clearer
+  that this \SUCC is for the abstract machine}
 
 Below we give a specification of the \SUCC function for the abstract machine,
 in form of inference rules. A function is defined in the actual Coq development.
@@ -399,7 +403,8 @@ machine, the symbolic machine has one memory and distinction between data
 and executable instructions is made through tags, in a similar fashion to what
 was shown in \ref{nwc_nxd} and \ref{cfi_fine}. We instantiate the symbolic
 machine, according to the aforementioned sections, with a set of tags
-\TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}}, where id now is drawn from the class
+\TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}},\ch{Bring in Inductive}
+where id now is drawn from the class
 of identifiers \ref{fig:cfi_id}. We do not have any monitor services and
 we do not need any internal state for this micro-policy therefore, only the
 transfer function is left to implement.
