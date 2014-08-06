@@ -34,9 +34,6 @@ on fine-grained metadata tags (PUMP is just a way of implementing this
   efficiently)
 }
 
-\FEEDBACK{Can the main idea of the CFI micro-policy be introduced here
-  already? See grant proposal.}
-
 Our key motivating insight is that a wide range of policies can
 be dynamically enforced by tagging all data with {\em metadata tags}
 describing its
@@ -54,7 +51,8 @@ More precisely, a micro-policy consists of
 \item a set of {\em metadata tags} that are used to tag each piece of data in
 the memory and registers (including the PC)
 \item a {\em transfer function} that, given the current opcode and the tags
-on the current instruction, the PC, and the operands of the instruction,
+on the current instruction, the PC, and the operands\ch{inputs?}
+of the instruction,
 specifies how the PC and the instruction's result should be tagged in the
 next machine state
 \item a description of how to annotate
