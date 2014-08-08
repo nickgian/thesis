@@ -1,5 +1,5 @@
 
-% This is coqdoc.sty, by Jean-Christophe Filli‚tre
+% This is coqdoc.sty, by Jean-Christophe Filli√¢tre
 % This LaTeX package is used by coqdoc (http://www.lri.fr/~filliatr/coqdoc)
 %
 % You can modify the following macros to customize the appearance
@@ -36,36 +36,37 @@
 \newcommand{\coqdoc}{\textsf{coqdoc}}
 
 % pretty underscores (the package fontenc causes ugly underscores)
-%BEGIN LATEX
-\def\_{\kern.08em\vbox{\hrule width.35em height.6pt}\kern.08em}
+% BEGIN LATEX
+% NOTE commented out, undersocres might look ugly, but at least, they are underscores (search for sub_class etc.)
+% \def\_{\kern.08em\vbox{\hrule width.35em height.6pt}\kern.08em}
 %END LATEX
 
 % macro for typesetting keywords
-\newcommand{\coqdockw}[1]{\texttt{#1}}
+\newcommand{\coqdockw}[1]{\texttt{\textbf{#1}}}
 
 % macro for typesetting variable identifiers
-\newcommand{\coqdocvar}[1]{\textit{#1}}
+\newcommand{\coqdocvar}[1]{\texttt{\textit{#1}}}
 
 % macro for typesetting constant identifiers
-\newcommand{\coqdoccst}[1]{\textsf{#1}}
+\newcommand{\coqdoccst}[1]{\texttt{\textsl{#1}}}
 
 % macro for typesetting module identifiers
-\newcommand{\coqdocmod}[1]{\textsc{\textsf{#1}}}
+\newcommand{\coqdocmod}[1]{\texttt{\textsc{\textsf{#1}}}}
 
 % macro for typesetting module constant identifiers (e.g. Parameters in
 % module types)
-\newcommand{\coqdocax}[1]{\textsl{\textsf{#1}}}
+\newcommand{\coqdocax}[1]{\texttt{\textsl{#1}}}
 
 % macro for typesetting inductive type identifiers
-\newcommand{\coqdocind}[1]{\textbf{\textsf{#1}}}
+\newcommand{\coqdocind}[1]{\texttt{\textsl{#1}}}
 
 % macro for typesetting constructor identifiers
-\newcommand{\coqdocconstr}[1]{\textsf{#1}}
+\newcommand{\coqdocconstr}[1]{\texttt{\textsl{#1}}}
 
 % macro for typesetting tactic identifiers
 \newcommand{\coqdoctac}[1]{\texttt{#1}}
 
-% These are the real macros used by coqdoc, their typesetting is 
+% These are the real macros used by coqdoc, their typesetting is
 % based on the above macros by default.
 
 \newcommand{\coqdoclibrary}[1]{\coqdoccst{#1}}
@@ -87,36 +88,57 @@
 
 % Environment encompassing code fragments
 % !!! CAUTION: This environment may have empty contents
-\newenvironment{coqdoccode}{}{}
+\newenvironment{coqdoccode}{\ttfamily}{}
 
 % Environment for comments
-\newenvironment{coqdoccomment}{\tt(*}{*)}
+\newenvironment{coqdoccomment}{\color{commentgray}\tt(*}{*)}
 
-% newline and indentation 
+% newline and indentation
 %BEGIN LATEX
 % Base indentation length
 \newlength{\coqdocbaseindent}
 \setlength{\coqdocbaseindent}{0em}
 
+% Some coqdoc commands (the ones that break tabular formatting) can be temporarily disabled by setting
+% \intabletrue
+\newif\ifintable
+\intablefalse
+
 % Beginning of a line without any Coq indentation
-\newcommand{\coqdocnoindent}{\noindent\kern\coqdocbaseindent}
+\newcommand{\coqdocnoindent}{%
+\ifintable\else%
+\noindent\kern\coqdocbaseindent%
+\fi}
 % Beginning of a line with a given Coq indentation
 \newcommand{\coqdocindent}[1]{\noindent\kern\coqdocbaseindent\noindent\kern#1}
 % End-of-the-line
-\newcommand{\coqdoceol}{\hspace*{\fill}\setlength\parskip{0pt}\par}
+\newcommand{\coqdoceol}{%
+\ifintable%
+% no forced newlines for fancy formatting
+\else%
+\hspace*{\fill}\setlength\parskip{0pt}\par%
+\fi}
 % Empty lines (in code only)
-\newcommand{\coqdocemptyline}{\vskip 0.4em plus 0.1em minus 0.1em}
+\newcommand{\coqdocemptyline}{\vskip 0.8em plus 0.1em minus 0.1em}
 
 \usepackage{ifpdf}
 \ifpdf
   \RequirePackage{hyperref}
-  \hypersetup{raiselinks=true,colorlinks=true,linkcolor=black}
+%   \hypersetup{raiselinks=true,colorlinks=true,linkcolor=black}
 
   % To do indexing, use something like:
   % \usepackage{multind}
   % \newcommand{\coqdef}[3]{\hypertarget{coq:#1}{\index{coq}{#1@#2|hyperpage}#3}}
 
-  \newcommand{\coqdef}[3]{\phantomsection\hypertarget{coq:#1}{#3}}
+
+  \newcommand{\coqdef}[3]{%
+  \ifdyndef{#1}{#3}{%
+    \newdyndef{#1}%
+    \ifintable%
+      {#3\phantomsection\hyperdef{}{coq:#1}\empty}%
+    \else%
+      \phantomsection\hypertarget{coq:#1}{#3}% breaks tabular* environment
+    \fi}}
   \newcommand{\coqref}[2]{\hyperlink{coq:#1}{#2}}
   \newcommand{\coqexternalref}[3]{\href{#1.html\##2}{#3}}
 
@@ -140,30 +162,90 @@
 \ProcessOptions
 
 \if@coqdoccolors
-\RequirePackage{xcolor}
-\definecolor{varpurple}{rgb}{0.4,0,0.4}
-\definecolor{constrmaroon}{rgb}{0.6,0,0}
-\definecolor{defgreen}{rgb}{0,0.4,0}
-\definecolor{indblue}{rgb}{0,0,0.8}
-\definecolor{kwred}{rgb}{0.8,0.1,0.1}
+\RequirePackage{color}
 
-\def\coqdocvarcolor{varpurple}
-\def\coqdockwcolor{kwred}
-\def\coqdoccstcolor{defgreen}
-\def\coqdocindcolor{indblue}
-\def\coqdocconstrcolor{constrmaroon}
-\def\coqdocmodcolor{defgreen}
-\def\coqdocaxcolor{varpurple}
-\def\coqdoctaccolor{black}
+% Coq Ide colors
+\definecolor{kworange}{rgb}{1.0, 0.27, 0.0}
+\definecolor{commentred}{rgb}{0.647, 0.165, 0.165}
+% there is also commentgray (used in coqdoccomment environment above)
+\definecolor{defaultblack}{rgb}{0.0, 0.0, 0.0}
+\definecolor{kwblue}{rgb}{0.0, 0.0, 1.0}
 
-\def\coqdockw#1{{\color{\coqdockwcolor}{\texttt{#1}}}}
-\def\coqdocvar#1{{\color{\coqdocvarcolor}{\textit{#1}}}}
-\def\coqdoccst#1{{\color{\coqdoccstcolor}{\textrm{#1}}}}
-\def\coqdocind#1{{\color{\coqdocindcolor}{\textsf{#1}}}}
-\def\coqdocconstr#1{{\color{\coqdocconstrcolor}{\textsf{#1}}}}
-\def\coqdocmod#1{{{\color{\coqdocmodcolor}{\textsc{\textsf{#1}}}}}}
-\def\coqdocax#1{{{\color{\coqdocaxcolor}{\textsl{\textrm{#1}}}}}}
-\def\coqdoctac#1{{\color{\coqdoctaccolor}{\texttt{#1}}}}
+% more colors
+\definecolor{vargreen}{rgb}{0.0, 0.4, 0.0}
+\definecolor{kwred}{rgb}{0.8, 0.1, 0.0}
+
+
+% syntax highlighting similar to Coq Ide
+%
+% TODO should be made bold
+% macro for typesetting keywords
+\renewcommand{\coqdockw}[1]{{\color{kwred}\texttt{#1}}}
+\renewcommand{\coqdocnotation}[1]{{\color{defaultblack}\texttt{#1}}}
+
+% macro for typesetting variable identifiers
+\renewcommand{\coqdocvar}[1]{{\color{vargreen}\texttt{#1}}}
+% \renewcommand{\coqdocvariable}[1]{\coqdocvar{#1}}
+
+% should be just black
+% macro for typesetting module identifiers
+\renewcommand{\coqdocmod}[1]{\texttt{#1}}
+% macro for typesetting constant identifiers
+% used for too many things
+\renewcommand{\coqdoccst}[1]{\texttt{#1}}
+% the things:
+% maybe bold?
+% \renewcommand{\coqdocdefinition}[1]{\coqdoccst{#1}}
+% \renewcommand{\coqdoclemma}[1]{\coqdoccst{#1}}
+% \renewcommand{\coqdocmethod}[1]{\coqdoccst{#1}}
+% \renewcommand{\coqdocabbreviation}[1]{\coqdoccst{#1}}
+
+% TODO find a way to make this italic (inconsolata does not seem to support this shape)
+% macro for typesetting module constant identifiers (e.g. Parameters in module types)
+% atom
+\renewcommand{\coqdocax}[1]{\texttt{#1}}
+
+% TODO could misuse it to distinguish our definitions (still blue) and standard things like nat and list
+% usually linked to definition anyway (darkBlueLink)
+% macro for typesetting constructor identifiers
+\renewcommand{\coqdocconstr}[1]{\texttt{#1}}
+% macro for typesetting inductive type identifiers
+\renewcommand{\coqdocind}[1]{\texttt{#1}}
+% \renewcommand{\coqdocprojection}[1]{\coqdoccst{#1}}
+% \renewcommand{\coqdocsection}[1]{\coqdoccst{#1}}
+
+% never used
+% macro for typesetting tactic identifiers
+\renewcommand{\coqdoctac}[1]{\texttt{#1}}
+% \renewcommand{\coqdoclibrary}[1]{\coqdoccst{#1}}
+% \renewcommand{\coqdocinstance}[1]{\coqdoccst{#1}}
+
+
+% too clumpy
+%
+% \definecolor{varpurple}{rgb}{0.4,0,0.4}
+% \definecolor{constrmaroon}{rgb}{0.6,0,0}
+% \definecolor{defgreen}{rgb}{0,0.4,0}
+% \definecolor{indblue}{rgb}{0,0,0.8}
+% \definecolor{kwred}{rgb}{0.8,0.1,0.1}
+
+% \def\coqdocvarcolor{black}
+% \def\coqdockwcolor{kwred}
+% \def\coqdoccstcolor{defgreen}
+% \def\coqdocindcolor{indblue}
+% \def\coqdocconstrcolor{constrmaroon}
+% \def\coqdocmodcolor{defgreen}
+% \def\coqdocaxcolor{varpurple}
+% \def\coqdoctaccolor{black}
+
+% \def\coqdockw#1{{\color{\coqdockwcolor}{\texttt{#1}}}}
+% \def\coqdocvar#1{{\color{\coqdocvarcolor}{\textit{#1}}}}
+% \def\coqdoccst#1{{\color{\coqdoccstcolor}{\textrm{#1}}}}
+% \def\coqdocind#1{{\color{\coqdocindcolor}{\textsf{#1}}}}
+% \def\coqdocconstr#1{{\color{\coqdocconstrcolor}{\textsf{#1}}}}
+% \def\coqdocmod#1{{{\color{\coqdocmodcolor}{\textsc{\textsf{#1}}}}}}
+% \def\coqdocax#1{{{\color{\coqdocaxcolor}{\textsl{\textrm{#1}}}}}}
+% \def\coqdoctac#1{{\color{\coqdoctaccolor}{\texttt{#1}}}}
 \fi
 
 \endinput

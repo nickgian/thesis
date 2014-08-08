@@ -13,7 +13,6 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows,shadows} % for pgf-umlsd
 \usepackage[underline=false,rounded corners=false]{pgf-umlsd}
-\usepackage{coqdoc}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
@@ -36,6 +35,7 @@
 \usepackage{bcprules}
 \restylefloat{table}
 \restylefloat{figure}
+\usepackage[color]{coqdoc}
 \usepackage{hyperref}
 \hypersetup{%
     xetex,
@@ -43,7 +43,7 @@
     colorlinks=true,
     pdfpagemode=UseOutlines,
     pdfstartview=FitH,
-    linkcolor=blue,
+    linkcolor=dkblue,
     citecolor=blue,
     urlcolor=magenta,
     pdftitle={},
@@ -52,10 +52,11 @@
     pdfkeywords={}
 }
 
-%\setromanfont[Mapping=tex-text]{CMU Concrete Roman}
-%\setsansfont[Mapping=tex-text]{CMU Concrete Roman}
-%\setmonofont[Mapping=tex-text]{CMU Concrete Roman}
-%\setmainfont[Mapping=tex-text]{CMU Concrete Roman}
+
+\setromanfont[Mapping=tex-text]{CMU Concrete Roman}
+\setsansfont[Mapping=tex-text]{CMU Concrete Roman}
+\setmonofont[Mapping=tex-text]{CMU Concrete Roman}
+\setmainfont[Mapping=tex-text]{CMU Concrete Roman}
 
 
 % CUSTOM COMMANDS ==============================================================
@@ -86,10 +87,16 @@
 }
 
 % Generic commands
+%Connect counter for figures and theorems/lemmas/definitions
+\makeatletter
+\let\c@equation\c@figure
+\makeatother
 
+\numberwithin{equation}{chapter}
 \theoremstyle{definition}
-\newtheorem{definition}{Definition}
-\newtheorem{thm}{Theorem}
+\newtheorem{definition}[equation]{Definition}
+\newtheorem{thm}[equation]{Theorem}
+\newtheorem{lemma}[equation]{Lemma}
 
 \newcommand*{\EG}{e.g.,\xspace}
 \newcommand*{\IE}{i.e.,\xspace}
@@ -143,39 +150,39 @@
 \newcommand{\tpc}[0]{t_\ii{pc}}
 \newcommand{\tra}[0]{t_\ii{ra}}
 \newcommand{\ti}[0]{t_\ii{i}}
-\newcommand{\extra}[0]{\ii{extra}}
+\newcommand{\targ}[1]{t_\ii{#1}}
+\newcommand{\extra}[0]{\ii{int}}
 \newcommand{\TRANSFER}{\ii{transfer}\xspace}
 \newcommand{\EXTRASTATES}{\ii{EX}}
 \newcommand{\cache}{\ii{cache}}
 \newcommand{\step}[2]{\ensuremath{#1\to#2}}
 \newcommand{\stepn}[2]{\ensuremath{#1\to_n#2}}
-\newcommand{\stepa}[2]{\ensuremath{#1\to_a#2}}
+\newcommand{\stepa}[3]{\ensuremath{#1\to_a^{#3}#2}}
+\newcommand{\longstep}[2]{\begin{array}[t]{l@{\;}l}&#1\\\to&#2\end{array}}
 
 % \newcommand{\rret}{r_{\!\ii{ret}}}
 % \newcommand{\rarg}[1]{r_{\!\ii{arg#1}}}
 \newcommand{\old}{_{\mathit{old}}}
 % \newcommand{\undefined}{\uparrow}
-% \newcommand{\trapaddr}{\ii{trapaddr}}
+ \newcommand{\trapaddr}{\ii{trapaddr}}
  \newcommand{\handler}[8]{\ii{transfer}(#1,#2,#3,#4,#5,#6) = (#7,#8)}
-% \newcommand{\rulelookup}[8]{%
-%    \cache \vdash (#1,#2,#3,#4,#5,#6) \mapsto (#7,#8)}
-% \newcommand{\rulelookupshort}[2]{%
-%    \cache \vdash #1 \mapsto #2}
-% \newcommand{\rulelookupmissshort}[1]{%
-%    \cache \vdash #1 \uparrow}
-% \newcommand{\rulelookupmiss}[6]{%
-%    \cache \vdash (#1,#2,#3,#4,#5,#6) \uparrow}
-% \newcommand{\savestate}[7]{%
-%   #7 [0..5 \leftarrow ({#1},{#2},{#3},{#4},{#5},{#6})]}
-% \newcommand{\savestateshort}[2]{%
-%   #2 [0..5 \leftarrow {#1}]}
+\newcommand{\rulelookup}[8]{%
+   \cache \vdash (#1,#2,#3,#4,#5,#6) \mapsto (#7,#8)}
+\newcommand{\rulelookupshort}[2]{%
+   \cache \vdash #1 \mapsto #2}
+\newcommand{\rulelookupmissshort}[1]{%
+   \cache \vdash #1 \uparrow}
+\newcommand{\rulelookupmiss}[6]{%
+   \cache \vdash (#1,#2,#3,#4,#5,#6) \not \mapsto}
+\newcommand{\savestate}[7]{%
+  #7 [0..5 \leftarrow ({#1},{#2},{#3},{#4},{#5},{#6})]}
+\newcommand{\savestateshort}[2]{%
+  #2 [0..5 \leftarrow {#1}]}
 
 \newcommand{\astat}[4]{\ensuremath{(#1,#2,#3,#4)}}
 \newcommand{\acfistat}[5]{\ensuremath{(#1,#2,#3,#4,#5)}}
 \newcommand{\cstat}[5]{\ensuremath{(#1,#2,#3,#4,#5)}}
 \newcommand{\stat}[5]{\ensuremath{(#1,#2,#3,#4,#5)}}
-
-\newcommand{\frule}[8]{(#1,#2,#3,#4,#5,#6) \to (#7,#8)}
 
 \newcommand{\DATA}[0]{\ii{Data}}
 \newcommand{\INSTRname}[0]{\ii{Instr}}
@@ -195,10 +202,17 @@
 \newcommand{\CFGm}[0]{\mathcal{CFG}\xspace}
 \newcommand{\J}[0]{$\mathcal{J}$\xspace}
 \newcommand{\Jm}[0]{\mathcal{J}\xspace}
-\newcommand{\SUCC}[0]{$\mathcal{SUCC_\CFGm}$\xspace}
-\newcommand{\SUCCm}[0]{\mathcal{SUCC_\CFGm}\xspace}
+\newcommand{\SUCC}[1]{$\mathcal{SUCC_\CFGm^{#1}}$\xspace}
+\newcommand{\SUCCm}[1]{\mathcal{SUCC_\CFGm^{#1}}\xspace}
 
 \newcommand{\INITIAL}[1]{\textit{initial~#1}\xspace}
+
+\newcommand{\frule}[8]{#1:\{\ifthenelse{\equal{#2}{}}{}{PC{=}#2\ifthenelse{\equal{#3}{}}{}{,}}
+                           \ifthenelse{\equal{#3}{}}{}{CI{=}#3}\ifthenelse{\equal{#4}{}}{}{,}
+                           \ifthenelse{\equal{#4}{}}{}{OP1{=}#4}\ifthenelse{\equal{#5}{}}{}{,}
+                           \ifthenelse{\equal{#5}{}}{}{OP2{=}#5}\ifthenelse{\equal{#6}{}}{}{,}
+                           \ifthenelse{\equal{#6}{}}{}{MR{=}#6}
+                           \} \to \{PC'{=}#7, RES{=}#8\}} 
 
 \newcommand{\NXD}[0]{\emph{NXD}\xspace}
 \newcommand{\NWC}[0]{\emph{NWC}\xspace}
@@ -262,7 +276,7 @@
 \cleardoublepage % start at the next odd page
 \phantomsection % correct hyperlinking
 \addcontentsline{toc}{chapter}{\bibname} % add bibliography section to toc
-\bibliography{bibliography}
+\bibliography{bibliography,safe,local}
 \bibliographystyle{abbrv} % plain/abbrv/alpha/abstract/apalike/...
 % \include{glossary}
 

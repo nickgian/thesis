@@ -85,60 +85,71 @@ destinations and sources with a tag \MARK{} and the rest of the instructions as
 their instruction tag to the \pc. We then have to check that the tag on the
 destination matches the tag on the tag on the \pc.
 
-\begin{figure}[!htpb]
-\begin{align}
- & (\mathit{Jump/Jal}, -,\MARK, -, -, -) \rightarrow (\MARK,-) \label{coarse_rule1} 
-\tag{1} \\
- & (-, \MARK, \MARK, -, -, -) \rightarrow (\UNMARK, -) \label{coarse_rule2}
-\tag{2} \\
- & (-, \MARK, \UNMARK, -, -, -) \rightarrow \varnothing \label{coarse_rule3} 
-\tag{3}
-\end{align}
-\caption{Rules enforcing coarse-grained \CFI}
+\begin{figure}[H]
+\infrule[Mark]{
+  \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace
+  }{
+  \frule{\ii{op}}{}{\MARK}{}{}{} {\MARK}{-}
+  }
+\bigskip
+
+\infrule[Check]{
+  \textit{op} \not \in \lbrace \textit{Jump},\textit{Jal} \rbrace
+  }{
+  \frule{\ii{op}}{\MARK}{\MARK}{}{}{} {\UNMARK}{-}
+  }
+\bigskip
+
+\infrule[NoCheck]{
+  \textit{op} \not \in \lbrace \textit{Jump},\textit{Jal} \rbrace
+  }{
+  \frule{\ii{op}}{\UNMARK}{\UNMARK}{}{}{} {\UNMARK}{-}
+  }
+\caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
 \end{figure}
 
-\TODO{align all elements of the rules above}
+Rule \emph{Mark} is used in the case the opcode is Jump or Jal (the
+only indirect jumps in the RISC machine we examine) and propagates the
+\MARKname tag on the tag of the new \pc. Rule \emph{Check} applies
+when the tag on the \pc is set to \MARKname and corresponds to a legal
+destination and rule \emph{NoCheck} corresponds to any instruction
+that is not a jump source or target.
 
-Rule \ref{coarse_rule1} is used in the case the opcode is Jump or Jal (the only 
-indirect jumps in the RISC machine we examine) and propagates the \MARKname tag on
-the tag of the new \pc. Rule \ref{coarse_rule2} applies when the tag on the \pc
-is set to \MARKname and corresponds to a legal destination and rule
-\ref{coarse_rule3} corresponds to an illegal destination (\IE one that is 
-tagged \UNMARK) and is not allowed.
-
-We do not further study this coarse-grained approach as we consider it 
-ineffective since attacks against it has already been demonstrated in 
-\cite{outofcontrol_ieeesp2014}. Instead we are going to focus on implementing
-and formalizing a fine-grained \CFI micro-policy.
+We do not further study this coarse-grained approach as we consider it
+ineffective since attacks against it has already been demonstrated in
+\cite{outofcontrol_ieeesp2014}. Instead we are going to focus on
+implementing and formalizing a fine-grained \CFI micro-policy.
 
 
 \subsection{Formal verification of Control-Flow Integrity}\label{sec:cfi_verif}
 
 In \cite{AbadiBEL09} Abadi \ETAL extended their original paper, with
--among other things- a more detailed formal study of \CFI. Their formalization
-regarded a much simpler machine than the x86 omitting all the complexity in
-modern systems. The machine has a few instructions, a separate data memory and
-instruction memory which by the operational semantics of the machine are 
-non-executable and non-writable (enforcing \NXD and \NWC by construction), and a
-small set of registers.
-Moreover, their attacker model permits arbitrary changes to the data memory,
-arbitrary changes to all the registers but a few distinguished ones that are
-used during the dynamic checks and no changes to the instruction memory.
-The authors proof that under some assumptions \CFI is preserved for every step
-even in the presence of an attacker as powerful as the one described above. 
-Their formal study served as a guideline for the implementation, but as it is 
-done on paper their proofs cannot be machine checked. Furthermore, their 
-formalization omits less interesting but important details such as instruction 
-encoding and decoding which as shown in \cite{MorrisettTTTG12} are far from 
-trivial for the x86.
+-among other things- a more detailed formal study of \CFI. Their
+formalization regarded a much simpler machine than the x86 omitting
+all the complexity in modern systems. The machine has a few
+instructions, a separate data memory and instruction memory which by
+the operational semantics of the machine are non-executable and
+non-writable (enforcing \NXD and \NWC by construction), and a small
+set of registers.  Moreover, their attacker model permits arbitrary
+changes to the data memory, arbitrary changes to all the registers but
+a few distinguished ones that are used during the dynamic checks and
+no changes to the instruction memory.  The authors proof that under
+some assumptions \CFI is preserved for every step even in the presence
+of an attacker as powerful as the one described above.  Their formal
+study served as a guideline for the implementation, but as it is done
+on paper their proofs cannot be machine checked. Furthermore, their
+formalization omits less interesting but important details such as
+instruction encoding and decoding which as shown in
+\cite{MorrisettTTTG12} are far from trivial for the x86.
 
-Machine-checked formal verification efforts include \cite{ZhaoLSR11}, which is
-a SFI formalization for the ARM architecture that also enforces \CFI.
-Their formalization was developed using the HOL theorem prover and a program
-logic framework they created. However their benchmarks report a 240\% runtime
-overhead. The authors of \cite{CriswellDA14} claim partial proofs for a \CFI
-enforcement mechanism focused on the kernel of an operating system. Their
-runtime overhead can also reach 100\%.
+Machine-checked formal verification efforts include \cite{ZhaoLSR11},
+which is a SFI formalization for the ARM architecture that also
+enforces \CFI.  Their formalization was developed using the HOL
+theorem prover and a program logic framework they created. However
+their benchmarks report a 240\% runtime overhead. The authors of
+\cite{CriswellDA14} claim partial proofs for a \CFI enforcement
+mechanism focused on the kernel of an operating system. Their runtime
+overhead can also reach 100\%.
 
 \section{Fine-Grained Control-Flow Integrity Micro-Policy}\label{sec:cfi_fine}
 
@@ -184,12 +195,13 @@ other instructions.
 The rules to enforce \NWC and \NXD are intuitively the same and only
 change to account for the splitting of the \INSTRname{} tag.
 
-We follow the same idea as with coarse-grained \CFI, propagating the instruction
-tag of instructions that are sources of indirect flows to the tag on the \pc of
-the next state and upon execution of the next instruction, checking that the tag
-on the \pc and on the instruction are in some relation. In the case of
-coarse-grained \CFI we required that they match but for fine-grained \CFI we
-require that they are in the \CFG relation.
+We follow the same idea as with coarse-grained \CFI, propagating the
+instruction tag of instructions that are sources of indirect flows to
+the tag on the \pc of the next state and upon execution of the next
+instruction, checking that the tag on the \pc and on the instruction
+are in some relation. In the case of coarse-grained \CFI we required
+that they match but for fine-grained \CFI we require that they are in
+the \CFG relation.
 
 % \begin{figure}[!htpb]
 % \begin{align}
@@ -213,49 +225,50 @@ require that they are in the \CFG relation.
 % \caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
 % \end{figure}
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
 \infrule[Flow/Check]{
   \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace \andalso 
   (src,dst) \in \CFGm
   }{
-  \frule{\ii{opcode}{=}\ii{op}}{\ii{PC}=\INSTR{src}}{\ii{CI}=\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
+  \frule{\ii{op}}{\INSTR{src}}{\INSTR{dst}}{}{}{} {\INSTR{dst}}{-}
   }
 \bigskip
 
 \infrule[Flow/NoCheck]{
-  opcode \in \lbrace Jump, Jal \rbrace
+  op \in \lbrace \textit{Jump},\textit{Jal} \rbrace
   }{
-  \frule{opcode}{\DATA}{\INSTR{dst}}{-}{-}{-} {\INSTR{dst}}{-}
+  \frule{\ii{op}}{\DATA}{\INSTR{dst}}{}{}{} {\INSTR{dst}}{-}
   }
 \bigskip
 
 \infrule[Store/Check]{
   (src,dst) \in \CFGm
   }{
-  \frule{\ii{opcode}{=}\ii{Store}}{\ii{pc}{=}\INSTR{\ii{src}}}{\ii{ci}{=}\INSTR{\ii{dst}}}{-}{-}{\ii{op}_3{=}\DATA} {\DATA}{\DATA}
+  \frule{\ii{Store}}{\INSTR{src}}{\INSTR{dst}}{}{}{\DATA} {\DATA}{\DATA}
   }
 \bigskip
 
 \infrule[Store/NoCheck]{
-  ti \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
+  \textit{ti} \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
   }{
-  \frule{Store}{\DATA}{ti}{-}{-}{\DATA} {\DATA}{\DATA}
+  \frule{\ii{Store}}{\DATA}{\textit{ti}}{}{}{\DATA} {\DATA}{\DATA}
   }
 \bigskip
 
 \infrule[Rest/Check]{
-  opcode \not \in \lbrace Jump, Jal, Store \rbrace \andalso
-  (src,dst) \in \CFGm
+  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store} 
+  \rbrace \andalso (src,dst) \in \CFGm
   }{
-  \frule{opcode}{\INSTR{src}}{\INSTR{dst}}{-}{-}{-} {\DATA}{-}
+  \frule{\textit{opcode}}{\INSTR{src}}{\INSTR{dst}}{}{}{} {\DATA}{-}
   }
 \bigskip
 
 \infrule[Rest/NoCheck]{
-  opcode \not \in \lbrace Jump, Jal, Store \rbrace \andalso
-  ti \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
+  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store} 
+  \rbrace \andalso
+  \textit{ti} \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
   }{
-  \frule{opcode}{\DATA}{ti}{-}{-}{-} {\DATA}{-}
+  \frule{\textit{opcode}}{\DATA}{\textit{ti}}{}{}{} {\DATA}{-}
   }
 \caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
 \end{figure}

@@ -1,72 +1,80 @@
 \chapter{Micro-policies: Verified, Hardware-Assisted Monitors}\label{ch:policies}
 Currently the hardware provides very limited security mechanisms \TODO{name some;
-  4 protection rings, page-level memory protection via virtual memory}, 
-leaving most of the work to the software. This requires that the software 
-performs various sanity-checks during an execution and that it carefully 
+  4 protection rings, page-level memory protection via virtual memory},
+leaving most of the work to the software. This requires that the software
+performs various sanity-checks during an execution and that it carefully
 maintains various safety and security invariants, a tedious and error-prone task
-that results in high runtime performance overheads.  
+that results in high runtime performance overheads.
 
 Many potentially effective mitigation techniques are not deployed because of the
-performance overhead they incur. Another requirement for deployment of a 
-protection mechanism is the compatibility with existing executables and 
-the degree of intervention required by a human. 
+performance overhead they incur. Another requirement for deployment of a
+protection mechanism is the compatibility with existing executables and
+the degree of intervention required by a human.
 Usually even making slight changes to a code and redistributing has high cost
-and the protection mechanism is likely to see very low adoption. 
+and the protection mechanism is likely to see very low adoption.
 
-The lack of efficient and effective generic ways to enforce security policies, 
-forces programmers to protect their own code, a task which is not trivial even 
-for the small and simply programs. As a result most, if not all, software 
-carries weaknesses which can be exploited by an attacker. ``Safe'' languages, 
+The lack of efficient and effective generic ways to enforce security policies,
+forces programmers to protect their own code, a task which is not trivial even
+for the small and simply programs. As a result most, if not all, software
+carries weaknesses which can be exploited by an attacker. ``Safe'' languages,
 automate some of the checks required and eases the work of the programmer,
-for example by implementing array bounds checking or by disallowing 
-pointer-arithmetic. However these solutions only reduce the chance of 
-introducing exploitable bugs in a program and do not enforce stricter, 
+for example by implementing array bounds checking or by disallowing
+pointer-arithmetic. However these solutions only reduce the chance of
+introducing exploitable bugs in a program and do not enforce stricter,
 more effective policies such as Control Flow Integrity
-or complete Memory Safety (spatial/temporal protection for heap and stack). 
-In addition, we still need effective and efficient protection mechanisms for a 
+or complete Memory Safety (spatial/temporal protection for heap and stack).
+In addition, we still need effective and efficient protection mechanisms for a
 plethora of software written in unsafe languages such as C.
 
-\section{Micro-Policies}
+\section{Micro-Policies}\label{sec:micropolicies}
 
 \FEEDBACK{More text introducing micro-policies:
 instruction-level security monitoring mechanisms based
-on fine-grained metadata tags (PUMP is just a way of implementing this 
+on fine-grained metadata tags (PUMP is just a way of implementing this
   efficiently)
 }
 
 \FEEDBACK{Can the main idea of the CFI micro-policy be introduced here
   already? See grant proposal.}
 
-Our key motivating insight is that a wide range of policies can
-be dynamically enforced by tagging all data with {\em metadata tags}
-describing its
-provenance or security restrictions (\EG ``this is an instruction,'' ``this
-came from the network,'' ``this is secret,'' ``this is sealed with key
-$k$''), propagating the metadata as instructions are executed, and checking
-that policy rules about the metadata are enforced throughout the
-computation.  We use the term {\em micro-policies} for such
-mechanisms---i.e., for instruction-level security-monitoring mechanisms
-based on fine-grained metadata.  Our goal is to develop a generic framework
-for defining, reasoning about, and implementing micro-policies.
+A wide range of security policies can be enforced by associating metadata
+to the data being processed (\EG this is an instruction, this is from the
+network, this is private, \ETC), propagating the metadata as
+instructions are executed and using a set of rules on the metadata to check
+whether a policy is violated and how the tags should be propagated.
 
-More precisely, a micro-policy consists of
+Abstractly, these rules form a partial function from a set of
+input tags to a set of output tags
+$$(opcode, tag_{pc},tag_{instr}, tag_{arg1}, tag_{arg2}, tag_{arg3})
+\rightarrow (tag_{pc'},tag_{result})$$
+informally read as, ``if the next instruction to be executed is opcode, the
+current tag of the program counter is $pc_{tag}$, the current tag on the
+instruction location is $tag_{instr}$ and the tags on the operands of the
+instruction are $tag_{arg1}, tag_{arg2}$ and $tag_{arg3}$ then if execution of
+the instruction is allowed the tag on the program counter should be set
+to $tag_{pc'}$ and any new data created by the instruction should be tagged
+$tag_{result}$''.
+
+More specific, a micro-policy is made up of the following elements:
 \begin{enumerate}
-\item a set of {\em metadata tags} that are used to tag each piece of data in
-the memory and registers (including the PC)
-\item a {\em transfer function} that, given the current opcode and the tags
-on the current instruction, the PC, and the operands of the instruction,
-specifies how the PC and the instruction's result should be tagged in the
-next machine state
-\item a description of how to annotate
-  the {\em initial state} of a process with tags
-\item for some micro-policies, a set of {\em monitor services} that can be
-invoked by user code.
+\item a set of {\em metadata tags} used to tag the contents of the memory and
+all the registers as well as the pc.
+\item a {\em transfer function} that implements the checks on the tags and
+the tag propagation as described above.
+\item a tagging scheme for the initial state of the machine.
+\item for some micro-policies, a set of {\em monitor services} (\IE privileged
+code) that can be invoked by user code.
 %\ch{CFI doesn't use this itself, but virtualizes
 %  the mechanism!}
 \end{enumerate}
 
-\ch{should at least mention that this can be done efficiently (and
-  maybe reference PUMP section)}
+Furthermore, as we will see in \ref{sec:pump}, a software-hardware
+mechanism that allows for implementation of micro-policies without
+sacrificing flexibility (in terms of the policies that can be
+enforced) has already been designed. Simulations and benchmarks show
+that the runtime overhead is very low compared to dedicated software
+solutions thus making it a realistic and appealing way to deploy a
+wide range of security policies in future computing systems.
 
 \section{Example:
   Non-Writable Code \& Non-Executable Data}
@@ -82,81 +90,66 @@ invoked by user code.
 \ch{Rename Instr to Code?}
 
 Consider the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
-all executable regions in memory as \INSTR{} and all non-executable as \DATAname
-then we can enforce \NWC by two rules of the form
+all executable regions in memory as \INSTRname and all non-executable
+as \DATAname then we can enforce \NWC by two rules of the form
 
-\begin{figure}[!htpb]
-\begin{align*}
- & (Store, \_,\_, \_, \_,\INSTR) \not\rightarrow
-\text{\ch{or better just leave out}}\\
- & (Store, \_,\_, \_, \_,\DATA) \rightarrow (\_, \DATA)
-\\
-& \text{\ch{Missing allow non-Stores rule}}
-\end{align*}
-\caption{Rules enforcing \NWC}
+\begin{figure}[H]
+\infrule[Store/Data]{
+  }{
+  \frule{Store}{}{\INSTRname}{}{}{\DATA} {-}{\DATA}
+  }
+\bigskip
+
+\infrule[Rest]{
+  \textit{opcode} \not \in \lbrace \ii{Store} \rbrace
+  }{
+  \frule{\textit{opcode}}{}{\INSTRname}{}{}{} {-}{-}
+  }
+\bigskip
+
+\caption{Rules enforcing \NWC and \NXD}
 \end{figure}
 
-The \_ in the vectors, represent \textit{don't care} values. In the context of
-the input vector their behavior is the same as \textit{don't care} values in
-match expressions in ML languages. In the context of the output vector it just
-captures the intuition that we will not really use the result tags, so anything
-could be returned as a result tag (\IE \DATAname or we can copy-through tags
-from the input vector).
-Informally the above rules reads as ``If the current opcode is Store and the
-content of the memory location we are trying to write is tagged \INSTR{}
-then the memory write is not allowed. Otherwise if it is tagged \DATAname then
-the write is permitted and the new value will also be tagged \DATA.''
+The dashes in the result vector, represent \textit{don't care} values,
+meaning we will not use their values for anything, so any tag (usually
+a default tag set by the policy designer) can be used. Furthermore, we
+are omitting from the input vector the fields that are unused by the
+transfer function. For this simply policy, the transfer function only
+uses the tag on the current instruction (CI) and in the case of a
+Store instruction the tag on the memory (MR), \IE the tag on the
+memory location we are trying to write. Additionally, if no rule
+applies, execution of the instruction is disallowed. Informally the
+above rules can be read as ``If the tag on the current instruction is
+\INSTR{}, then if the opcode of the instruction is Store, execution
+should be allowed only if the tag of the third operand is \DATA. In
+that case the tag on the new data on the memory should remain
+\DATA. If the opcode of the instruction is not Store, then it's
+allowed and the result tags are indifferent for the enforced policy.''
 
-We can enforce \NXD in a similar fashion
-\begin{figure}[!htpb]
-\begin{align*}
- & (-, -,\DATA, -, -, -) \rightarrow \varnothing \\
- & (-, -,\INSTR, -, -,-) \rightarrow (-, -)
-\end{align*}
-\caption{Rules enforcing \NXD}
-\end{figure}
+\section{Generic Verification Framework for Micro-Policies}
+\label{sec:framework}
 
-Informally the above rules reads as ``If the tag on the current instruction is
-\DATAname then execution is not allowed. Otherwise if it is \INSTRname then
-execution is allowed''.
-
-\FEEDBACK{Used \_ and -, I think the second one looks better, opinions?}\\
-\TODO{Perhaps explain what each tag means for each opcode earlier -- or maybe 
-just in appendix?}\\
-\FEEDBACK{These tuple-vectors make it hard for people not familiar with them
-to remember what each field is, any better ways to represent them?}
-
-\section{Generic Verification Framework for Micro-Policies}\label{sec:micropolicies}
-
-The software components that can be changed to enforce a security policy
-are collectively called a micro-policy.\FEEDBACK{Should be quite useless once
-  micro-policies are defined at the beginning of chapter}
-Unsurprisingly, designing a security policy, reasoning about it's effectiveness 
-against potential attackers and encoding it as a micro-policy can become a 
+Unsurprisingly, designing a security policy, reasoning about it's effectiveness
+against potential attackers and encoding it as a micro-policy can become a
 complex task. Azevedo \ETAL \cite{pump_popl2015} built a generic framework for
-defining micro-policies on top of a simple machine modeling a RISC processor 
+defining micro-policies on top of a simple machine modeling a RISC processor
 augmented with the PUMP hardware (referred to as concrete machine), formalized
 this framework in Coq and used it to define and formally verify micro-policies
 for dynamic sealing, control-flow integrity, memory safety, compartmentalization
-and protecting the monitor code itself.
-\FEEDBACK{maybe I should mention the word monitor at some point earlier}
+and protecting the enforcement mechanism (monitor) itself.
 
-The framework offers a high-level machine, called the symbolic machine, that
-abstracts away from unnecessary implementation details and can be used as an 
-interface to the concrete machine, simplifying the work of the micro-policy 
-designer. Additionally the symbolic machine is used to simplify correctness 
-proofs. To instantiate the symbolic machine, the micro-policy designer needs to
-provide a set of symbolic tags which will be used to tag the various values of
-the machine, a transfer function that monitors program execution and determines
-how tags are propagated in each step and optionally a set of monitor services 
-that are partial functions from machine states to machine states and can be used
-to control the monitor's behavior dynamically.
+The framework offers a high-level machine, called the symbolic
+machine, that abstracts away from unnecessary low-level implementation
+details and can be used as an interface to a concrete machine,
+simplifying the work of the micro-policy designer and allowing him to
+define and reason about a micro-policy using structured mathematical
+objects than low-level machine words.
 
 In order to implement the micro-policy at the concrete machine level, one needs
 to additionally provide machine code that implements the transfer function, an
 encoding of tags to words and machine code for any monitor services that the
 micro-policy may use. The relation between the symbolic and the concrete machine
-is formally defined as a two-way refinement (forward and backward). This is a 
+is formally defined as a two-way refinement (forward and backward). This is a
 generic refinement proof, parameterized by the encoding of the symbolic tags to
 words and a proof of correctness of the monitor code for a micro-policy.
 The designer of a micro-policy can use this two-way refinement simply by
@@ -164,99 +157,190 @@ providing these two parameters.
 
 \subsection{Correctness of micro-policies}\label{sec:verification}
 
-For each micro-policy an abstract machine which serves as a specification to the
-invariants the policy designer wants to enforce is defined. The abstract machine 
-is ``correct'' by construction, meaning that it's designed to respect those 
-invariants. Using the symbolic machine as an intermediate step to simplify the
-proofs, by proving a refinement between the symbolic and the abstract machine 
-and by utilizing the the generic refinement between the symbolic and the
+For each micro-policy an abstract machine which serves as a
+specification to the invariants the policy designer wants to enforce
+is defined. The abstract machine is ``correct'' by construction,
+meaning that it's designed to respect those invariants. Using the
+symbolic machine as an intermediate step to simplify the proofs, by
+proving a refinement between the symbolic and the abstract machine and
+by utilizing the the generic refinement between the symbolic and the
 concrete machine, we can prove a refinement between the abstract and
-the concrete machine, thus showing that every valid step for the concrete
-machine is also a valid step for the abstract machine. 
-\FEEDBACK{say smth about steps and refinement earlier..}
+the concrete machine, thus showing that every valid step for the
+concrete machine is also a valid step for the abstract machine.
 
-All the machines introduced in the original paper by Azevedo \ETAL 
-\cite{pump_popl2015}, 
-as well as this thesis, have a similar structure. In particular, they share a
-common RISC-based instruction set (with a few - uninteresting for the scope of
-this thesis - exceptions) and they have a fixed number of general-purpose
-registers, along with a pc register. Of course the abstract machine defined
-by the policy designer can differ in various ways, but more similarities with
-the symbolic machine implies easier proofs of correctness.
+All the machines introduced in the original paper by Azevedo \ETAL
+\cite{pump_popl2015}, as well as this thesis, have a similar
+structure. In particular, they share a common RISC-based instruction
+set (with a few - uninteresting for the scope of this thesis -
+exceptions) and they have a fixed number of general-purpose registers,
+along with a pc register. Of course the abstract machine defined by
+the policy designer can differ in various ways, but more similarities
+with the symbolic machine implies easier proofs of correctness.
 
 \FEEDBACK{Introduce the (names of the) various machines and
   how they relate to each-other. Nice diagram?}
 
+\TODO{Write instruction set}
+
 \subsection{Symbolic Machine}\label{sec:symbolic}
 
-As mentioned above, the symbolic machine enables us to abstract away from 
+As mentioned above, the symbolic machine enables us to abstract away from
 various low-level details of the concrete machine. We can express and reason
 about policies in terms of mathematical objects written in Gallina rather than
-machine code and the corresponding proofs for the concrete machine comes for 
-free under some assumptions. The symbolic machine follows the structure of the 
-basic machine but it's augmented to better match a PUMP architecture. 
-Specifically the symbolic machine is parameterized by the following:
-\begin{itemize}
-\item A set of symbolic tags, used to tag the contents of the memory, the
-registers and the pc.
-\item A partial function \TRANSFER, that on every step checks whether the
-step is allowed according to opcode of the instruction executed and the tags on
-it. In the case it's allowed it returns a tag for the new pc and a tag for any 
-resulting data from executing the instruction.
-\item A partial function \textit{get\_service}, mapping addresses to 
-\textit{symbolic monitor services}. In the symbolic machine, monitor services
-are represented as a tuple of a partial function on machine states and a
-symbolic tag.
-\item An internal machine state with an initial value, that can be used by 
-monitor services.
-\end{itemize}
+machine code and the corresponding proofs for the concrete machine comes for
+free under some assumptions.
+In essence, the symbolic machine is parameterized by a micro-policy as it was
+defined in \ref{sec:micropolicies}, with the addition of an internal state
+that can be used by monitor services.
 
-The states of the symbolic machine consists of a memory, registers, a \pc 
-register and an internal state.
-The memory  and register contents, as well as the \pc, are all tagged with a
-symbolic tag \textit{t}. We name their contents \textit{symbolic atoms} referred
-to with the notation \atom{\ii{w}}{\ii{t}}, where \ii{w} is the value (word) and
-\ii{t} is the tag.
+The states of the symbolic machine consists of the memory, the
+registers, the \pc register and the internal state. The memory and
+register contents, as well as the \pc, are all tagged with a symbolic
+tag \textit{t}. We name their contents \textit{symbolic atoms}
+referred to with the notation \atom{\ii{w}}{\ii{t}}, where \ii{w} is
+the value (word) and \ii{t} is the tag.
 
-At each step, a record named \emph{mvector} is formed. It consists of the 
-current opcode, the tag on the \pc, the tag on the current instruction and 
-optionally up to three tags depending on the opcode of the instruction.
-The \emph{mvector} is passed to the transfer function
-which decides whether the step violated the policy enforced by the \TRANSFER
-function and in this case halts the machine, or if no violation occurred returns
-a tag for the new \pc and a tag for any results the instruction execution 
-produced.
+At each step, a record named \emph{mvector} is formed. It consists of
+the current opcode, the tag on the \pc, the tag on the current
+instruction and optionally up to three tags depending on the opcode of
+the instruction. The \emph{mvector} is passed to the transfer
+function which decides whether the step violated the policy enforced
+by the \TRANSFER function and in this case halts the machine, or if no
+violation occurred returns a tag for the new \pc and a tag for any
+results the instruction execution produced.
 
-We write, in form of inference rules, the stepping relation for the Store and 
-Jump instructions, in order to demonstrate the above mechanism. The complete
-definition of the stepping relation can be found at \TODO{cite appendix}
+We give, in form of inference rules, the stepping relation for the
+Symbolic machine, demonstrating how the transfer function and the
+tag propagation works at each step.
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
+\small
+%Nop
+\infrule[Nop]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Nop} \\
+  \frule{\ii{Nop}}{\tpc}{\ti}{}{}{} {\tpc'}{-} \\
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg}{\atom{\pc + 1}{\tpc'}}{int}}
+  }
+\bigskip
+
+%Const
+\infrule[Const]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Const}~n~r \andalso
+  \rd{\reg}{r} {=} \atom{w\old}{t\old} \\
+  \frule{\ii{Const}}{\tpc}{\ti}{t\old}{}{} {\tpc'}{\targ{res}} \\
+  \reg' = \upd{\reg}{r}{n@\targ{res}}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
+  }
+\bigskip
+
+%Mov
+\infrule[Mov]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Mov}~r_p~r_s \\
+  \rd{\reg}{r_p} {=} \atom{w}{t_p} \andalso
+  \rd{\reg}{r_s} {=} \atom{w\old}{t\old} \\
+  \frule{\ii{Mov}}{\tpc}{\ti}{t_p}{t\old}{} {\tpc'}{\targ{res}} \\
+  \reg' = \upd{\reg}{r_s}{w@\targ{res}}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
+  }
+\bigskip
+
+%Binop
+\infrule[Binop]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Binop}~op~r_p~r_s~r_t\\
+  \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
+  \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
+  \rd{\reg}{r_t} {=} \atom{w\old}{t\old} \\
+  \frule{\ii{Binop op}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{\targ{res}} \\
+  \reg' = \upd{\reg}{r_t}{(w_p{op}w_s@\targ{res}}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
+  }
+\bigskip
+
+%Load
+\infrule[Load]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Load}~r_p~r_s\\
+  \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
+  \rd{\mem}{w_p} {=} \atom{w}{\targ{mem}} \andalso
+  \rd{\reg}{r_s} {=} \atom{w\old}{t\old} \\
+  \frule{\ii{Load}}{\tpc}{\ti}{t_p}{\targ{mem}}{t\old} {\tpc'}{\targ{res}} \\
+  \reg' = \upd{\reg}{r_s}{(w@\targ{res}}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
+  }
+\bigskip
+
+%Store
 \infrule[Store]{
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s  \\
   \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
   \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
   \rd{\mem}{w_p} {=} \atom{w\old}{t\old} \\
-  \handler{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
-  \mem' = \upd{\mem}{w_p}{w_s@t_d'}
+  \frule{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
+  \mem' = \upd{\mem}{w_p}{\atom{w_s}{t_d'}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem'}{\reg}{\atom{\pc + 1}{\tpc'}}{int}}
   }
 \bigskip
 
+%Jump
 \infrule[Jump]{
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jump}~r \andalso
   \rd{\reg}{r} {=} \atom{w}{t_w} \\
-  \handler{\ii{Jump}}{\tpc}{\ti}{t_w}{-}{-} {\tpc'}{-}
+  \frule{\ii{Jump}}{\tpc}{\ti}{t_w}{}{} {\tpc'}{-}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg}{\atom{w}{\tpc'}}{int}}
   }
-\caption{Symbolic stepping relation for Store and Jump}
+\bigskip
+
+%Bnz
+\infrule[Bnz]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Bnz}~r~n \andalso
+  \rd{\reg}{r} {=} \atom{w}{t_w} \\
+  \frule{\ii{Bnz}}{\tpc}{\ti}{t_w}{}{} {\tpc'}{-}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg}{\atom{w}{\tpc'}}{int}}
+  }
+\bigskip
+
+%Jump
+\infrule[Jal]{
+  \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jal}~r \\
+  \rd{\reg}{r} {=} \atom{w}{t_w} \andalso
+  \rd{\reg}{ra} {=} \atom{w\old}{t\old} \\
+  \frule{\ii{Jal}}{\tpc}{\ti}{t_w}{t\old}{} {\tpc'}{-} \\
+  \reg' = \upd{\reg}{ra}{\atom{pc + 1}{\targ{res}}}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
+  {\astat{\mem}{\reg'}{\atom{w}{\tpc'}}{int}}
+  }
+\bigskip
+
+%Monitor Service
+\infrule[Service]{
+  \mem[\pc] = \varnothing \andalso
+  \ii{get\_service}~\pc = (\ti,f) \\
+  \frule{\ii{Service}}{\tpc}{\ti}{}{}{} {\tpc'}{-} \\
+  f~\acfistat{\mem}{\reg}{\pc}{\extra}{}=
+    \acfistat{\mem'}{\reg'}{\pc'}{\extra}{}
+  }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{\extra}}
+  {\astat{\mem'}{\reg'}{\atom{\pc'}{\tpc'}}{\extra'}}
+  }
+
+\caption{Stepping relation for the symbolic machine}
+\label{fig:symbolic_step}
 \end{figure}
 
-Notice that when a store instruction executed, the tag on the memory location to
-be overwritten is fetched, allowing the \TRANSFER function to know what kind of
-data we are trying to overwrite.
+Notice for example, that when a store instruction executed, the tag on
+the memory location to be overwritten is fetched, allowing the
+\TRANSFER function to know what kind of data we are trying to
+overwrite. Returning to the example micro-policy in \ref{sec:nwc_nxd}
+we can define the transfer function that is used by the symbolic machine
+as a Coq function.
+
+\TODO{Actually define it - but wait for beautified coq code to kick in}
 
 \section{A Programmable Unit for Metadata Processing}\label{sec:pump}
 
@@ -265,132 +349,146 @@ data we are trying to overwrite.
 \subsection{Hardware Architecture}
 
 The Programmable Unit for Metadata Processing (PUMP) architecture
-\cite{pump_hasp2014}
-allows us to efficiently implement a wide range of security policies 
-\cite{pump_ccs2014} by associating metadata to the data being processed 
-(e.g., this is an instruction, this is from the network, this is private),
-propagating the metadata as instructions are executed and using a rules-based 
-system to check invariants on the metadata in parallel with the main computation.
-Abstractly, the tag propagation rules form a partial function from a set of 
-input tags to a set of output tags
-$$(opcode, tag_{pc},tag_{instr}, tag_{arg1}, tag_{arg2}, tag_{arg3})
-\nrightarrow (tag_{pc'},tag_{result})$$
-informally read as, ``if the next instruction to be executed is opcode, the 
-current tag of the program counter is $pc_{tag}$, the current tag on the 
-instruction location is $tag_{instr}$ and the tags on the operands of the 
-instruction are $tag_{arg1}, tag_{arg2}$ and $tag_{arg3}$ then if execution of 
-the instruction is allowed the tag on the program counter should be set
-to $tag_{pc'}$ and any new data created by the instruction should be tagged 
-$tag_{result}$''.
+\cite{pump_hasp2014} allows us to efficiently implement a wide range
+of micro-policies \cite{pump_asplos2015}, using software to define
+the rules enforcing the policy, while the hardware provides efficiency
+by undertaking the propagation of the tags and a rules cache.
 
-On the hardware level, the PUMP is an extension to a conventional RISC 
-architecture. Every word of data in the machine - whether in memory 
-or a register, is extended with a word-sized metadata tag.
-These tags are not interpreted by hardware, instead the interpretation of the 
-tags is left to the software, thus making it easy to implement new policies on 
-the metadata. Since tags are word-sized, they can be pointers to complex 
-data-structures of tags, such as tuples of tags, allowing for complex policies 
-to be expressed and multiple orthogonal policies to be enforced in parallel.
+On the hardware level, the PUMP is an extension to a conventional RISC
+architecture. Every word of data in the machine - whether in memory or
+a register, is extended with a word-sized metadata tag.  These tags
+are not interpreted by hardware, instead the interpretation of the
+tags is left to the software, thus making it easy to implement new
+policies on the metadata. Since tags are word-sized, they can be
+pointers to complex data-structures of tags, such as tuples of tags,
+allowing for complex policies to be expressed and multiple orthogonal
+policies to be enforced in parallel.
 
-The hardware undertakes the correct propagation of tags from operands to results 
-according to the rules defined by the software. 
-A hardware rule cache mapping sets of input tags to sets of output tags is used 
-for common case efficiency. On each instruction dispatch, in parallel 
-with the usual behavior of an instruction 
-(\EG execution of an addition in the ALU), the hardware forms the set of input 
-tags and a lookup is performed on the rule cache. If the lookup is successful
-a set of output tags is returned and combined with the results of the normal 
-execution of the  instruction a new state is produced. On the other hand, 
-if the lookup failed, the hardware invokes a trusted piece of system software - 
-the fault handler - which checks the input tags and decides whether the 
-execution should be allowed or not. In the first case, the fault handler returns
-a set of result tags, a pair of set of input and output tags is formed and
-inserted into the rules cache, while the faulting instruction is restarted 
-and will now hit the cache. Otherwise, execution of this instruction violated 
-some rules of the enforced policy and execution should not continue normally 
-(\EG should be halted).
+The hardware undertakes the correct propagation of tags from operands
+to results according to the rules defined by the software. A hardware
+rule cache mapping sets of input tags to sets of output tags is used
+for common case efficiency. On each instruction dispatch, in parallel
+with the usual behavior of an instruction (\EG execution of an
+addition in the ALU), the hardware forms the set of input tags and a
+lookup is performed on the rule cache. If the lookup is successful a
+set of output tags is returned and combined with the results of the
+normal execution of the instruction a new state is produced. On the
+other hand, if the lookup failed, the hardware invokes a trusted piece
+of system software - the fault handler - which checks the input tags
+and decides whether the execution should be allowed or not. In the
+first case, the fault handler returns a set of result tags, a pair of
+set of input and output tags is formed and inserted into the rules
+cache, while the faulting instruction is restarted and will now hit
+the cache. Otherwise, execution of this instruction violated some
+rules of the enforced policy and execution should not continue
+normally (\EG should be halted).
 
-As described in the original PUMP paper by Dehon \ETAL \cite{pump_hasp2014} and 
-in more detail in the follow-up \cite{pump_ccs2014} a rich set of effective 
-security policies can be efficiently implemented using the architecture 
-mentioned above. In particular, implementations of dynamic typing, memory safety
-for heap-based data, control flow integrity and taint tracking are described, 
-evaluated against a specific threat model and benchmarked. The benchmarks are
-done using a simulation of the described hardware and the two papers claim low
-overhead (~10\% on average) for each of the policies named above.
+As described in the original PUMP paper by Dehon \ETAL
+\cite{pump_hasp2014} and in \cite{pump_asplos2015} a rich set of
+effective security policies can be efficiently implemented using the
+architecture mentioned above. In particular, implementations of
+dynamic typing, memory safety for heap-based data, control flow
+integrity and taint tracking are described, evaluated against a
+specific threat model and benchmarked. The benchmarks are done using a
+simulation of the described hardware and the two papers claim low
+overhead (~3\% on average) for each of the policies named above.
 
-Compared to other software solutions for enforcing security policies, the PUMP 
-offers  significantly lower overhead, thanks to dedicated hardware assistance, 
-while the fact that interpretation of the metadata is done by software offers 
-flexibility with regard to the policies that can be implemented, compared to 
+Compared to other software solutions for enforcing security policies, the PUMP
+offers significantly lower overhead, thanks to dedicated hardware assistance,
+while the fact that interpretation of the metadata is done by software offers
+flexibility with regard to the policies that can be implemented, compared to
 hardware solutions implementing a specific policy.
 
-While the PUMP offers flexibility at a low runtime performance overhead, 
-there are more overheads associated to such a mechanism. For example adding 
-metadata to all the data in the machine, would result in a 100\% memory overhead.
-In addition, the extra hardware and the rule cache along with potentially larger
-memories could result into a 400\% overhead on energy usage. \cite{pump_ccs2014}
-The authors claim that a careful and well-optimized implementation can reduce 
+While the PUMP offers flexibility at a low runtime performance
+overhead, there are more overheads associated to such a mechanism. For
+example adding metadata to all the data in the machine, would result
+in a 100\% memory overhead.  In addition, the extra hardware and the
+rule cache along with potentially larger memories could result into a
+400\% overhead on energy usage. \cite{pump_asplos2015} The authors
+claim that a careful and well-optimized implementation can reduce
 these numbers, resulting in a 50\% energy overhead.
 %
-\FEEDBACK{Cite ASPLOS instead of CCS; use optimized numbers}
+\FEEDBACK{use optimized numbers}
 
 \subsection{Concrete Machine Modeling PUMP Architecture}\label{sec:concrete}
 
-The concrete machine is a model of the basic machine with PUMP hardware, 
-in particular a rules \cache and a software \emph{miss handler}. 
-The instruction set has been extended with four additional instructions that 
-are meant to be used by monitor code only, a restriction enforced by the monitor
-self-protection mechanism.
+The concrete machine is a model of the PUMP architecture, modeling a
+RISC machine with a rules \cache and the software \emph{miss handler}.
+The instruction set has been extended with four additional
+instructions that are meant to be used by monitor code only, a
+restriction that is enforced by the monitor self-protection
+micro-policy.
 
-The states of the concrete machine consists of a memory, registers, a \pc 
-register, an \epc register a special purpose register that holds the address of
-the faulting instruction after a cache miss and a cache.
-The cache works as a key-value store where a key is an \emph{input vector} that
-contains an instruction opcode, the concrete tag of the current instruction,
-the concrete tag of the pc and up to three operand tags, and a value is an 
-\emph{output vector} which contain a tag for the new pc and a tag for any
-results from the execution of the instruction. Intuitively a concrete tag is the
-encoding into a word of a symbolic tag. 
-Lifting this encoding relation to vectors, we get that a concrete vector is the
-encoding of a symbolic vector (\emph{mvector}). 
-In accordance \FEEDBACK{em this sucks? does this word even exist? think about smth else?} to the symbolic machine
-the contents of the memory, the registers, the pc and the epc are concrete atoms
-\atom{w}{t} where w is a word and t is the encoding of a tag into a word.
+The state of the concrete machine consists of the memory, the
+registers, the \pc register, the \epc register a special purpose
+register that holds the address of the faulting instruction after a
+cache miss and a rules cache. The cache works as a key-value store
+where a key is an \emph{input vector} that contains an instruction
+opcode, the tag of the current instruction, the tag of the pc and up
+to three operand tags, and a value is an \emph{output vector} which
+contain a tag for the new pc and a tag for any results from the
+execution of the instruction. In the context of the concrete machine a
+tag is the encoding into a word of a symbolic tag. Lifting this
+encoding relation to vectors, we get that a concrete vector is the
+encoding of a symbolic vector (\emph{mvector}). Similar to the
+symbolic machine the contents of the memory, the registers, the pc and
+the epc are concrete atoms \atom{w}{t} where w is a word and t is the
+encoding of a tag into a word.
 
 The stepping relation for the concrete machine is a bit more complicated than
 the one for the symbolic machine. In particular, on each step the machine forms
-the \emph{input vector} and looks it up in the cache. If the lookup succeeds 
-then the instruction is allowed, a \emph{output vector} is returned by the
-cache and the next state is tagged according to it. 
-If the lookup fails, then the \emph{input vector} is saved in memory, the 
+the \emph{input vector} and looks it up in the cache. If the lookup succeeds
+then the instruction is allowed, an \emph{output vector} is returned by the
+cache and the next state is tagged according to it.
+If the lookup fails, then the \emph{input vector} is saved in memory, the
 current \pc is stored in \epc and the machine traps to the \emph{miss handler}.
 The above are demonstrated in the two example rules below:
 
-\TODO{put example rules}
+\begin{figure}[H]
+\infrule[Store]{
+  \mem[\pc] = \atom{i}{t_i} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s \\
+  \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
+  \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
+  \rd{\mem}{w_p} {=} \atom{w\old}{t\old} \\
+  \rulelookup{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
+  \mem' = \upd{\mem}{w_p}{\atom{w_s}{t_d'}}
+  }{\step{\cstat{\mem}{\reg}{\atom{\pc}{\tpc}}{\epc}{\cache}}{
+              \cstat{\mem'}{\reg}{\atom{(\pc{+}1)}{\tpc'}}}{\epc}{\cache}}
+\bigskip
+\infrule[Store-Miss]{
+  \mem[\pc] = \atom{i}{t_i} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s  \\
+  \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
+  \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
+  \rd{\mem}{w_p} {=} \atom{w\old}{t\old} \\
+  \rulelookupmiss{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} \\
+  \mem' = \savestate{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\mem}
+  }{\step{\cstat{\mem}{\reg}{\atom{\pc}{\tpc}}{\epc}{\cache}}{
+              \cstat{\mem'}{\reg}{\atom{\trapaddr}{\ii{Monitor}}}{\atom{\pc}{\tpc}}{\cache}}}
+\caption{Concrete step rules for Store instruction}
+\end{figure}
 
 Addresses 0 to 5 are used to store the \emph{input vector} and 6 to 7 are used
-by the miss handler to store the \emph{output vector}. As a side-note, cache 
+by the miss handler to store the \emph{output vector}. As a side-note, cache
 eviction is not modeled (an infinite cache is assumed).
 
 \subsection{Concrete Policy Monitor}\label{sec:concrete_policy}
 
-Unlike the symbolic machine, where the user cannot cannot change the 
+Unlike the symbolic machine, where the user cannot cannot change the
 \TRANSFER function, enforcing a micro-policy on the concrete machine requires
 that we are able to protect the memory of the policy monitor and that privileged
-instructions are not executed by user code. This self-protection policy can be 
+instructions are not executed by user code. This self-protection policy can be
 easily composed with another micro-policy and enforced by the infrastructure
-described above. 
+described above.
 
-Using tags of the form, \USER{\ii{st}}, \ENTRY{\ii{st}}, \MONITOR we can 
-distinguish between user memory, monitor memory and monitor services. 
+Using tags of the form, \USER{\ii{st}}, \ENTRY{\ii{st}}, \MONITOR we can
+distinguish between user memory, monitor memory and monitor services.
 In particular \USER{\ii{st}} is used to tag a user-level atom, where \ii{st} is
 the word-encoding of a symbolic tag. \MONITOR is used to tag the monitor memory
 and a few reserved registers. The \pc is tagged with \MONITOR when a monitor
 execution takes place and \USER{\ii{st}} when user-code is executed. The tag
-\ENTRY{\ii{st}} is used to tag the first instruction of a monitor service and 
+\ENTRY{\ii{st}} is used to tag the first instruction of a monitor service and
 serves as an indication that execution will continue under the privileged
-\MONITOR mode. 
+\MONITOR mode.
 
 The miss handler is a composed policy monitor that protects itself from
 \USERname code and that enforces a desired micro-policy.
@@ -398,4 +496,3 @@ One important thing to note is that the miss handler for the concrete machine
 can take an arbitrary number of steps before deciding that no violation occurred
 and returning to \USERname  mode, unlike the symbolic \TRANSFER function that
 does not need to take any steps.
-
