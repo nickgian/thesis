@@ -28,12 +28,6 @@ plethora of software written in unsafe languages such as C.
 
 \section{Micro-Policies}\label{sec:micropolicies}
 
-\FEEDBACK{More text introducing micro-policies:
-instruction-level security monitoring mechanisms based
-on fine-grained metadata tags (PUMP is just a way of implementing this
-  efficiently)
-}
-
 \FEEDBACK{Can the main idea of the CFI micro-policy be introduced here
   already? See grant proposal.}
 
@@ -64,9 +58,6 @@ the tag propagation as described above.
 \item a tagging scheme for the initial state of the machine.
 \item for some micro-policies, a set of {\em monitor services} (\IE privileged
 code) that can be invoked by user code.
-%\ch{CFI doesn't use this itself, but virtualizes
-%  the mechanism!}
-\end{enumerate}
 
 Furthermore, as we will see in \ref{sec:pump}, a software-hardware
 mechanism that allows for implementation of micro-policies without
