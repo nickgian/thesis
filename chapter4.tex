@@ -772,11 +772,12 @@ step of the symbolic machine is matched by one step
 of the abstract machine.
 
 \begin{definition}[1-Backward Simulation]
-\label{simulation_SA}
-  The symbolic machine simulates the abstract machine with respect to
-  a $simulation~relation~\sim$ between symbolic and abstract states,
-  if $s^A_1 \sim s_1^S$ and \stepn{s^S_1}{s^S_2} implies that there
-  exists $s^A_2$ such that, $s^A_2 \sim s^S_2$ and \stepn{s^A_1}{s^A_2}.
+\label{simulation_LH}
+  A low-level machine simulates a high-level machine with respect to a
+  $simulation~relation~\sim$ between low-level machine states and
+  high-level machine states, if $s^H_1 \sim s_1^L$ and
+  \stepn{s^L_1}{s^L_2} implies that there exists $s^H_2$ such that,
+  $s^H_2 \sim s^L_2$ and \stepn{s^H_1}{s^H_2}.
 
 We visualize the above definition with the following diagram:
 
@@ -786,8 +787,8 @@ We visualize the above definition with the following diagram:
     \begin{tikzpicture}
       \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
       {
-        s^S_1 & s^S_2 \\
-        A_t & A \\};
+        s^L_1 & s^L_2 \\
+        s^H_1 & s^H_2 \\};
       \path[->]
       (m-1-1) edge [snake it,-] node  {} (m-2-1)
       edge [above] node [below] {} (m-1-2)
@@ -963,21 +964,28 @@ words (\textit{addr,v,v'}),
 
 With these definitions and lemmas we are able to prove 1-backward simulation
 for normal steps between the Symbolic and the Abstract machine as defined
-by \cref{simulation_SA}, a crucial theorem for the rest of our development.
+by \cref{simulation_LH}, where the low-level machine is the Symbolic machine and
+the high-level machine is the Abstract machine.
+
+\begin{theorem}[1-Backward Simulation Symbolic-Abstract]
+\label{simulation_SA}
+\Cref{simulation_LH} holds for the Symbolic (low-level) and
+the Abstract (high-level) machines.
+\end{theorem}
 
 \subsubsection{Proving 1-backward simulation for attacker steps}
 \label{sec:backward_SA_attacker}
 
-The same definition as \labelcref{simulation_SA} of 1-backward
+The same definition as \labelcref{simulation_LH} of 1-backward
 simulation is used for the attacker, with the sole difference being
 that steps now refer to attacker steps.
 
 \begin{definition}[1-Backward Simulation Attacker]
-\label{simulation_SA_attacker}
+\label{simulation_LH_attacker}
   The symbolic machine simulates the abstract machine with respect to
   a $simulation~relation~\sim$ between symbolic and abstract states,
-  if $s^A_1 \sim s_1^S$ and \stepa{s^S_1}{s^S_2}{S} implies that there
-  exists $s^A_2$ such that, $s^A_2 \sim s^S_2$ and \stepa{s^A_1}{s^A_2}{S}.
+  if $s^H_1 \sim s_1^L$ and \stepa{s^L_1}{s^L_2}{L} implies that there
+  exists $s^H_2$ such that, $s^H_2 \sim s^L_2$ and \stepa{s^H_1}{s^H_2}{H}.
 \end{definition}
 
 We prove that 1-backward simulation for attacker steps hold, by first
@@ -1121,9 +1129,14 @@ complicated, due to the fact that we had to split the symbolic memory.
   \end{align*}
 \end{lemma}
 
-Finally using these lemmas we can prove that, a 1-backward
-simulation for attacker steps as defined by \cref{simulation_SA_attacker}
-holds.
+Likewise with normal steps, we can now prove a 1-backward
+simulation for attacker steps as defined by \cref{simulation_LH_attacker}.
+
+\begin{theorem}[1-Backward Simulation Symbolic-Abstract for Attacker]
+\label{simulation_SA_attacker}
+\Cref{simulation_LH_attacker} holds for the Symbolic (low-level) and
+the Abstract (high-level) machines.
+\end{theorem}
 
 \section{The Concrete  Machine}\label{sec:concrete_cfi}
 
@@ -1201,7 +1214,7 @@ the two least-significant bits are used to distinguish between \DATA,
 \INSTR{$\bot$} and \INSTR{\id}, and the 28 higher-bits are the \id
 in the last case and zero otherwise.
 
-\begin{table}[htpb!]
+\begin{table}[htb!]
 \centering
     \begin{tabular}{|c|c|}
     \hline
@@ -1223,7 +1236,7 @@ policy monitor does not use symbolic tags and the corresponding tag
 \MONITOR does not need to wrap around them. Thus the encoding of the
 \MONITOR tag has all its bits set to zero.
 
-\begin{figure}[htpb!]
+\begin{figure}[htb!]
   \centering
   \begin{bytefield}[endianness=big]{32}
     \bitheader{0,1,2,3,31} \\
@@ -1233,6 +1246,56 @@ policy monitor does not use symbolic tags and the corresponding tag
   \caption{Encoding of an instruction with a unique identifier id}
 \end{figure}
 
+With the above encoding, we can easily define a \emph{decode} function
+and prove that the \emph{decode} function is the \emph{left inverse}
+of the \emph{encode} function ($decode (encode~t) = t$) and
+\emph{right inverse} for all elements in the domain of \emph{decode}
+($decode~w = t \implies encode~t = w$).
 
+\subsection{Concrete-Symbolic backward refinement}\label{sec:refinement_CS}
 
+We can now instantiate the backward refinement between the concrete
+and the symbolic machine that is provided by the micro-policies
+framework \cite{pump_popl2015}. For the concrete to symbolic backward
+refinement we no longer get a 1-backward simulation, due to the fact
+that the steps the concrete policy monitor takes are not matched by
+any steps of the symbolic machine. We can however proof a 1-backward
+simulation as defined by \cref{simulation_LH}, where the low-level
+machine is now the concrete machine and the high-level one the
+symbolic machine, with respect to a simulation relation ($\sim_U$)
+when the tag of the \pc is \USERname (user state).
+
+For \MONITOR steps we can use a weaker simulation relation ($\sim_M$)
+and eventually obtain a $\lbrace 0,1 \rbrace$-backward simulation.
+
+\begin{definition}[Weak simulation relation for Monitor steps]
+\label{weak_simulation_relation}
+  A concrete state $s^C$ is in weak simulation with a symbolic state $s^S$
+  ($s^S \sim_M s^C$), if the tag of the \pc of state $s^C$ is \MONITOR and
+  there exists a concrete user state $s_0^C$ such that $s^S \sim_U s^C_0$
+  and there is an execution trace $s^C_0 \to_n \ldots \to_n s^C$ with only
+  monitor steps (all states have \MONITOR tag on the \pc).
+  
+  We visualize the above definition with the following diagram:
+
+%
+\vspace{-\smallskipamount}
+ \begin{center}
+    \begin{tikzpicture}
+      \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
+      {
+        & s^S \\
+        s^C_0 & s^C_1 & s^C \\};
+      \path[->]
+      (m-1-2) edge [snake it,-,above,sloped,font=\tiny] node {U} (m-2-1)
+      (m-2-1.east|-m-2-2) edge [below,font=\tiny] node {UM}
+      node {} (m-2-2)
+      (m-1-2) edge [snake it,-,left,font=\tiny] node {M} (m-2-2)
+      (m-2-2.east|-m-2-3) edge [below,font=\tiny] node {$M^*$}
+      node {} (m-2-3)
+      (m-1-2) edge [snake it,-,above,sloped,font=\tiny] node {M} (m-2-3);
+    \end{tikzpicture}
+  \end{center}
+\vspace{-\smallskipamount}
+\end{definition}
 
