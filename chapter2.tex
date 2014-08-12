@@ -149,13 +149,13 @@ providing these two parameters.
 
 \subsection{Correctness of micro-policies}\label{sec:verification}
 
-For each micro-policy an abstract machine which serves as a
-specification to the invariants the policy designer wants to enforce
+For each micro-policy an abstract machine, which serves as a
+specification to the invariants the policy designer wants to enforce,
 is defined. The abstract machine is ``correct'' by construction,
 meaning that it's designed to respect those invariants. Using the
 symbolic machine as an intermediate step to simplify the proofs, by
 proving a refinement between the symbolic and the abstract machine and
-by utilizing the the generic refinement between the symbolic and the
+by utilizing the generic refinement between the symbolic and the
 concrete machine, we can prove a refinement between the abstract and
 the concrete machine, thus showing that every valid step for the
 concrete machine is also a valid step for the abstract machine.
@@ -201,11 +201,11 @@ by the \TRANSFER function and in this case halts the machine, or if no
 violation occurred returns a tag for the new \pc and a tag for any
 results the instruction execution produced.
 
-We give, in form of inference rules, the stepping relation for the
+In \cref{symbolic_step} we give, in form of inference rules, the stepping relation for the
 Symbolic machine, demonstrating how the transfer function and the
 tag propagation works at each step.
 
-\begin{figure}[H]
+\begin{figure}[htpb!]
 \small
 %Nop
 \infrule[Nop]{
@@ -322,7 +322,7 @@ tag propagation works at each step.
   }
 
 \caption{Stepping relation for the symbolic machine}
-\label{fig:symbolic_step}
+\label{symbolic_step}
 \end{figure}
 
 Notice for example, that when a store instruction executed, the tag on
@@ -434,9 +434,9 @@ then the instruction is allowed, an \emph{output vector} is returned by the
 cache and the next state is tagged according to it.
 If the lookup fails, then the \emph{input vector} is saved in memory, the
 current \pc is stored in \epc and the machine traps to the \emph{miss handler}.
-The above are demonstrated in the two example rules below:
+The above are demonstrated in the two example rules in \cref{cstep_store}.
 
-\begin{figure}[H]
+\begin{figure}[!htpb]
 \infrule[Store]{
   \mem[\pc] = \atom{i}{t_i} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s \\
   \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
@@ -457,6 +457,7 @@ The above are demonstrated in the two example rules below:
   }{\step{\cstat{\mem}{\reg}{\atom{\pc}{\tpc}}{\epc}{\cache}}{
               \cstat{\mem'}{\reg}{\atom{\trapaddr}{\ii{Monitor}}}{\atom{\pc}{\tpc}}{\cache}}}
 \caption{Concrete step rules for Store instruction}
+\label{cstep_store}
 \end{figure}
 
 Addresses 0 to 5 are used to store the \emph{input vector} and 6 to 7 are used

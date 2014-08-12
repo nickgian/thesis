@@ -37,31 +37,20 @@ example, the node identifiers, along with a number of properties we
 require of them are expressed by the following interface (defined in
 terms of a type class):
 
-\begin{figure}[!htpb] 
-\begin{coqdoccode}
-  \coqdocnoindent \coqdockw{Context} \{\coqdocvar{t} :
-  \coqdocvar{machine\_types}\}.\coqdoceol \coqdocemptyline
-  \coqdocnoindent \coqdockw{Class} \coqdocvar{cfi\_id} := \{\coqdoceol
-  \coqdocindent{1.00em} \coqdocvar{id} : \coqdocvar{eqType};\coqdoceol
-  \coqdocnoindent \coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{word\_to\_id} : \coqdocvar{word} \coqdocvar{t}
-  \ensuremath{\rightarrow} \coqdocvar{option}
-  \coqdocvar{id};\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{id\_to\_word} : \coqdocvar{id} \ensuremath{\rightarrow}
-  \coqdocvar{word} \coqdocvar{t};\coqdoceol \coqdocindent{1.00em}
-  \coqdoceol \coqdocindent{1.00em} \coqdocvar{id\_to\_wordK} :
-  \coqdockw{\ensuremath{\forall}} \coqdocvar{x},
-  \coqdocvar{word\_to\_id} (\coqdocvar{id\_to\_word} \coqdocvar{x}) =
-  \coqdocvar{Some} \coqdocvar{x};\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{word\_to\_idK} : \coqdockw{\ensuremath{\forall}}
-  \coqdocvar{w} \coqdocvar{x}, \coqdocvar{word\_to\_id} \coqdocvar{w}
-  = \coqdocvar{Some} \coqdocvar{x} \ensuremath{\rightarrow}
-  \coqdocvar{id\_to\_word} \coqdocvar{x} = \coqdocvar{w}\coqdoceol
-  \coqdocindent{14.50em} \coqdoceol \coqdocnoindent \}.\coqdoceol
-\end{coqdoccode}
-\caption{Interface of node identifiers}
-\label{fig:cfi_id}
-\end{figure}
+\lstheader{id_class}{Interface of node identifiers}
+Context {t : machine_types}.
+
+Class cfi_id := {
+  id         : eqType;
+
+  word_to_id : word t -> option id;
+  id_to_word : id -> word t;
+  
+  id_to_wordK : forall x, word_to_id (id_to_word x) = Some x;
+  word_to_idK : forall w x, word_to_id w = Some x -> id_to_word x = w
+                             
+}.
+\end{lstlisting}
 
 The \emph{Context} command on the top of the code above, allows us to
 \textit{assume} that there exists an instance of this interface.
@@ -79,7 +68,7 @@ all parts that used this wrong specification (\EG in our case, the
 \emph{machine\_types} class was widely used). Therefore one should be careful
 when doing heavy use of such mechanisms.
 
-Returning to the identifiers, looking at the definition in \ref{fig:id_class},
+Returning to the identifiers, looking at the definition in \cref{id_class},
 we require that the type of the identifiers \id is an Eqtype (has decidable
 boolean equality) and that there exists conversion functions between elements
 of type \word and \id, satisfying some constraints. 
@@ -87,7 +76,7 @@ of type \word and \id, satisfying some constraints.
 \QUESTION{Should I give some intuition, as to why word\_to\_id is partial? Is it
 obvious?}
 
-As mentioned in \ref{sec:cfi_fine}, we check for violations of the
+As mentioned in \cref{sec:cfi_fine}, we check for violations of the
 control-flow with respect to a binary relation (on the identifiers)
 \CFG which represents the set of allowed (indirect) jumps. We can
 extend this relation to precisely describe the control-flow of a
@@ -97,33 +86,22 @@ instructions. Throughout this thesis we use \CFG to refer to the set
 of allowed jumps. In our Coq development we assumed a translation of
 the allowed jumps in form of a function on two identifiers.
 
-\begin{figure}[H]
-  \coqdockw{Variable} \coqdocvar{cfg} : \coqdocvar{id}
-  \ensuremath{\rightarrow} \coqdocvar{id} \ensuremath{\rightarrow}
-  \coqdocvar{bool}.\coqdoceol
-\caption{Function on ids representing the set of allowed jumps}
-\label{fig:cfg}
-\end{figure}
+
+\lstheader{cfg}{Function on ids representing the set of allowed jumps}
+Variable cfg : id -> id -> bool.
+\end{lstlisting}
 
 In addition we defined a function valid\_jmp (referred to with the
 notation \J) that expresses the set of allowed jumps between words, by
 using the \emph{word\_to\_id} function.
 
-\begin{figure}[H]
-  \coqdockw{Definition} \coqdocvar{valid\_jmp} \coqdocvar{w1}
-  \coqdocvar{w2} :=\coqdoceol \coqdocindent{1.00em} \coqdockw{match}
-  \coqdocvar{word\_to\_id} \coqdocvar{w1}, \coqdocvar{word\_to\_id}
-  \coqdocvar{w2} \coqdockw{with}\coqdoceol \coqdocindent{2.00em}
-  \ensuremath{|} \coqdocvar{Some} \coqdocvar{id1}, \coqdocvar{Some}
-  \coqdocvar{id2} \ensuremath{\Rightarrow} \coqdocvar{cfg}
-  \coqdocvar{id1} \coqdocvar{id2}\coqdoceol \coqdocindent{2.00em}
-  \ensuremath{|} \coqdocvar{\_}, \coqdocvar{\_}
-  \ensuremath{\Rightarrow} \coqdocvar{false}\coqdoceol
-  \coqdocindent{1.00em} \coqdockw{end}.\coqdoceol
-\caption{Function on words representing the set of allowed jumps}
-\label{fig:valid_jmp}
-\end{figure}
-
+\lstheader{valid_jmp}{Function on words representing the set of allowed jumps}
+Definition valid_jmp w1 w2 :=
+  match word_to_id w1, word_to_id w2 with
+    | Some id1, Some id2 => cfg id1 id2
+    | _, _ => false
+  end.
+\end{lstlisting}
 
 \section{Control-Flow Integrity Property}\label{sec:cfi_property}
 
@@ -139,14 +117,14 @@ mechanism, it does however lead to a more complex definition and therefore
 more complex proofs.
 
 The definition of \CFI is further parameterized by an attacker model. We
-model the attacker as a step relation (\stepa{}{}). Intuitively the attacker is
+model the attacker as a step relation (\stepa{}{}{}). Intuitively the attacker is
 allowed to change any \emph{user-level} data but not the code of the program and
 the \pc, as well as the tags in the case of a tagged machine. 
 This limitations ensures that an attacker cannot directly circumvent the monitor
 protection mechanism and our user-level policies (\NWC , \NXD and \CFI). To 
 account for attacker steps, the stepping relation is extended as the union of 
 the normal step relation (\stepn{}{}), as defined by the machine semantics, and
-the attacker step relation (\stepa{}{}), as defined by the attacker model.
+the attacker step relation (\stepa{}{}{}), as defined by the attacker model.
 
 \begin{figure}[ht]
 \centering
@@ -177,32 +155,22 @@ each of our machines, it makes sense to wrap them in a type class which
 we will instantiate for each machine to get the corresponding definition
 of \CFI.
 
-\begin{figure}[ht]
-\begin{coqdoccode}
-  \coqdocnoindent \coqdockw{Class} \coqdocvar{cfi\_machine} :=
-  \{\coqdoceol \coqdocindent{1.00em} \coqdocvar{state} :
-  \coqdockw{Type};\coqdoceol \coqdocindent{1.00em} \coqdocvar{initial}
-  : \coqdocvar{state} \ensuremath{\rightarrow}
-  \coqdockw{Prop};\coqdoceol \coqdocindent{1.00em} \coqdoceol
-  \coqdocindent{1.00em} \coqdocvar{step\_n} : \coqdocvar{state}
-  \ensuremath{\rightarrow} \coqdocvar{state} \ensuremath{\rightarrow}
-  \coqdockw{Prop};\coqdoceol \coqdocindent{1.00em} \coqdocvar{step\_a}
-  : \coqdocvar{state} \ensuremath{\rightarrow} \coqdocvar{state}
-  \ensuremath{\rightarrow} \coqdockw{Prop};\coqdoceol \coqdocnoindent
-  \coqdoceol \coqdocindent{1.00em} \coqdocvar{succ} :
-  \coqdocvar{state} \ensuremath{\rightarrow} \coqdocvar{state}
-  \ensuremath{\rightarrow} \coqdocvar{bool};\coqdoceol
-  \coqdocindent{1.00em} \coqdocvar{stopping} : \coqdocvar{list}
-  \coqdocvar{state} \ensuremath{\rightarrow} \coqdockw{Prop}\coqdoceol
-  \coqdocnoindent \}.\coqdoceol
-\end{coqdoccode}
-\caption{Interface of a cfi\_machine}
-\label{fig:cfi_machine}
-\end{figure}
+\lstheader{cfi_machine}{Interface of a cfi\_machine}
+Class cfi_machine := {
+  state : Type;
+  initial : state -> Prop;
+  
+  step : state -> state -> Prop;
+  step_a : state -> state -> Prop;
+
+  succ : state -> state -> bool;
+  stopping : list state -> Prop
+}.
+\end{lstlisting}
 
 For a machine of type cfi\_machine we give the following definitions:
 
-\begin{definition}\label{definition:traceHasCfi}
+\begin{definition}[Trace has CFI]\label{traceHasCfi}
   We say that an execution trace $s_0 \to s_1 \to \ldots \to s_n$ {\em has CFI}
   if for all $ i \in [0,\ldots,n)$ if \stepn{s_i}{s_{i+1}} then
   $(s_i,s_{i+1}) \in$ \SUCC .
@@ -218,7 +186,7 @@ not allow for any violations then the above definition would be enough, but
 since our enforcement mechanism allows for one violation we have to resort to a
 weaker definition.
 
-\begin{definition}[CFI]\label{definition:CFI}
+\begin{definition}[CFI]\label{cfi}
   We say that the machine
   $(\ii{State}, \ii{initial}, \to_n,\allowbreak \to_a, \SUCCm{}, \ii{stopping})$
   has \CFI with respect to the set of allowed indirect jumps \CFG
@@ -226,7 +194,7 @@ weaker definition.
   and producing a trace $s_0 \to \ldots \to s_n$, either
   \begin{enumerate}
   \item The whole trace has \CFI according to
-    \ref{definition:traceHasCfi}, or else
+    \cref{traceHasCfi}, or else
   \item There is some $i$ such that $s_i \to_n s_{i+1}$,
   and $(s_i, s_{i+1}) \not \in$ \SUCC{}, where
   the sub-traces $s_0 \to \ldots \to s_i$ and
@@ -254,7 +222,7 @@ notation for the state \acfistat{\imem}{\dmem}{\reg}{\pc}{\ok}, where the first
 field is the instruction memory, the second the data memory, the third the
 registers, the fourth is the pc register and the fifth is the \ok bit.
 
-\subsection{Operational semantics}\label{abstract_semantics}
+\subsection{Operational semantics}\label{sec:abstract_semantics}
 Below is the step rule for the Store instruction, illustrating both \NWC and 
 \NXD. Notice that the instruction is fetched by the instruction memory and
 the store is done on the data memory.
@@ -278,7 +246,7 @@ happened, as expected by the execution of a Store
 instruction. Control-flow violations in the \NWC setting our machine
 is executing, can only occur from \emph{indirect} jump instructions,
 in our case the Jump and Jal instructions. Upon execution of a Jump or
-Jal instruction, we consult \J (see \ref{fig:valid_jmp}) to check
+Jal instruction, we consult \J (see \cref{valid_jmp}) to check
 whether the change of control-flow is legal. If the jump is not
 allowed according to \J then the jump is taken but the \ok bit is set
 to false, which will halt the machine in the next step, as it is only
@@ -419,12 +387,12 @@ defining a predicate on execution traces:
 
 Regarding initial states, we only require that the \ok bit is set to true.
 We can now instantiate the class of the machines defined in 
-\ref{fig:cfi_machine}, with the abstract machine and that the abstract machine
-has \CFI according to definition \ref{definition:CFI}.
+\cref{cfi_machine}, with the abstract machine and that the abstract machine
+has \CFI according to \cref{cfi}.
 We first prove a helpful lemma.
 
 \begin{lemma}[Step Intersection]
-\label{lemma:attacker_no_v}
+\label{attacker_no_v}
 For all states \textit{st st'} such that \stepa{st}{st'}{A}
 and \stepn{st}{st'}, $(\mathit{st},\mathit{st'}) \in \SUCCm{A}$.
 \end{lemma}
@@ -441,9 +409,9 @@ $(\mathit{st},\mathit{st'}) \in \SUCCm{A}$.
 \end{itemize}
 \end{proof}
 
-\begin{thm}[Abstract CFI]\label{thm:CFIabstract}
-The abstract machine has the \CFI property defined by \ref{definition:CFI}.
-\end{thm}
+\begin{theorem}[Abstract CFI]\label{CFIabstract}
+The abstract machine has the \CFI property stated by \cref{cfi}.
+\end{theorem}
 
 \begin{proof} 
   ~ The proof proceeds by induction on the execution trace.
@@ -452,10 +420,10 @@ The abstract machine has the \CFI property defined by \ref{definition:CFI}.
     of a single step \step{st}{st'}. We proceed with case analysis on
     the step.
     \begin{itemize}
-    \item \textbf{Attacker Step} By lemma \ref{lemma:attacker_no_v} we
+    \item \textbf{Attacker Step} By \cref{attacker_no_v} we
       note that an attacker step cannot be a normal step outside the
       \SUCC{A} relation. Thus in this case the whole trace has \CFI
-      according to \ref{definition:traceHasCfi}.
+      according to \cref{traceHasCfi}.
     \item \textbf{Normal Step} By case analysis, if
       $(\mathit{st},\mathit{st'}) \in \SUCCm{A}$ then trivially the
       whole trace has \CFI. Otherwise $(\mathit{st},\mathit{st'}) \not
@@ -492,7 +460,7 @@ The abstract machine has the \CFI property defined by \ref{definition:CFI}.
        is also a stopping trace. 
        \begin{itemize}
          \item If $(\mathit{s_0},\mathit{s_1}) \in \SUCCm{A}$ then
-           \ref{definition:CFI} still holds and the sub-trace $s_1 \to \ldots 
+           \cref{cfi} still holds and the sub-trace $s_1 \to \ldots 
            \to s_{v1}$ is extended by one step to $s_0 \to \ldots \to s_{v1}$.
          \item Otherwise the \ok bit for $s_1$ is set to false and the
            rest of the trace is stuck with respect to normal steps. However from
@@ -505,25 +473,22 @@ The abstract machine has the \CFI property defined by \ref{definition:CFI}.
 
 \section{The Symbolic  Machine}\label{sec:symbolic_cfi}
 
-The symbolic machine was described in \ref{sec:symbolic}. Unlike the
+The symbolic machine was described in \cref{sec:symbolic}. Unlike the
 abstract machine, the symbolic machine has one memory and the
 distinction between data and executable instructions is made through
-tags, in a fashion similar to what was shown in \ref{sec:nwc_nxd} and
-\ref{sec:cfi_fine}. We instantiate the symbolic machine, according to
-the aforementioned sections, with a set of tags
+tags, in a fashion similar to what was shown in
+\cref{sec:nwc_nxd,sec:cfi_fine}.  We instantiate the symbolic machine,
+according to the aforementioned sections, with a set of tags
 \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}} where id is drawn from the
-class of identifiers \ref{fig:cfi_id}.
+class of identifiers \cref{cfi_id}.
 
-\begin{figure}[!htpb]
-  \coqdockw{Context} \{\coqdocvar{ids} : @\coqdocvar{cfi\_id}
-  \coqdocvar{t}\}.\coqdoceol \coqdocemptyline \coqdocnoindent
-  \coqdockw{Inductive} \coqdocvar{cfi\_tag} : \coqdockw{Type}
-  :=\coqdoceol \coqdocnoindent \ensuremath{|} \coqdocvar{INSTR} :
-  \coqdocvar{option} \coqdocvar{id} \ensuremath{\rightarrow}
-  \coqdocvar{cfi\_tag}\coqdoceol \coqdocnoindent \ensuremath{|}
-  \coqdocvar{DATA} : \coqdocvar{cfi\_tag}.\coqdoceol
-\caption{Coq definition of Symbolic tags}
-\end{figure}
+\lstheader{cfi_tags}{Coq definition of Symbolic tags}
+Context {ids : @cfi_id t}.
+
+Inductive cfi_tag : Type :=
+| INSTR : option id -> cfi_tag
+| DATA  : cfi_tag.
+\end{lstlisting}
 
 Although enforcement of \CFI does not require any monitor services we
 expose the monitor services mechanism and we check whether calls to
@@ -532,7 +497,7 @@ graph. This is done by assuming a lookup-table of monitor services
 where each entry has a tag that is used to check for control-flow
 violations and a semantic function from symbolic state to symbolic
 state which produces the new machine state after execution of the
-system call, as shown in \ref{fig:symbolic_step}.
+system call, as shown in \cref{symbolic_step}.
 
 We do not need any internal state for this micro-policy therefore,
 only the transfer function is left to implement.
@@ -543,80 +508,47 @@ We implement the \TRANSFER function based on the rules found in
 \ref{sec:cfi_fine}, using Gallina to define a function mapping
 input vectors (mvector) to output vectors (rvector).
 
-\begin{figure}[htbp!]
-\begin{coqdoccode}
-  \coqdocnoindent \coqdockw{Definition} \coqdocvar{cfi\_handler}
-  \coqdocvar{umvec} :=\coqdoceol \coqdocindent{1.00em}
-  \coqdockw{match} \coqdocvar{umvec} \coqdockw{with}\coqdoceol
-  \coqdocindent{1.00em} \ensuremath{|} \coqdocvar{mkMVec}
-  \coqdocvar{JUMP} (\coqdocvar{INSTR} (\coqdocvar{Some}
-  \coqdocvar{n})) (\coqdocvar{INSTR} (\coqdocvar{Some} \coqdocvar{m}))
-  \coqdocvar{\_}\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{JAL} (\coqdocvar{INSTR}
-  (\coqdocvar{Some} \coqdocvar{n})) (\coqdocvar{INSTR}
-  (\coqdocvar{Some} \coqdocvar{m})) \coqdocvar{\_}
-  \ensuremath{\Rightarrow}\coqdoceol \coqdocindent{2.00em}
-  \coqdockw{if} \coqdocvar{cfg} \coqdocvar{n} \coqdocvar{m}
-  \coqdockw{then} \coqdocvar{Some} (\coqdocvar{mkRVec}
-  (\coqdocvar{INSTR} (\coqdocvar{Some} \coqdocvar{m}))
-  \coqdocvar{DATA})\coqdoceol \coqdocindent{2.00em} \coqdockw{else}
-  \coqdocvar{None}\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{JUMP} \coqdocvar{DATA}
-  (\coqdocvar{INSTR} (\coqdocvar{Some} \coqdocvar{n}))
-  \coqdocvar{\_}\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{JAL} \coqdocvar{DATA}
-  (\coqdocvar{INSTR} (\coqdocvar{Some} \coqdocvar{n})) \coqdocvar{\_}
-  \ensuremath{\Rightarrow} \coqdoceol \coqdocindent{2.00em}
-  \coqdocvar{Some} (\coqdocvar{mkRVec} (\coqdocvar{INSTR}
-  (\coqdocvar{Some} \coqdocvar{n})) \coqdocvar{DATA})\coqdoceol
-  \coqdocindent{1.00em} \ensuremath{|} \coqdocvar{mkMVec}
-  \coqdocvar{JUMP} \coqdocvar{DATA} (\coqdocvar{INSTR}
-  \coqdocvar{None}) \coqdocvar{\_}\coqdoceol \coqdocindent{1.00em}
-  \ensuremath{|} \coqdocvar{mkMVec} \coqdocvar{JAL} \coqdocvar{DATA}
-  (\coqdocvar{INSTR} \coqdocvar{None}) \coqdocvar{\_}
-  \ensuremath{\Rightarrow}\coqdoceol \coqdocindent{2.00em}
-  \coqdocvar{None}\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{STORE} (\coqdocvar{INSTR}
-  (\coqdocvar{Some} \coqdocvar{n})) (\coqdocvar{INSTR}
-  (\coqdocvar{Some} \coqdocvar{m})) [\coqdocvar{\_} ; \coqdocvar{\_} ;
-  \coqdocvar{DATA}] \ensuremath{\Rightarrow}\coqdoceol
-  \coqdocindent{2.00em} \coqdockw{if} \coqdocvar{cfg} \coqdocvar{n}
-  \coqdocvar{m} \coqdockw{then} \coqdocvar{Some} (\coqdocvar{mkRVec}
-  \coqdocvar{DATA} \coqdocvar{DATA}) \coqdockw{else}
-  \coqdocvar{None}\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{STORE} \coqdocvar{DATA}
-  (\coqdocvar{INSTR} \coqdocvar{\_}) [\coqdocvar{\_} ; \coqdocvar{\_}
-  ; \coqdocvar{DATA}] \ensuremath{\Rightarrow} \coqdoceol
-  \coqdocindent{2.00em} \coqdocvar{Some} (\coqdocvar{mkRVec}
-  \coqdocvar{DATA} \coqdocvar{DATA})\coqdoceol \coqdocindent{1.00em}
-  \ensuremath{|} \coqdocvar{mkMVec} \coqdocvar{STORE} \coqdocvar{\_}
-  \coqdocvar{\_} \coqdocvar{\_} \ensuremath{\Rightarrow}
-  \coqdocvar{None}\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{\_} (\coqdocvar{INSTR}
-  (\coqdocvar{Some} \coqdocvar{n})) (\coqdocvar{INSTR}
-  (\coqdocvar{Some} \coqdocvar{m})) \coqdocvar{\_}
-  \ensuremath{\Rightarrow} \coqdoceol \coqdocindent{2.00em}
-  \coqdockw{if} \coqdocvar{cfg} \coqdocvar{n} \coqdocvar{m}
-  \coqdockw{then} \coqdocvar{Some} (\coqdocvar{mkRVec}
-  \coqdocvar{DATA} \coqdocvar{DATA}) \coqdockw{else}
-  \coqdocvar{None}\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{\_} \coqdocvar{DATA}
-  (\coqdocvar{INSTR} \coqdocvar{\_}) \coqdocvar{\_}
-  \ensuremath{\Rightarrow} \coqdoceol \coqdocindent{2.00em}
-  \coqdocvar{Some} (\coqdocvar{mkRVec} \coqdocvar{DATA}
-  \coqdocvar{DATA})\coqdoceol \coqdocindent{1.00em} \ensuremath{|}
-  \coqdocvar{mkMVec} \coqdocvar{\_} \coqdocvar{\_} \coqdocvar{\_}
-  \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{None}\coqdoceol
-  \coqdocindent{1.00em} \coqdockw{end}.\coqdoceol
-\end{coqdoccode}
-\caption{Transfer function for symbolic machine in Gallina}
-\label{fig:transfer_coq}
-\end{figure}
+\lstheader{transfer_coq}{Transfer function for symbolic machine in Gallina}
+Definition cfi_handler (ivec : Symbolic.IVec cfi_tags) : 
+           option (Symbolic.OVec cfi_tags (Symbolic.op ivec)) :=
+  match ivec return 
+          option (Symbolic.OVec cfi_tags (Symbolic.op ivec)) with
+  | mkIVec   (JUMP as op) (INSTR (Some n))  (INSTR (Some m))  _
+  | mkIVec   (JAL  as op) (INSTR (Some n))  (INSTR (Some m))  _  =>
+    if cfg n m then 
+      Some (@mkOVec cfi_tags op (INSTR (Some m)) (default_rtag op))
+    else 
+      None
+  | mkIVec   (JUMP as op)  DATA  (INSTR (Some n))  _
+  | mkIVec   (JAL  as op)  DATA  (INSTR (Some n))  _   =>
+    Some (@mkOVec cfi_tags op (INSTR (Some n)) (default_rtag op))
+  | mkIVec   JUMP   DATA  (INSTR None)  _
+  | mkIVec   JAL    DATA  (INSTR None)  _  =>
+    None
+  | mkIVec   STORE  (INSTR (Some n))  (INSTR (Some m))  [_ ; _ ; DATA] =>
+    if cfg n m then Some (@mkOVec cfi_tags STORE DATA DATA) else None
+  | mkIVec   STORE  DATA  (INSTR _)  [_ ; _ ; DATA]  =>
+    Some (@mkOVec cfi_tags STORE DATA DATA)
+  | mkIVec   STORE  _  _  _  => None
+  | mkIVec   op     (INSTR (Some n))  (INSTR (Some m))  _  =>
+    (* this includes op = SERVICE *)
+    if cfg n m then 
+      Some (@mkOVec cfi_tags op DATA (default_rtag op)) 
+    else 
+      None
+  | mkIVec   op     DATA  (INSTR _)  _  =>
+    (* this includes op = SERVICE, fall-throughs checked statically *)
+    Some (@mkOVec cfi_tags op DATA (default_rtag op))
+  | mkIVec _ _ _ _ => None
+  end.
+\end{lstlisting}
 \TODO{Should I remove the aggressive capitilization above?
-It may make it less painful on the eye...}
+It may make it less painful on the eye...
+Thanks to dependent types it also looks super ugly too,
+probably make it pseudo-code at some point
+}
 
-
-Although, the rules in \ref{sec:cfi_fine} were fairly simply,
+Although, the rules in \cref{sec:cfi_fine} were fairly simply,
 expressing them using Gallina's pattern matching increased their
 size. We also experimented, with different ways of writing the
 transfer function but we decided to stick with the definition above as
@@ -669,8 +601,8 @@ the memory and registers by a pointwise extension.
 \subsection{Allowed control-flows for the Symbolic Machine}
 \label{sec:symbolic_flow}
 
-Similar to the abstract machine \ref{sec:abstract_flow}, we construct
-\SUCC{S} for the symbolic machine (figure \ref{fig:symbolic_succ}) by
+Similar to the abstract machine of \cref{sec:abstract_flow}, we construct
+\SUCC{S} for the symbolic machine (\cref{fig:symbolic_succ}) by
 extending the set of allowed jumps \CFG.
 
 \begin{figure}[htbp!]
@@ -743,14 +675,14 @@ be required for forward simulation.
 \TODO{hopefully try to get to forward simulation and
 see what's the situation there.}
 
-\begin{definition}[Instructions Tagged]\label{definition:instructions_tagged}
+\begin{definition}[Instructions Tagged]\label{instructions_tagged}
   ~ For all addresses \textit{addr} in the memory such that
   $$\mem[\mathit{addr}] = \atom{\mathit{i}}{\INSTR{id}}$$ \textit{addr}
   is in the domain of \emph{word\_to\_id} and additionally
   $$word\_to\_id ~\mathit{addr} = \mathit{id}$$
 \end{definition}
 
-\begin{definition}[Entry Points Tagged]\label{definition:entry_tagged}
+\begin{definition}[Entry Points Tagged]\label{entry_tagged}
   ~ For all addresses \textit{addr} such that 
   \begin{align*}
   & \mem[addr] = \varnothing\\
@@ -761,7 +693,7 @@ see what's the situation there.}
   $$word\_to\_id ~\mathit{addr} = \mathit{id}$$
 \end{definition}
 
-\begin{definition}[Valid Jumps Tagged]\label{definition:valid_jmp_tagged}
+\begin{definition}[Valid Jumps Tagged]\label{valid_jmp_tagged}
   For all addresses \textit{saddr, taddr} such that
   $$(\mathit{saddr},\mathit{taddr}) \in \Jm$$ it holds that
   $$\exists \mathit{i}, \mem[saddr] = \atom{\mathit{i}}{\INSTR{(word\_to\_id~saddr)}} $$
@@ -778,24 +710,17 @@ We define a predicate \emph{initial} on symbolic states as
 the conjunction of the above invariants and the
 proposition that the tag on the \pc is set to \DATAname.
 
-\begin{figure}[ht]
-  \coqdockw{Definition} \coqdocvar{invariants} \coqdocvar{st}
-  :=\coqdoceol \coqdocindent{1.00em} \coqdocvar{instructions\_tagged}
-  (\coqdocvar{Symbolic.mem} \coqdocvar{st})
-  \ensuremath{\land}\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{valid\_jmp\_tagged} (\coqdocvar{Symbolic.mem}
-  \coqdocvar{st}) \ensuremath{\land}\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{entry\_points\_tagged} (\coqdocvar{Symbolic.mem}
-  \coqdocvar{st}).\coqdoceol \coqdocemptyline \coqdocnoindent
+\lstheader{sym_initial}{Initial Symbolic states predicate}
+Definition invariants st :=
+  instructions_tagged (Symbolic.mem st) /\
+  valid_jmp_tagged (Symbolic.mem st) /\
+  entry_points_tagged (Symbolic.mem st) /\
+  registers_tagged (Symbolic.regs st).
 
-  \coqdockw{Definition} \coqdocvar{initial} (\coqdocvar{s} :
-  \coqdocvar{Symbolic.state} \coqdocvar{t}) :=\coqdoceol
-  \coqdocindent{1.00em} (\coqdocvar{common.tag}
-  (\coqdocvar{Symbolic.pc} \coqdocvar{s})) = \coqdocvar{DATA}
-  \ensuremath{\land}\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{invariants} \coqdocvar{s}.\coqdoceol
-\caption{Initial symbolic states predicate}
-\end{figure}
+Definition initial (s : Symbolic.state t) :=
+  (common.tag (Symbolic.pc s)) = DATA /\
+  invariants s.
+\end{lstlisting}
 
 It's straightforward by the semantics of the step relations to prove
 that both normal and attacker steps preserve each of the invariants.
@@ -803,26 +728,27 @@ We only need to assume that this holds for monitor services (\IE if we
 were to provide some monitor services they would have to preserve
 these invariants).
 
-\begin{figure}[ht]
-  \coqdockw{Lemma} \coqdocvar{invariants\_preserved\_by\_step}
-  \coqdocvar{st} \coqdocvar{st'} :\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{invariants} \coqdocvar{st}
-  \ensuremath{\rightarrow}\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{step\_n} \coqdocvar{st}
-  \coqdocvar{st'} \ensuremath{\rightarrow}\coqdoceol
-  \coqdocindent{1.00em} \coqdocvar{invariants}
-  \coqdocvar{st'}.\coqdoceol
+%write this in latex form and then use appendix for these.
 
-  \coqdocemptyline \coqdocnoindent \coqdockw{Lemma}
-  \coqdocvar{invariants\_preserved\_by\_step\_a} \coqdocvar{st}
-  \coqdocvar{st'} :\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{invariants} \coqdocvar{st}
-  \ensuremath{\rightarrow}\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{step\_a} \coqdocvar{st} \coqdocvar{st'}
-  \ensuremath{\rightarrow}\coqdoceol \coqdocindent{1.00em}
-  \coqdocvar{invariants} \coqdocvar{st'}.\coqdoceol
-\caption{Symbolic invariants preservation}
-\end{figure}
+\begin{lemma}[Symbolic Invariants preserved by normal steps]
+\label{step_preserves_invariants}
+For all symbolic states (\textit{st, st}'),
+\begin{align*}
+  & \mathit{invariants}~\mathit{st} \implies \\
+  & \stepn{\mathit{st}}{\mathit{st}'} \implies \\
+  & \mathit{invariants}~\mathit{st}'
+\end{align*}
+\end{lemma}
+
+\begin{lemma}[Symbolic Invariants preserved by attacker steps]
+\label{step_a_preserves_invariants}
+For all symbolic states (\textit{st, st}'),
+\begin{align*}
+  & \mathit{invariants}~\mathit{st} \implies \\
+  & \stepa{\mathit{st}}{\mathit{st}'}{S} \implies \\
+  & \mathit{invariants}~\mathit{st}'
+\end{align*}
+\end{lemma}
 
 \subsection{Stopping predicate for the Symbolic Machine}
 \label{sec:symbolic_stopping}
@@ -834,3 +760,479 @@ symbolic machine is stopping if:
   (\stepn{}{})
 \item All steps in the trace are attacker steps (\stepa{}{}{})
 \end{enumerate}
+
+\subsection{Symbolic-Abstract backward simulation}
+\label{sec:refinement_SA}
+
+The Symbolic-Abstract backward simulation formally defines the
+connection between the two machines. We prove a
+1-backward simulation theorem for
+both normal and attacker steps. This means that every
+step of the symbolic machine is matched by one step
+of the abstract machine.
+
+\begin{definition}[1-Backward Simulation]
+\label{simulation_SA}
+  The symbolic machine simulates the abstract machine with respect to
+  a $simulation~relation~\sim$ between symbolic and abstract states,
+  if $s^A_1 \sim s_1^S$ and \stepn{s^S_1}{s^S_2} implies that there
+  exists $s^A_2$ such that, $s^A_2 \sim s^S_2$ and \stepn{s^A_1}{s^A_2}.
+
+We visualize the above definition with the following diagram:
+
+%
+\vspace{-\smallskipamount}
+ \begin{center}
+    \begin{tikzpicture}
+      \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
+      {
+        s^S_1 & s^S_2 \\
+        A_t & A \\};
+      \path[->]
+      (m-1-1) edge [snake it,-] node  {} (m-2-1)
+      edge [above] node [below] {} (m-1-2)
+      (m-2-1.east|-m-2-2) edge [dashed] node {}
+      node {} (m-2-2)
+      (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
+    \end{tikzpicture}
+  \end{center}
+\vspace{-\smallskipamount}
+(Plain lines denote premises, dashed ones conclusions.)
+\end{definition}
+
+Intuitively, backward simulation is enough to capture the desired
+security property. Our intuition is further strengthened later, when
+we prove that the \CFI property given by \cref{cfi} is preserved by
+backward refinement. However, a machine that cannot take any step
+also enjoys \CFI vacuously. Forward simulation would guarantee us that
+if we start from two states in relation ($s^A_1 \sim s_1^S$), then a
+step in the abstract machine (\stepn{s^A_1}{s^A_2}) is matched by a
+step in the symbolic machine (\stepn{s^S_1}{s^S_2}) and the resulting
+states are related by the simulation relation ($s^A_2 \sim s^S_2$). We
+have not proved forward simulation but we believe it holds.
+
+\TODO{Try to change that}
+
+\subsubsection{Simulation Relation}
+\label{sec:sim_relation}
+
+We define the state simulation relation between the symbolic and
+abstract machine by defining the simulation relation for each
+component of the state.
+
+\begin{definition}[Data Memory Simulation]\label{refine_dmemory}
+  An abstract data memory \dmem is in simulation with a
+  symbolic memory \mem, if for all words \textit{w, x} it holds
+  that 
+  $$\rd{\mem}{\mathit{w}} = \atom{x}{\DATA}
+  \iff \rd{\dmem}{\mathit{w}} = \mathit{x}$$
+\end{definition}
+
+\begin{definition}[Instruction Memory Simulation]
+  \label{refine_imemory}
+  An abstract instruction memory \imem is in simulation with a
+  symbolic memory \mem, if for all words \textit{w, x} it holds
+  that
+  $$(\exists~\mathit{it}, ~ \rd{\mem}{\mathit{w}} = 
+  \atom{x}{(\INSTR{\mathit{it}})})
+  \iff \rd{\imem}{\mathit{w}} = \mathit{x}$$
+\end{definition}
+
+\begin{definition}[Registers Simulation]
+  \label{refine_registers}
+  An abstract register set \textit{areg} is in simulation with a
+  symbolic register set \textit{sreg}, if for all registers \textit{r} and words
+  \textit{x} it holds that
+  $$(\exists\mathit{ut \in (\id \cup \lbrace \bot \rbrace)}, 
+  ~ \rd{\mathit{sreg}}{\mathit{r}} = 
+  \atom{x}{ut})
+  \iff \rd{\mathit{areg}}{\mathit{r}} = \mathit{x}$$
+\end{definition}
+
+\begin{definition}[PC simulation]
+  \label{refine_pc}
+  The abstract \pc (\textit{apc}) is in simulation with the symbolic \pc
+  ($\atom{\mathit{spc}}{\tpc}$), if it holds that
+  $$\mathit{apc} = \mathit{spc} \land
+    (\tpc = \DATA \lor \exists\mathit{n \in \id},~
+    \tpc = \INSTR{n})$$
+\end{definition}
+
+\Cref{refine_dmemory,refine_imemory,refine_registers,refine_pc} relate the basic
+components of the state.  What is left to do, is relate the \ok bit of
+the abstract machine with the state of the symbolic machine.
+
+\begin{definition}[Correctness]
+  \label{refine_correctness}
+  The statement of correctness, states that for the symbolic memory
+  (\textit{smem}), the symbolic pc ($\atom{spc}{\tpc}$) and the \ok bit
+  of the abstract machine, it holds that for all words \textit{i} and
+  tags \textit{ti},
+  \begin{align*}
+     & \rd{\mathit{smem}}{spc} = \atom{i}{ti} \implies \\
+     & \ok = true  \iff \\
+     & (\forall src \in \id, ~ \tpc = \INSTR{src} \implies  \\
+     & ~~\exists dst \in \id, \\
+     & ~~~~ \mathit{ti} = \INSTR{dst} \land (src,dst) \in \CFGm)
+    \end{align*}
+\end{definition}
+
+Informally \cref{refine_correctness} states that if the tag on the
+current instruction is \textit{ti}, then if the tag on the pc is set
+to \INSTR{src} (which means an indirect flow occurred in the previous
+step), there exists an \id dst which is used to tag the current
+instruction and additionally the flow from an instruction with \id src
+to one with \id dst is allowed according to \CFG, if and only if the
+\ok bit of the abstract machine is set to true. This definition
+captures the notion that a violation in the abstract machine is also a
+violation in the symbolic machine and vice-versa.
+
+We give one more definition of correctness, for the case of monitor
+services.  The intuition is the same, but because monitor services
+live outside the addressable memory of the machines, it's statement
+needs to be adapted a bit.
+
+\begin{definition}[Monitor Service Correctness]
+  \label{refine_correctness_sc}
+  Correctness for monitor services, states that for the symbolic memory
+  (\textit{smem}), the symbolic pc ($\atom{spc}{\tpc}$) and the \ok bit
+  of the abstract machine, it holds that for all monitor services
+  \textit{sc},
+  \begin{align*}
+     & \rd{\mathit{smem}}{spc} = \varnothing \implies \\
+     & \mathit{get\_service}~spc = (\mathit{ti},f) \implies \\
+     & \ok = true  \iff \\
+     & (\forall src \in \id, ~ \tpc = \INSTR{src} \implies  \\
+     & ~~\exists dst \in \id, \\
+     & ~~~~ \mathit{ti} = \INSTR{dst} \land (src,dst) \in \CFGm)
+    \end{align*}
+\end{definition}
+
+The simulation relation ($\sim$) is defined as the conjunction of
+\cref{refine_dmemory,refine_imemory,refine_registers,refine_pc,refine_correctness,refine_correctness_sc}
+and the invariants
+\labelcref{instructions_tagged,entry_tagged,valid_jmp_tagged}.
+
+\subsubsection{Proving 1-backward simulation for normal steps}
+\label{sec:backward_SA_normal}
+
+Proving a 1-backward simulation for normal steps is relatively
+straight-forward, mostly thanks to the fact that the symbolic
+machine abstracts away many details of the concrete machine
+that would make the proofs more tedious. Additionally we do
+not have to provide such proofs for any monitor service as
+we did not use any. Therefore we will only have to reason
+about the small set of instructions that the symbolic
+and the abstract machine share. 
+
+We start with some helpful lemmas about registers and memory
+updates. These lemmas serve as the basis for proving simulation for
+instructions that change the registers or the memory.  The
+corresponding Coq definitions and proofs can be found.
+\TODO{cite appendix}
+
+\begin{lemma}[Registers Update Backward Simulation]
+\label{refine_registers_upd}
+For all symbolic register sets (\textit{sreg,sreg'}),
+abstract register sets (\textit{areg}), registers (\textit{r}),
+words (\textit{v,v'}) and tags (\textit{tg,tg'}),
+\begin{align*}
+  & \mathit{areg} \sim_{regs} \mathit{sreg} \implies \\
+  & \rd{\mathit{sreg}}{\mathit{r}} = \atom{v}{tg} \implies \\
+  & \upd{\mathit{sreg}}{\mathit{r}}{\atom{v'}{tg'}} = \mathit{sreg'} \implies \\
+  & ~~ \exists \mathit{areg'}, \\
+  & ~~~~ \upd{\mathit{areg}}{\mathit{r}}{v'} = \mathit{areg'} \land \\
+  & ~~~~  \mathit{areg'} \sim_{regs} \mathit{sreg'}
+\end{align*}
+\end{lemma}
+
+\begin{lemma}[Memory Update Backward Simulation]
+\label{refine_memory_upd}
+For all symbolic memories (\textit{smem,smem'}),
+abstract data memories (\textit{amem}) and
+words (\textit{addr,v,v'}),
+\begin{align*}
+  & \mathit{amem} \sim_{dmem} \mathit{smem} \implies \\
+  & \rd{\mathit{smem}}{\mathit{addr}} = \atom{v}{\DATA} \implies \\
+  & \upd{\mathit{smem}}{\mathit{addr}}{\atom{v'}{\DATA}} = \mathit{smem'} \implies \\
+  & ~~ \exists \mathit{amem'}, \\
+  & ~~~~ \upd{\mathit{amem}}{\mathit{addr}}{v'} = \mathit{amem'} \land \\
+  & ~~~~  \mathit{amem'} \sim_{dmem} \mathit{smem'}
+\end{align*}
+\end{lemma}
+
+With these definitions and lemmas we are able to prove 1-backward simulation
+for normal steps between the Symbolic and the Abstract machine as defined
+by \cref{simulation_SA}, a crucial theorem for the rest of our development.
+
+\subsubsection{Proving 1-backward simulation for attacker steps}
+\label{sec:backward_SA_attacker}
+
+The same definition as \labelcref{simulation_SA} of 1-backward
+simulation is used for the attacker, with the sole difference being
+that steps now refer to attacker steps.
+
+\begin{definition}[1-Backward Simulation Attacker]
+\label{simulation_SA_attacker}
+  The symbolic machine simulates the abstract machine with respect to
+  a $simulation~relation~\sim$ between symbolic and abstract states,
+  if $s^A_1 \sim s_1^S$ and \stepa{s^S_1}{s^S_2}{S} implies that there
+  exists $s^A_2$ such that, $s^A_2 \sim s^S_2$ and \stepa{s^A_1}{s^A_2}{S}.
+\end{definition}
+
+We prove that 1-backward simulation for attacker steps hold, by first
+showing how we can construct attacker steps at the abstract level from
+symbolic attacker steps and then showing that this way of building
+attacker steps preserves the simulation relation ($\sim$).
+
+A step of the symbolic attacker, as mandated by the semantics of the
+attacker model, can only change the memory and register contents tagged
+\DATAname, formally \stepa{\mem}{\mem'}{S} and \stepa{\reg}{\reg'}{S}.
+
+Intuitively, we can construct \textit{areg} by \emph{mapping} a function
+on the set of registers, that changes a symbolic atom to a word by removing
+it's tag. 
+
+\lstheader{untag_atom}{Untag symbolic atom function}
+Definition untag_atom (a : atom (word t) cfi_tag) := common.val a.
+\end{lstlisting}
+
+We can trivially prove that the abstract attacker can take a step
+by \emph{mapping} untag\_atom over a symbolic register set. This is
+trivial because the attacker can arbitrarily change all registers.
+
+\begin{lemma}[Abstract attacker registers]
+\label{areg_map}
+  \begin{align*}
+    & \stepa{\mathit{sreg}}{\mathit{sreg}'}{S} \implies \\
+    & \stepa{\mathit{areg}}{\mathit{map}~untag\_atom~\mathit{sreg}'}{A}
+  \end{align*}
+\end{lemma}
+
+However, we still need to prove that the simulation relation between
+the two machines does not break when attacker steps are taken.
+We can proof that simulation of registers is preserved by attacker
+steps. The proof proceeds by using the correctness theorem for the map function.
+\begin{theorem}[Map Correctness instance]
+  $$\rd{(\mathit{map}~\mathit{untag\_atom}~\mathit{sreg}')}{r} = 
+  \mathit{option\_map}~\mathit{untag\_atom}~ (\rd{\mathit{sreg}'}{r})$$
+  where option\_map is defined as
+  \lstheader{option_map}{Option Map function}
+    Definition option_map f x := 
+      match x with
+      | Some y => Some (f y)
+      | None => None
+      end.
+  \end{lstlisting}
+\end{theorem}
+
+\begin{lemma}[Attacker preserves register simulation]
+\label{areg_map_preserves_ref}
+  For all abstract register sets (\textit{areg})
+  and symbolic register sets (\textit{sreg, sreg'}),
+  \begin{align*}
+    & \mathit{areg} \sim_{regs} \mathit{reg} \implies \\
+    & \stepa{\mathit{sreg}}{\mathit{sreg}'}{S} \implies \\
+    & \mathit{map}~untag\_atom~\mathit{sreg}' \sim_{regs} \mathit{sreg}'
+  \end{align*}
+\end{lemma}
+
+In order to complete the proof of 1-backward simulation for attacker
+steps, we also need to construct an abstract memory and to show
+that the $\sim_{mem}$ relation is preserved by attacker steps.
+Due to the fact that the abstract machine has split data and instruction
+memories, in order to follow the same methodology as with registers,
+we will need to split the symbolic memory. We achieve this, using a
+filter function.
+
+Firstly we proof that attacker steps do not break simulation of
+instruction memories. Intuitively this is trivial, as the symbolic
+attacker can only change memory contents tagged \DATAname.
+
+\begin{lemma}[Attacker preserves instruction memory simulation]
+\label{imem_attacker_ref}
+  For all abstract instruction memories (\textit{imem})
+  and symbolic memories (\textit{smem, smem'}),
+  \begin{align*}
+    & \mathit{imem} \sim_{imem} \mathit{smem} \implies \\
+    & \stepa{\mathit{smem}}{\mathit{smem}'}{S} \implies \\
+    & \mathit{imem} \sim_{imem} \mathit{smem}'
+  \end{align*}
+\end{lemma}
+
+Constructing a data memory is more complicated than in the previous cases.
+Our approach, uses the filter function to create a subset of the symbolic
+memory that only contains atoms tagged \DATAname and then applies the
+same methodology with registers, mapping the $untag\_atom$ function over
+this subset to obtain an abstract data memory.
+
+\lstheader{is_data}{Function that checks if atom is tagged \DATA}
+Definition is_data (a : atom (word t) cfi_tag) :=
+  match common.tag a with
+    | DATA => true
+    | INSTR _ => false
+  end.
+\end{lstlisting}
+
+Again we can prove a few helpful lemmas that ease the final proof.
+
+\begin{lemma}[Attacker preserves data memory simulation]
+\label{dmem_attacker_preserves_ref}
+  For all abstract data memories (\textit{dmem})
+  and symbolic memories (\textit{smem, smem}'),
+  \begin{align*}
+    & \mathit{dmem} \sim_{dmem} \mathit{smem} \implies \\
+    & \stepa{\mathit{smem}}{\mathit{smem}'}{S} \implies \\
+    & \mathit{map}~untag\_atom~(\mathit{filter}~\mathit{is\_data}~\mathit{sreg}' \sim_{dmem} \mathit{dmem}'
+  \end{align*}
+\end{lemma}
+
+The proof of \cref{dmem_attacker_preserves_ref} is slightly more complex than
+the one for registers, as we now have to invoke the filter correctness theorem
+as well.
+
+\begin{theorem}[Filter Correctness instance]
+  $$\rd{(\mathit{filter}~\mathit{is\_data}~\mathit{smem}')}{addr} = 
+  \mathit{option\_filter}~\mathit{is\_data}~ (\rd{\mathit{smem}'}{addr})$$
+  where option\_map is defined as
+  \lstheader{option_filter}{Option Filter function}
+    Definition option_filter f x := 
+      match x with
+      | Some x0 => if f x0 then Some x0 else None
+      | None => None
+      end.
+  \end{lstlisting}
+\end{theorem}
+
+In all cases, we have to show that the domains of the abstract
+memories and registers are also preserved. We include here the
+corresponding lemma for the data memory. It's proof was again more
+complicated, due to the fact that we had to split the symbolic memory.
+
+\begin{lemma}[Attacker preserves data memory domains]
+\label{dmem_attacker_preserves_domain}
+  For all abstract data memories (\textit{dmem, dmem}')
+  and symbolic memories (\textit{smem, smem}'),
+  \begin{align*}
+    & \mathit{dmem} \sim_{dmem} \mathit{smem} \implies \\
+    & \stepa{\mathit{smem}}{\mathit{smem}'}{S} \implies \\
+    & \mathit{dmem}' \sim_{dmem} \mathit{smem}' \implies \\
+    & \mathcal{D}(\mathit{dmem}) = \mathcal{D}(\mathit{dmem}')
+  \end{align*}
+\end{lemma}
+
+Finally using these lemmas we can prove that, a 1-backward
+simulation for attacker steps as defined by \cref{simulation_SA_attacker}
+holds.
+
+\section{The Concrete  Machine}\label{sec:concrete_cfi}
+
+Assuming the existence of correct code that implements the \CFI
+monitor, we can utilize the framework of \cref{sec:framework} to
+instantiate the concrete machine and obtain a refinement between the
+concrete and the symbolic machines, we need to provide the encoding of
+symbolic tags. For the concrete machine we only considered a 32-bit
+architecture, but as already mentioned, we could very easily
+instantiate the concrete machine with 64-bit words with minimal
+changes to our proofs.
+
+\subsection{Concrete tags}\label{sec:concrete_tags}
+
+In order to obtain the concrete tags, we need to wrap the symbolic
+tags with the monitor self-protection tags (\USERname, \ENTRYname,
+\MONITOR) and provide an encoding to words of these tags.
+
+We instantiate the \id type of cfi\_id class (\cref{id_class}) as
+bit-fields of size 28-bits. That means, that we can uniquely identify
+up to $2^{28}$ instructions. Trying to tag more instructions than
+this, would break the symbolic
+invariant \labelcref{instructions_tagged}, because by the simulation
+relation between the concrete and symbolic machines, the
+two machines follow the same tagging scheme for \USERname and \ENTRYname tags.
+
+Defining the conversion functions \footnote{Numbers in the Coq
+  definitions are off by one (\EG 27 means 28), for reasons relating
+  to the underlying words library \TODO{cite library}} between
+\textit{words} and \textit{ids} is straight forward. We make the
+simply choice, to convert \textit{words} to \textit{ids} only if they
+are equal or less than the maximum word our 28-bit \textit{ids} can
+fit. Note that this does not mean we reduce the addressable space to
+28-bits. You can use addresses higher than $2^{28}$ to place contents
+tagged as \DATAname or \MONITOR or even \INSTR{$\bot$} but not
+instructions with an identifier.
+
+The conversion from \textit{ids} to \textit{words} is trivial by
+expanding the id to 32-bit words by adding zeros to the high bits.
+
+\QUESTION{To Catalin: Do the above make sense to you?}
+
+\lstheader{id_conversion}{Coq definitions of conversion functions for ids and words}
+Definition id_size := Word.int 27.
+Definition id := [eqType of id_size].
+Definition bound : word t := 
+  Word.repr ((Word.max_unsigned 27) + 1)%Z. (*29 bits*)
+
+Definition word_to_id (w : word t) : option id_size :=
+  if (Word.ltu w bound) then Some (Word.castu w) else None.
+
+Definition id_to_word (x : id) : word t :=
+  Word.castu x.
+\end{lstlisting}
+
+Finally we prove the two properties required by cfi\_id,
+\textit{id\_to\_wordK} and \textit{word\_to\_idK}. We can now
+instantiate cfi\_id with 28-bit sized \textit{ids}.
+
+\lstheader{cfi_id28}{cfi\_id instance with 28-bit sized \textit{ids}} 
+Instance ids : cfi_id := {|
+ id := id;
+ word_to_id := word_to_id;
+ id_to_word := id_to_word
+|}.
+Proof.
+  - by apply id_to_wordK.
+  - by apply word_to_idK.
+Defined.
+\end{lstlisting}
+
+When using identifiers of 28-bits, we can encode the symbolic tags using
+30 bits, with an encoding like the one in \cref{tag_encoding}, where
+the two least-significant bits are used to distinguish between \DATA,
+\INSTR{$\bot$} and \INSTR{\id}, and the 28 higher-bits are the \id
+in the last case and zero otherwise.
+
+\begin{table}[htpb!]
+\centering
+    \begin{tabular}{|c|c|}
+    \hline
+    Symbolic Tag   & Encoding \\ \hline
+    \DATA           & 0        \\ \hline
+    \INSTR{$\bot$}     & 1        \\ \hline
+    \INSTR{\id} & $4x+2$    \\ \hline
+    \end{tabular}
+  \caption{Encoding of Symbolic Tags}
+  \label{tag_encoding}
+\end{table}
+
+Having an encoding into 30-bits of symbolic tags, we can use the
+2-bits left, to wrap the symbolic tags with the monitor
+self-protection tags. We use the two least-significant bits to
+distinguish between \USERname (01), \ENTRYname (10) and \MONITOR
+(00). Only the \USERname and \ENTRYname wrap around symbolic tags. The
+policy monitor does not use symbolic tags and the corresponding tag
+\MONITOR does not need to wrap around them. Thus the encoding of the
+\MONITOR tag has all its bits set to zero.
+
+\begin{figure}[htpb!]
+  \centering
+  \begin{bytefield}[endianness=big]{32}
+    \bitheader{0,1,2,3,31} \\
+    \bitbox{28}{id} & \bitbox{1}{1} & \bitbox{1}{0} & \bitbox{1}{0} & \bitbox{1}{1} \\    
+  \end{bytefield}
+  \label{instr_example}
+  \caption{Encoding of an instruction with a unique identifier id}
+\end{figure}
+
+
+
+

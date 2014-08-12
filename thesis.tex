@@ -1,6 +1,9 @@
 % DOCUMENT FORMAT ==============================================================
 
 \newif\ifdraft  \drafttrue
+\interfootnotelinepenalty=10000
+
+
 
 \documentclass{ntua-thesis} % a4paper,11pt,twoside,titlepage already set
 % \pagestyle{plain} % pagestyle already set
@@ -10,24 +13,27 @@
 % PACKAGE SETTINGS =============================================================
 
 \usepackage[cm-default]{fontspec}
-\usepackage{tikz}
-\usetikzlibrary{arrows,shadows} % for pgf-umlsd
-\usepackage[underline=false,rounded corners=false]{pgf-umlsd}
+% \usepackage{tikz}
+% \usetikzlibrary{arrows,shadows} % for pgf-umlsd
+% \usepackage[underline=false,rounded corners=false]{pgf-umlsd}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage{thmtools}
+\usepackage{listings}
 %% \usepackage{algorithmic}
 %% \usepackage{amsfonts}
 %% \usepackage{multirow}
 %% \usepackage{array}
 %% \usepackage{tabularx}
 %% \usepackage{mdwlist}
-%% \usepackage{graphicx}
+\usepackage{graphicx}
 \usepackage{xunicode}
 \usepackage{xltxtra}
 \usepackage{xspace}
 \usepackage{url}
 \usepackage{color}
+\usepackage{bytefield}
 %% \usepackage{rotating}
 \usepackage[format=hang,textformat=simple]{caption}
 \usepackage{wrapfig}
@@ -36,6 +42,8 @@
 \restylefloat{table}
 \restylefloat{figure}
 \usepackage[color]{coqdoc}
+\usepackage{tabularx}
+\newcolumntype{m}[1]{>{$}#1<{$}}
 \usepackage{hyperref}
 \hypersetup{%
     xetex,
@@ -87,16 +95,30 @@
 }
 
 % Generic commands
-%Connect counter for figures and theorems/lemmas/definitions
+
+\declaretheorem[numberwithin=chapter]{theorem}
+\declaretheorem[sibling=theorem]{definition}
+\declaretheorem[sibling=theorem]{lemma}
+
 \makeatletter
-\let\c@equation\c@figure
+\AtBeginDocument{%
+  \renewcommand*{\thetable}{\arabic{chapter}.\arabic{table}}
+  \renewcommand*{\thefigure}{\arabic{chapter}.\arabic{figure}}
+  \renewcommand*{\thelstlisting}{\arabic{chapter}.\arabic{lstlisting}}
+  \let\c@table\c@theorem
+  \let\c@table\c@figure
+  \let\thetable\thefigure
+  \let\c@table\c@lstlisting
+  \let\thetable\thelstlisting
+  \let\c@figure\c@lstlisting
+  \let\c@figure\c@theorem
+  \let\c@lstlisting\c@theorem
+  \let\thefigure\thelstlisting
+  \let\ftype@lstlisting\ftype@figure\ftype@table % give the floats the same precedence
+}
 \makeatother
 
-\numberwithin{equation}{chapter}
-\theoremstyle{definition}
-\newtheorem{definition}[equation]{Definition}
-\newtheorem{thm}[equation]{Theorem}
-\newtheorem{lemma}[equation]{Lemma}
+\usepackage{cleveref}
 
 \newcommand*{\EG}{e.g.,\xspace}
 \newcommand*{\IE}{i.e.,\xspace}
@@ -135,15 +157,15 @@
 \newcommand*{\ii}[1]{\textit{#1}}
 
 % Micro-policies related commands
-\newcommand{\mem}[0]{\ii{mem}}
-\newcommand{\imem}[0]{\ii{im}}
-\newcommand{\dmem}[0]{\ii{dm}}
-\newcommand{\reg}[0]{\ii{reg}}
+\newcommand{\mem}[0]{\ii{mem}\xspace}
+\newcommand{\imem}[0]{\ii{im}\xspace}
+\newcommand{\dmem}[0]{\ii{dm}\xspace}
+\newcommand{\reg}[0]{\ii{reg}\xspace}
 \newcommand{\ok}[0]{\ii{ok}\xspace}
 \newcommand{\rd}[2]{#1[#2]}
 \newcommand{\upd}[3]{#1[#2{\leftarrow}#3]}
 \newcommand{\pc}[0]{\ii{pc}\xspace}
-\newcommand{\epc}[0]{\ii{epc}}
+\newcommand{\epc}[0]{\ii{epc}\xspace}
 \newcommand{\PCname}[0]{\ii{pc}\xspace}
 \newcommand{\EPCname}[0]{\ii{epc}\xspace}
 \newcommand{\ra}[0]{\ii{ra}}
@@ -154,7 +176,7 @@
 \newcommand{\extra}[0]{\ii{int}}
 \newcommand{\TRANSFER}{\ii{transfer}\xspace}
 \newcommand{\EXTRASTATES}{\ii{EX}}
-\newcommand{\cache}{\ii{cache}}
+\newcommand{\cache}{\ii{cache}\xspace}
 \newcommand{\step}[2]{\ensuremath{#1\to#2}}
 \newcommand{\stepn}[2]{\ensuremath{#1\to_n#2}}
 \newcommand{\stepa}[3]{\ensuremath{#1\to_a^{#3}#2}}
@@ -192,7 +214,7 @@
 \newcommand{\USERname}[0]{\ii{User}\xspace}
 \newcommand{\USER}[1]{\USERname~#1}
 \newcommand{\MONITOR}[0]{\ii{Monitor}\xspace}
-\newcommand{\ENTRYname}[0]{\ii{Entry}}
+\newcommand{\ENTRYname}[0]{\ii{Entry}\xspace}
 \newcommand{\ENTRY}[1]{\ENTRYname~#1}
 \newcommand{\enc}[1]{\ii{enc}~#1}
 \newcommand{\atom}[2]{#1@#2}
@@ -227,9 +249,111 @@
 \newcommand{\id}[0]{\ii{id}\xspace}
 \newcommand{\word}[0]{\ii{word}\xspace}
 
+\newcommand{\init}[1]{\ensuremath{\mathit{Init}(#1)}}
+\newcommand{\initf}[0]{\ensuremath{\mathit{Init}}}
+\newcommand{\Initf}[1]{\ensuremath{\initf(#1)}}
+
+%TIKZ
+
+% Mysterious example found on the TeX Stack Exchange to draw a diagram
+% with a reflexive-transitive closure.
+\usepackage{tikz}
+\usepgflibrary{plotmarks}
+\usetikzlibrary{matrix,arrows,decorations.pathmorphing} 
+
+\tikzset{snake it/.style={decorate, decoration=snake}}
+
+\usetikzlibrary{calc}
+
+
+
 % CODE HIGHLIGHTING ============================================================
 
+% CODE HIGHLIGHTING ============================================================
 
+\usepackage{lstcoq}
+\definecolor{ForestGreen}{RGB}{0, 155, 85}
+\definecolor{Purple}{RGB}{153, 71, 155}
+\definecolor{BrickRed}{RGB}{182, 50, 28}
+\definecolor{darkgreen}{cmyk}{0.7, 0, 1, 0.5}
+
+\lstset{%
+    numbers=none,
+    numberstyle=\tiny\color[rgb]{0.5,0.5,0.5},
+    basicstyle=\ttfamily\footnotesize,
+    basewidth=0.59em,
+    keywordstyle=[3]{},
+    commentstyle=\itshape\footnotesize,
+    tabsize=4,
+    frame=single,
+    frameround=tttt,
+    showstringspaces=false,
+    breaklines=false,
+    captionpos=b,
+    aboveskip=\bigskipamount,
+    belowskip=\bigskipamount,
+    escapechar=^,
+    keywordstyle=\color[rgb]{0,0,1},
+    commentstyle=\color[rgb]{0.133,0.545,0.133},
+    stringstyle=\color[rgb]{0.627,0.126,0.941}
+}
+
+\newcommand\code[1]{{\tt\small #1}}
+\newcommand\regex{\coqe{regex}}
+\newcommand\dk{\coqe{decide_kleene}}
+
+% Style options:
+% numberstyle,basicstyle,identifierstyle,commentstyle,stringstyle
+% keywordstyle=[1]{},keywordstyle=[2]{},directivestyle
+% \small\tiny\footnotesize\itshape\ttfamily\bf
+\lstdefinestyle{coq_style}{%
+  language=Coq, float=htpb!
+}
+\lstdefinestyle{python_style}{%
+  language=python, float=htpb!
+}
+\lstdefinestyle{bash_style}{%
+  language=bash, float=htb!
+}
+\lstdefinestyle{console_style}{%
+  float=htb!, numbers=none
+}
+\lstdefinestyle{diff_style}{%
+  language=diff, float=htb!, numbers=none
+}
+
+\lstnewenvironment{Coq}[2]{%
+  \nopagebreak
+  \lstset{style=coq_style,label={#1},caption={#2}}
+}{}
+\lstnewenvironment{erlang}[2]{%
+  \nopagebreak
+  \lstset{style=erlang_style,label={#1},caption={#2}}
+}{}
+\lstnewenvironment{python}[2]{%
+  \nopagebreak
+  \lstset{style=python_style,label={#1},caption={#2}}
+}{}
+\lstnewenvironment{bash}[2]{%
+  \nopagebreak
+  \lstset{style=bash_style,label={#1},caption={#2}}
+}{}
+\lstnewenvironment{console}[2]{%
+  \nopagebreak
+  \lstset{style=console_style,label={#1},caption={#2}}
+}{}
+\lstnewenvironment{diff}[2]{%
+  \nopagebreak
+  \lstset{style=diff_style,label={#1},caption={#2}}
+}{}
+
+\newcommand{\includecode}[4][Coq]{%
+  \nopagebreak
+  \lstinputlisting[label={#2},caption={#3},style={#1_style}]{#4}
+}
+\newcommand{\lstheader}[2]{%
+  \begin{lstlisting}[label={#1},caption={#2},style=coq_style]
+}
 
 % DOCUMENT INFORMATION =========================================================
 
@@ -261,6 +385,11 @@
 \setlength{\parindent}{\templen}
 \tableofcontents
 \listoffigures
+\renewcommand{\lstlistlistingname}{List of Listings}
+\lstlistoflistings
+\renewcommand{\listtheoremname}{List of theorems and definitions}
+\listoftheorems[ignoreall,show={definition,lemma,theorem}]
+
 
 % \mainmatter
 % moved these two commands here so that they don't influence the toc
