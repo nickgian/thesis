@@ -144,7 +144,7 @@ instruction encoding and decoding which as shown in
 
 Machine-checked formal verification efforts include \cite{ZhaoLSR11},
 which is a SFI formalization for the ARM architecture that also
-enforces \CFI.  Their formalization was developed using the HOL
+enforces \CFI. Their formalization was developed using the HOL
 theorem prover and a program logic framework they created. However
 their benchmarks report a 240\% runtime overhead. The authors of
 \cite{CriswellDA14} claim partial proofs for a \CFI enforcement
@@ -158,42 +158,42 @@ performance and security. As shown in \cite{pump_asplos2015}, we can enforce a
 \emph{fine-grained} \CFI policy with an average runtime overhead of less than 3\%
 (maximum overhead of less than 10\%), on the SPEC2006 benchmarks.
 
-\ch{Shrink and polish this}
-In our design, we take the standard approach and claim \CFI under \NXD and
-\NWC\ch{make it clear that we ENFORCE \NXD and \NWC}.
-We considered designs that lifted these assumptions but
-we rejected them, for the time being, as there did not seem to be any
-considerable advantage \IE{compatibility with self-modifying programs,
-JIT compilers, \ETC} Allowing the code of the program to change, would in
-practice require for the CFG to change as well, which unless done in
-a controlled, ``safe'' way, would invalidate the enforcement of \CFI.
-However, we do not have to rely on special hardware or software to enforce
-\NXD and \NWC. We can achieve this easily and efficiently by
-creating a separate\ch{could be separate, but we include it into
- the \CFI one} micro-policy.
+\ch{Shrink and polish this}\nick{done} We follow the standard approach, by
+designing a composed micro-policy that enforces \NXD, \NWC and \CFI.  We
+considered designs that lifted the \NXD and \NWC restrictions but we
+rejected them, for the time being, as there did not seem to be any
+considerable advantages (\IE{ compatibility with self-modifying
+programs, JIT compilers, \ETC}). Moreover unlike other \CFI
+enforcement mechanisms we do not have to rely on the CPU or the
+operating system to enforce \NXD and \NWC, therefore lifting these
+restrictions would not reduce our assumptions and consequently would
+not increase our confidence in the robustness of our approach.
 
+% Allowing the code of the program to change, would in
+%practice require for the CFG to change as well, which unless done in
+%a controlled, ``safe'' way, would invalidate the enforcement of \CFI.
 
-The micro-policy we implemented and studied is a composition of a fine-grained
-\CFI micro-policy and the \NWC, \NXD micro-policies explained above.
+%The micro-policy we implemented and studied is a composition of a fine-grained
+%\CFI micro-policy and the \NWC, \NXD micro-policies explained above.
 
 Our approach uses unique identifiers to tag the contents of the memory that 
 correspond to sources and potential destinations of indirect flows according to
 a binary relation (on the identifiers) $\mathcal{CFG}$.
 
 %\ch{I have more intuition about addresses than about identifiers}
-Consider the set of tags 
-\TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}} where \ii{id} is a unique identifier 
-(\IE used to tag the contents of only one location in the memory).
-\ch{maybe add more intuition: for instance, we can
-  choose identifiers to be the addresses at which the
-  instructions are stored + example (POPL)}
-Adapting the rules from \ref{sec:nwc_nxd}, we shall use \DATAname to tag all 
-contents in memory that are considered non-executable data, \INSTR{\ii{id}}
-to tag all contents in memory that are considered executable instructions and 
-are sources or targets of indirect control flows and \INSTR{$\bot$} to tag all
-other instructions.
-The rules to enforce \NWC and \NXD are intuitively the same and only
-change to account for the splitting of the \INSTRname{} tag.
+Consider the set of tags \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}}
+where \id is a unique identifier (\IE used to tag the contents of only
+one location in the memory). One simply way to achieve this is to use
+the address of the instruction as it's \id, for example an instruction
+stored at address 100 would be tagged \INSTR{100}. This is the
+approach we take in our development. Adapting the rules from
+\ref{sec:nwc_nxd}, we shall use \DATAname to tag all contents in
+memory that are considered non-executable data, \INSTR{\ii{id}} to tag
+all contents in memory that are considered executable instructions and
+are sources or targets of indirect control flows and \INSTR{$\bot$} to
+tag all other instructions.  The rules to enforce \NWC and \NXD are
+intuitively the same and only change to account for the splitting of
+the \INSTRname{} tag.
 
 We follow the same idea as with coarse-grained \CFI, propagating the
 instruction tag of instructions that are sources of indirect flows to
