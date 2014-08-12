@@ -11,44 +11,42 @@ priority. Researchers have identified a number of potential vulnerabilities
 which arise from the violation of known but in-practice unenforceable safety
 and security policies.
  
-So far, computer security has been delegated mostly to software, while the 
-hardware is being almost completely controlled by the software.
-High-level languages are becoming more widely used,
-due to features such as strong type systems with type inference
-and automatic memory
-management, making programming less error prone and reducing the number of
-exploitable bugs. Furthermore, in order to strengthen the security of computing
-systems a variety of low-level
-mitigation techniques \TODO{reference some? stack canaries, ASLR, $W \oplus X$}
+So far, computer security has been delegated mostly to software, while
+the hardware is being almost completely controlled by the software.
+High-level languages are becoming more widely used, due to features
+such as strong type systems with type inference and automatic memory
+management, making programming less error prone and reducing the
+number of exploitable bugs. Furthermore, in order to strengthen the
+security of computing systems a variety of low-level mitigation
+techniques \cite{Cowan:1998:SAA:1267549.1267554,PaX,
+  Erlingsson:2007:LSS:1793914.1793919}
+
+\TODO{reference some? stack canaries, ASLR, $W \oplus X$}
+\nick{done}
 % http://prosecco.gforge.inria.fr/personal/hritcu/talks/05-control-hijacking-defenses.pdf
 % Úlfar Erlingsson: Low-Level Software Security: Attacks and Defenses. FOSAD 2007: 92-134
-have been
-proposed, however these are mostly ad-hoc solutions designed to prevent specific
-known attacks, rather than enforcing a security policy 
-by preventing a well-defined class of attacks,
-thus making it hard to reason about their
-effectiveness. In fact most of these mitigation techniques can be circumvented
-by attackers, \TODO{reference; Overcoming CFI; Eternal War in Memory}
-which has lead to a continuous ``chase''
-between attackers and security researchers.
+have been proposed, however these are mostly ad-hoc solutions designed
+to prevent specific known attacks, rather than enforcing a security
+policy by preventing a well-defined class of attacks, thus making it
+hard to reason about their effectiveness. In fact most of these
+mitigation techniques can be circumvented by attackers
+\cite{Szekeres2013}, which has lead to a continuous ``chase'' between
+attackers and security researchers.
 
-One common attack technique is to 
-exploit some low-level vulnerability such as a
-buffer overflow to redirect the control flow to 
-attacker injected code. This attack
-can be stopped by a simple protection scheme known as $W \oplus X$, which
-enforces that a memory page is either executable or writable but not both.
-Unfortunately, clever attack techniques can bypass $W \oplus X$. In
-particular, attackers have been using code-reuse attacks
-(e.g. return/jump - oriented programming) that allows them to chain together
-existing pieces of code to achieve malicious behavior without directly
-introducing new code.
-Abadi~\ETAL\cite{abadi2005}
-introduced a property called Control Flow Integrity (CFI),
-which provides effective protection against control-flow hijacking attacks.
-CFI enforces that any execution of a program will
-respect a statically computed control flow graph (CFG).
-\FEEDBACK{missing references throughout}
+One common attack technique is to exploit some low-level vulnerability
+such as a buffer overflow to redirect the control flow to attacker
+injected code. This attack can be stopped by a simple protection
+scheme known as $W \oplus X$, which enforces that a memory page is
+either executable or writable but not both.  Unfortunately, clever
+attack techniques can bypass $W \oplus X$. In particular, attackers
+have been using code-reuse attacks (e.g. return/jump - oriented
+programming) that allows them to chain together existing pieces of
+code to achieve malicious behavior without directly introducing new
+code.  Abadi~\ETAL\cite{abadi2005} introduced a property called
+Control Flow Integrity (CFI), which provides effective protection
+against control-flow hijacking attacks.  CFI enforces that any
+execution of a program will respect a statically computed control flow
+graph (CFG).  \FEEDBACK{missing references throughout}
 
 The main contribution of this thesis is the formalization and
 verification of a dynamic monitor for CFI, based on a generic
@@ -56,7 +54,7 @@ hardware-software security mechanism.
 %
 We provide a precise attacker model and prove in Coq that the monitor
 enforces a variant of the CFI property proposed by
-Abadi~\ETAL\cite{abadi2005}.
+Abadi~\ETAL\cite{AbadiBEL09}.
 %
 To obtain this result we prove refinement between a concrete
 machine running a monitor satisfying our Coq specification
@@ -76,14 +74,19 @@ Map
 5. Conclusions and Future work
 6. Related work
 
-Chapter 2 of this thesis briefly describes the basic requirements a security
-policy must satisfy and puts into context the framework we utilize in order
-to formalize and enforce a Control-Flow Integrity (CFI) policy.
-Chapter 3 discusses the current state of research on Control-Flow Integrity 
-and clarifies our goals and contributions to it.
-Chapter 4 describes in detail the design of a fine-grained CFI policy and
-how we used the framework from Chapter 2 in order to enforce the policy
-and formally reason about it's security properties.
-Chapter 5.. conclusions, future work?
-Chapter 6.. related work and bibliography?
-Appendix with code and/or step relations etc.?
+\Cref{ch:policies} of this thesis briefly describes the motivation for
+effective and efficient security policies, the desired properties a
+robust security policy must satisfy and puts into context the
+framework we utilize in order to formalize and enforce a Control-Flow
+Integrity (CFI) policy.  
+
+\Cref{ch:cfi} discusses the current state of
+research on enforcing and formalizing Control-Flow Integrity and clarifies
+the design choices of our approach regarding enforcement of \CFI.
+
+\Cref{ch:verified_cfi} explains how we used the framework of \cref{ch:policies}
+in order to formally reason about the security properties of the \CFI policy and
+our approach to enforcing it. 
+
+Chapter 5.. conclusions, future work? Appendix with code and/or step
+relations etc.?
