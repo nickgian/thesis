@@ -3,16 +3,15 @@
 Restricting the control-flow of a program in some way is a technique widely
 spread among security researchers. For example non-executable data (NXD)
 can be considered as a form of (very) coarse-grained \CFI where control-flow is
-not allowed to reach any memory region that holds non-executable data. Other
-mitigation techniques such as protecting return addresses on the stack enforce
-a form of coarse-grained \CFI.
+not allowed to reach any memory region that holds non-executable data. Another
+popular mitigation technique is to protect return addresses on the stack,
+thus restricting the control-flow on returns. 
 
 Moreover it is common that security properties are enforced dynamically by code
 that is statically injected to the program (\EG Inlined Reference Monitors (IRM)
 \cite{Erlingsson04} follow that approach), thus some form of \CFI is required in
 order to ensure that these checks are not circumvented. 
 
-\TODO{Think about title}
 \section{Related Work}
 
 \subsection{Balancing between performance and security}\label{sec:security_cfi}
@@ -126,21 +125,22 @@ implementing and formalizing a fine-grained \CFI micro-policy.
 In \cite{AbadiBEL09} Abadi \ETAL extended their original paper, with
 -among other things- a more detailed formal study of \CFI. Their
 formalization regarded a much simpler machine than the x86 omitting
-all the complexity in modern systems. The machine has a few
+all the complexity of modern systems. The machine has a few
 instructions, a separate data memory and instruction memory which by
 the operational semantics of the machine are non-executable and
-non-writable (enforcing \NXD and \NWC by construction), and a small
-set of registers.  Moreover, their attacker model permits arbitrary
-changes to the data memory, arbitrary changes to all the registers but
-a few distinguished ones that are used during the dynamic checks and
-no changes to the instruction memory.  The authors proof that under
-some assumptions \CFI is preserved for every step even in the presence
-of an attacker as powerful as the one described above.  Their formal
-study served as a guideline for the implementation, but as it is done
-on paper their proofs cannot be machine checked. Furthermore, their
-formalization omits less interesting but important details such as
-instruction encoding and decoding which as shown in
-\cite{MorrisettTTTG12} are far from trivial for the x86.
+non-writable respectively (enforcing \NXD and \NWC by construction),
+and a small set of registers. Moreover, their attacker model permits
+arbitrary changes to the data memory, arbitrary changes to all the
+registers but a few distinguished ones that are used during the
+dynamic checks and no changes to the instruction memory.  The authors
+proof that under some assumptions every step respects the control-flow
+graph even in the presence of an attacker as powerful as the one
+described above. Their formal study served as a guideline for the
+implementation, but as it is done on paper their proofs cannot be
+machine checked. Furthermore, their formalization omits less
+interesting but important details such as instruction encoding and
+decoding which as shown in \cite{MorrisettTTTG12} are far from trivial
+for the x86.
 
 Machine-checked formal verification efforts include \cite{ZhaoLSR11},
 which is a SFI formalization for the ARM architecture that also

@@ -21,6 +21,8 @@ we developed we prove that this property is \emph{preserved} by
 backwards refinement and thus transferring the property to the
 symbolic and consequently to the concrete machine.
 
+\TODO{Maybe draw a diagram about proof structure here?}
+
 \section{Representing control-flow graphs}\label{sec:cfi_tags}
 
 Our approach for enforcing \CFI, as explained in \ref{sec:cfi_fine},
@@ -227,7 +229,7 @@ Below is the step rule for the Store instruction, illustrating both \NWC and
 \NXD. Notice that the instruction is fetched by the instruction memory and
 the store is done on the data memory.
 
-\begin{figure}[!htpb]
+\begin{figure}[!htb]
 \infrule[Store]{
   \imem[\pc] = i \andalso \ii{decode}~i = \ii{Store}~r_p~r_s \andalso
   \rd{\reg}{r_p} = p \\
@@ -288,7 +290,7 @@ of a monitor service is done simply by jumping to it's address, there
 is no separate instruction. As with all other instructions, execution
 of the monitor service is only allowed if the \ok bit is set to true.
 
-\begin{figure}[H]
+\begin{figure}[htb!]
 \infrule[Service]{
   \pc \not\in \ii{dom(\imem)} \andalso \pc \not\in \ii{dom(\dmem)} \andalso
   \ii{get\_service}~\pc = (addr,f) \\
@@ -608,11 +610,9 @@ extending the set of allowed jumps \CFG.
 \begin{figure}[htbp!]
 \small
 \infrule[IndirectFlows]{
-  \mem[\pc] = \atom{\textit{i}}{\ti} 
+  \mem[\pc] = \atom{\textit{i}}{(\INSTR{src})} 
   \andalso \textit{decode~i} \in \lbrace \ii{Jal~r}, \ii{Jump~r} \rbrace\\
-  \mem[\pc'] = \atom{\textit{i}'}{\ti'} 
-    \andalso \ti = \INSTR{src}
-    \andalso \ti' = \INSTR{dst}\\
+  \mem[\pc'] = \atom{\textit{i}'}{(\INSTR{dst})} \\
     (\textit{src},\textit{dst}) \in \CFGm
   }{
   (\acfistat{\mem}{\reg}{\pc}{\extra}{},
@@ -620,19 +620,18 @@ extending the set of allowed jumps \CFG.
 \bigskip
 
 \infrule[IndirectFlows2]{
-  \mem[\pc] = \atom{\textit{i}}{\ti}
+  \mem[\pc] = \atom{\textit{i}}{(\INSTR{src})}
   \andalso \textit{decode~i} \in \lbrace \ii{Jal~r}, \ii{Jump~r} \rbrace\\
   \mem[\pc'] = \varnothing 
-    \andalso \textit{get\_service}~\pc = (\ti',f)\\
-    \ti = \INSTR{src} \andalso \ti' = \INSTR{dst}
-    \\ (\textit{src},\textit{dst}) \in \CFGm
+    \andalso \textit{get\_service}~\pc = (\INSTR{dst},f) \\ 
+    (\textit{src},\textit{dst}) \in \CFGm
   }{
   (\acfistat{\mem}{\reg}{\pc}{\extra}{},
   \acfistat{\mem}{\reg}{\pc'}{\extra}{}) \in \SUCCm{S}}
 \bigskip
 
 \infrule[ConditionalFlows]{
-  \mem[\pc] = \atom{\textit{i}}{\ti}
+  \mem[\pc] = \atom{\textit{i}}{(\INSTR{_})}
   \andalso \textit{decode~i} = \ii{Bnz~r~imm}\\
    (\pc' = \pc + 1) \vee (\pc' = \pc + imm)
   }{
@@ -641,7 +640,7 @@ extending the set of allowed jumps \CFG.
 \bigskip
 
 \infrule[NormalFlows]{
-  \mem[\pc] = \atom{\textit{i}}{\ti}
+  \mem[\pc] = \atom{\textit{i}}{(\INSTR{_})}
   \andalso 
   \ii{decode}~i \not\in \lbrace \ii{Jal~r}, \ii{Jump~r}, \ii{Bnz~r~imm}, 
   \varnothing \rbrace
@@ -706,21 +705,27 @@ see what's the situation there.}
   \end{align*}
 \end{definition}
 
-We define a predicate \emph{initial} on symbolic states as
-the conjunction of the above invariants and the
-proposition that the tag on the \pc is set to \DATAname.
+We define a predicate \emph{initial} that determines whether a symbolic
+state is an initial state.
 
-\lstheader{sym_initial}{Initial Symbolic states predicate}
-Definition invariants st :=
-  instructions_tagged (Symbolic.mem st) /\
-  valid_jmp_tagged (Symbolic.mem st) /\
-  entry_points_tagged (Symbolic.mem st) /\
-  registers_tagged (Symbolic.regs st).
+\begin{definition}[Symbolic Initial States]\label{symbolic_initial_pred}
+  ~ A symbolic state $s^S$ is an initial state ($initial^S ~ s^S$)
+  if \cref{instructions_tagged,entry_tagged,valid_jmp_tagged} hold for $s^S$
+  and additionally the tag on the \pc is set to \DATAname.
+\end{definition}
 
-Definition initial (s : Symbolic.state t) :=
-  (common.tag (Symbolic.pc s)) = DATA /\
-  invariants s.
-\end{lstlisting}
+%should i remove code from here?
+% \lstheader{sym_initial}{Initial Symbolic states predicate}
+% Definition invariants st :=
+%   instructions_tagged (Symbolic.mem st) /\
+%   valid_jmp_tagged (Symbolic.mem st) /\
+%   entry_points_tagged (Symbolic.mem st) /\
+%   registers_tagged (Symbolic.regs st).
+
+% Definition initial (s : Symbolic.state t) :=
+%   (common.tag (Symbolic.pc s)) = DATA /\
+%   invariants s.
+% \end{lstlisting}
 
 It's straightforward by the semantics of the step relations to prove
 that both normal and attacker steps preserve each of the invariants.
@@ -982,8 +987,8 @@ that steps now refer to attacker steps.
 
 \begin{definition}[1-Backward Simulation Attacker]
 \label{simulation_LH_attacker}
-  The symbolic machine simulates the abstract machine with respect to
-  a $simulation~relation~\sim$ between symbolic and abstract states,
+  A low-level machine simulates a high-level machine with respect to
+  a $simulation~relation~\sim$ between low-level and high-level machinestates,
   if $s^H_1 \sim s_1^L$ and \stepa{s^L_1}{s^L_2}{L} implies that there
   exists $s^H_2$ such that, $s^H_2 \sim s^L_2$ and \stepa{s^H_1}{s^H_2}{H}.
 \end{definition}
@@ -1037,7 +1042,7 @@ steps. The proof proceeds by using the correctness theorem for the map function.
 \begin{lemma}[Attacker preserves register simulation]
 \label{areg_map_preserves_ref}
   For all abstract register sets (\textit{areg})
-  and symbolic register sets (\textit{sreg, sreg'}),
+  and symbolic register sets (\textit{sreg, sreg}'),
   \begin{align*}
     & \mathit{areg} \sim_{regs} \mathit{reg} \implies \\
     & \stepa{\mathit{sreg}}{\mathit{sreg}'}{S} \implies \\
@@ -1135,7 +1140,8 @@ simulation for attacker steps as defined by \cref{simulation_LH_attacker}.
 \begin{theorem}[1-Backward Simulation Symbolic-Abstract for Attacker]
 \label{simulation_SA_attacker}
 \Cref{simulation_LH_attacker} holds for the Symbolic (low-level) and
-the Abstract (high-level) machines.
+the Abstract (high-level) machines when the two machines are related
+by $\sim$.
 \end{theorem}
 
 \section{The Concrete  Machine}\label{sec:concrete_cfi}
@@ -1214,7 +1220,7 @@ the two least-significant bits are used to distinguish between \DATA,
 \INSTR{$\bot$} and \INSTR{\id}, and the 28 higher-bits are the \id
 in the last case and zero otherwise.
 
-\begin{table}[htb!]
+\begin{table}[float=htb!]
 \centering
     \begin{tabular}{|c|c|}
     \hline
@@ -1259,14 +1265,14 @@ and the symbolic machine that is provided by the micro-policies
 framework \cite{pump_popl2015}. For the concrete to symbolic backward
 refinement we no longer get a 1-backward simulation, due to the fact
 that the steps the concrete policy monitor takes are not matched by
-any steps of the symbolic machine. We can however proof a 1-backward
-simulation as defined by \cref{simulation_LH}, where the low-level
-machine is now the concrete machine and the high-level one the
-symbolic machine, with respect to a simulation relation ($\sim_U$)
-when the tag of the \pc is \USERname (user state).
+any steps of the symbolic machine. The framework does however provide
+a proof of 1-backward simulation as defined by \cref{simulation_LH},
+where the low-level machine is now the concrete machine and the
+high-level one the symbolic machine, with respect to a simulation
+relation ($\sim_U$) when the tag of the \pc is \USERname (user state).
 
-For \MONITOR steps we can use a weaker simulation relation ($\sim_M$)
-and eventually obtain a $\lbrace 0,1 \rbrace$-backward simulation.
+For \MONITOR steps a weaker simulation relation ($\sim_M$) is used,
+to eventually obtain a $\lbrace 0,1 \rbrace$-backward simulation.
 
 \begin{definition}[Weak simulation relation for Monitor steps]
 \label{weak_simulation_relation}
@@ -1298,4 +1304,258 @@ and eventually obtain a $\lbrace 0,1 \rbrace$-backward simulation.
   \end{center}
 \vspace{-\smallskipamount}
 \end{definition}
+
+\begin{theorem}[$\lbrace 0,1 \rbrace$-Backward simulation between Concrete and Symbolic Machines]
+\label{backward_simulation_CS}
+  For all concrete states $s^C_1, s^C_2$ and symbolic states $s^S_1$:
+  \begin{itemize}
+    \item If $s^S_1 \sim_U s^C_1$ and $\stepn{s^C_1}{s^C_2}$ then there exists
+      $s^S_2$ such that $s^S_2 \sim_U s^C_2$ and $\stepn{s^S_1}{s^S_2}$
+    \item If $s^S_1 \sim_M s^C_1$ and $\stepn{s^C_1}{s^C_2}$ then
+      $s^S_1 \sim_M s^C_2$
+    \end{itemize}
+\end{theorem}
+
+Using the 1-backward simulation between the symbolic and abstract
+machines (\cref{simulation_SA}) and the $\lbrace 0,1 \rbrace$-backward
+simulation between the concrete and the symbolic machine
+(\cref{backward_simulation_CS}), we can obtain our first result, which
+is the refinement between the concrete machine running a policy
+monitor that enforces \CFI and the abstract machine with respect
+to a refinement relation ($\sim_{CA}$) between concrete and abstract states.
+
+\begin{figure}[htb!]
+\infrule[]{
+  s^S \sim_{CS} s^C \andalso s^A \sim_{SA} s^S
+  }{s^A \sim_{CA} s^C}
+\caption{Refinement relation between concrete and abstract machines}
+\label{refinement_CA}
+\end{figure}
+
+\begin{theorem}[Concrete-Abstract backward refinement]
+\label{backward_refinement_CA}
+  For all abstract machine states ($s^A_1$), concrete machine states
+  ($s^C_1, s^C_2$), if $s^A_1 \sim_{CA} s^C_1$ and
+  $s^C_1 \to_n^{*} s^C_2$ and $s^C_2$ is in user mode, then
+  there exists an abstract machine state $s^A_2$ such that
+  $s^A_1 \to_n^{*} s^A_2$ and $s^A_2 \sim_{CA} s^C_2$.
+\end{theorem}
+
+In order to obtain our second result, which is a proof that the
+property stated by \cref{cfi} holds for the concrete machine, we will
+need to make the concrete machine an instance of
+the \labelcref{cfi_machine}, by defining all it's parameters, similar
+to what we did for the abstract and symbolic machines.
+
+\subsection{Attacker model}\label{sec:concrete_attacker}
+
+The attacker model for the concrete machine, models an attacker that
+can tamper with the machine only when it's in user mode. The
+capabilities of the concrete attacker when the machine is in user
+mode, directly matches the capabilities of the symbolic attacker,
+which means that the attacker can only change the values of atoms that
+have a \USERname tag. This prevents the attacker from changing monitor
+data in memory or registers, as well as the tags.
+
+\begin{figure}[htb!]
+\infrule[AttackUser]{
+  \stepa{\atom{w_1}{ut_1}}{\atom{w_2}{ut_2}}{S}
+  }{\stepa{\atom{w_1}{\USER{ut_1}}}{\atom{w_2}{\USER{ut_2}}}{C}}
+\caption{Concrete attacker capabilities on atoms}
+\label{concrete_attacker_atom}
+\end{figure}
+
+\begin{figure}[htb!]
+\infrule{
+  \stepa{\mem}{\mem'}{C} \andalso
+  \stepa{\reg}{\reg'}{C}
+}{
+  \stepa{\cstat{\mem}{\reg}{\cache}{\atom{\pc}{\USER{ut}}}{\epc}}
+  {\cstat{\mem'}{\reg'}{\cache}{\atom{\pc}{\USER{ut}}}{\epc}}
+  {C}
+}
+\caption{Attacker model for the Concrete machine}
+\label{concrete_attacker}
+\end{figure}
+
+\subsection{Concrete-Symbolic 1-backward simulation for Attacker}
+\label{sec:backward_CS_attacker}
+
+For attacker steps we can prove a 1-backward simulation, instantiating
+\cref{simulation_LH}, with the concrete machine as the low level machine,
+the symbolic machine as the high machine and using $\sim_U$ as a simulation
+relation.
+
+In order to prove the simulation, we apply the same technique as in the
+case of Symbolic-Abstract backward simulation for attacker steps, constructing
+attacker steps at the symbolic level from attacker steps in the concrete level
+and additionally showing that the way we build the steps preserve the simulation
+relation.
+
+We can construct a symbolic memory and a symbolic set of registers
+from their concrete counterparts by filtering all non-user data of the
+concrete memory and registers and then decoding all the concrete tags
+to symbolic ones. We can achieve this using the filter and map
+functions as seen in \cref{sec:backward_SA_attacker}.
+
+\lstheader{is_user}{Function that returns true if atom has a \USERname tag}
+Definition is_user (x : atom (word mt) (word mt)) :=
+  rules.word_lift (fun t => rules.is_user t) (common.tag x).
+\end{lstlisting}
+
+\lstheader{coerce}{Function that converts a concrete atom to a symbolic one}
+Definition coerce (x : atom (word mt) (word mt)) : atom (word mt) (cfi_tag) :=
+  match rules.decode (common.tag x) with
+    | Some (rules.USER tg) => (common.val x)@tg
+    | _ => (common.val x)@DATA (*this is unreachable in our case, dummy value*)
+  end.
+\end{lstlisting}
+
+We can now prove \cref{creg_simulation,cmem_simulation} the two lemmas that
+will allows us to easily proof the 1-backward simulation for attacker steps.
+
+\begin{lemma}[Concrete-Symbolic attacker registers 1-backward simulation]
+\label{creg_simulation}
+  For all symbolic register sets (\textit{sreg})
+  and concrete register sets (\textit{creg, creg}'),
+  \begin{align*}
+    & \mathit{sreg} \sim_{regs} \mathit{creg} \implies \\
+    & \stepa{\mathit{creg}}{\mathit{creg}'}{C} \implies \\
+    & \stepa{sreg}{\mathit{map}~coerce~(filter~is\_user~\mathit{creg}')}{S}
+  \end{align*}
+\end{lemma}
+
+\begin{lemma}[Concrete-Symbolic attacker memory 1-backward simulation]
+\label{cmem_simulation}
+  For all symbolic memories (\textit{smem})
+  and concrete memories (\textit{cmem, cmem}'),
+  \begin{align*}
+    & \mathit{smem} \sim_{mem} \mathit{cmem} \implies \\
+    & \stepa{\mathit{cmem}}{\mathit{cmem}'}{C} \implies \\
+    & \mathit{map}~coerce~(filter~is\_user~\mathit{cmem}') \sim_{mem} 
+       \mathit{cmem}' \\
+    & \stepa{smem}{\mathit{map}~coerce~(filter~is\_user~\mathit{cmem}')}{S}
+  \end{align*}
+\end{lemma}
+
+We additionally have to prove that attacker steps preserve some low-level
+invariants of the concrete machine that are required by the framework we
+use, but the proofs are mostly trivial as the invariants regard pieces of
+state the attacker cannot tamper with \EG monitor data.
+
+\begin{theorem}[1-Backward Simulation Concrete-Symbolic for Attacker]
+\label{simulation_CS_attacker}
+\Cref{simulation_LH_attacker} holds for the Concrete (low-level) and
+the Symbolic (high-level) machines when the two machines are related
+by $\sim_U$.
+\end{theorem}
+
+\subsection{Allowed control-flows for the Concrete Machine}
+\label{sec:concrete_flow}
+
+Once again we construct a function that decides the validity of all
+control-flows \SUCC{C}, this time for the concrete machine. \SUCC{C}
+allows all flows to, from and in monitor mode and only expresses
+the desired control-flow for user mode.
+
+\begin{figure}[htb!]
+\small
+\infrule[MonitorFlows]{
+   in\_kernel~s_1~||~in\_kernel~s_2
+  }{(s_1, s_2) \in \SUCCm{C}}
+\bigskip
+
+\infrule[IndirectFlows]{
+  \mem[\pc] = \atom{\textit{i}}{\USER{(\INSTR{src})}} 
+  \andalso \textit{decode~i} \in \lbrace \ii{Jal~r}, \ii{Jump~r} \rbrace\\
+  \mem[\pc'] = \atom{\textit{i}'}{\USER{(\INSTR{dst})}} \\
+  \tpc = \USER{\textit{ut}}
+  \andalso \tpc' = \USER{\textit{ut}'}
+  \andalso (\textit{src},\textit{dst}) \in \CFGm
+  }{
+  (\cstat{\mem}{\reg}{\cache}{\atom{\pc}{\tpc}}{\epc},
+  \cstat{\mem}{\reg}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
+\bigskip
+
+\infrule[IndirectFlows2]{
+  \mem[\pc] = \atom{\textit{i}}{\USER{(\INSTR{src})}} 
+  \andalso \textit{decode~i} \in \lbrace \ii{Jal~r}, \ii{Jump~r} \rbrace\\
+  \mem[\pc'] = \atom{\textit{i}'}{\ENTRY{(\INSTR{dst})}} \\
+  \tpc = \USER{\textit{ut}}
+  \andalso \tpc' = \USER{\textit{ut}'} \\
+  \textit{decode~i} = Nop \andalso (\textit{src},\textit{dst}) \in \CFGm
+  }{
+  (\cstat{\mem}{\reg}{\cache}{\atom{\pc}{\tpc}}{\epc},
+  \cstat{\mem}{\reg}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
+\bigskip
+
+\infrule[ConditionalFlows]{
+  \mem[\pc] = \atom{\textit{i}}{\USER{(\INSTR{_})}} 
+  \andalso \textit{decode~i} = \ii{Bnz~r~imm} \\
+  \tpc = \USER{\textit{ut}}
+  \andalso \tpc' = \USER{\textit{ut}'} \\
+  (\pc' = \pc + 1) \vee (\pc' = \pc + imm)
+  }{
+  (\cstat{\mem}{\reg}{\cache}{\atom{\pc}{\tpc}}{\epc},
+  \cstat{\mem}{\reg}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
+\bigskip
+
+\infrule[NormalFlows]{
+  \mem[\pc] = \atom{\textit{i}}{\USER{(\INSTR{_})}} 
+  \andalso 
+  \ii{decode}~i \not\in \lbrace \ii{Jal~r}, \ii{Jump~r}, \ii{Bnz~r~imm}, 
+  \varnothing \rbrace
+  \tpc = \USER{\textit{ut}}
+  \andalso \tpc' = \USER{\textit{ut}'} \\
+  (\pc' = \pc + 1) \vee (\pc' = \pc + imm)
+  }{
+  (\cstat{\mem}{\reg}{\cache}{\atom{\pc}{\tpc}}{\epc},
+  \cstat{\mem'}{\reg'}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
+
+\caption{Allowed control-flows for instructions of the concrete machine}
+\label{concrete_succ}
+\end{figure}
+
+\subsection{Initial states of the Concrete Machine}
+\label{sec:concrete_initial}
+
+For the concrete machine, we require that it's initial states matches
+the initial states of the symbolic machine under the simulation
+relation $\sim_U$. This ensures that concrete initial states satisfy
+both the invariants we enforced on symbolic initial states and any
+low-level invariants enforced by $\sim_U$.
+
+\begin{definition}[Concrete Initial States]\label{concrete_initia_predl}
+  ~ A concrete state $s^C$ is an initial state if there exists a
+  symbolic state $s^S$ such that $initial^S ~ s^S$ and $s^S \sim_U
+  s^C$.
+\end{definition}
+
+\subsection{Stopping predicate for the Concrete Machine}
+\label{sec:concrete_stopping}
+
+The stopping predicate for the concrete machine is more complex than
+the one for the symbolic or the abstract machine, due to the monitor
+steps. In particular, on the next step after a violation the machine
+will enter monitor mode to determine whether the step is allowed or
+not. The miss handler will take an arbitrary number of steps to
+determine that execution should be disallowed because a violation of
+the policy occurred. This is modeled by disallowing the concrete
+machine to return to user mode.  However, note that it could be the
+case that the machine cannot step at all after a control-flow
+violation, for example if the \pc is outside the memory of the machine.
+
+In addition to the above, there may be attacker steps. These can only
+come immediately after the violating step and before the machine
+enters monitor mode. Attacker is not allowed to take steps during
+monitor mode and as mentioned above the machine will not return to
+user mode.
+
+We can summarize the conditions that hold for an execution trace to
+be stopping.
+
+\begin{enumerate}
+\item There is an optional prefix of attacker steps (\stepa{}{}{})
+\item There is an optional suffix of monitor steps (\stepn{}{})
+\end{enumerate}
 

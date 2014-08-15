@@ -100,21 +100,33 @@
 \declaretheorem[sibling=theorem]{definition}
 \declaretheorem[sibling=theorem]{lemma}
 
+% \makeatletter
+% \AtBeginDocument{%
+%   \renewcommand*{\thetable}{\arabic{chapter}.\arabic{table}}
+%   \renewcommand*{\thefigure}{\arabic{chapter}.\arabic{figure}}
+%   \renewcommand*{\thelstlisting}{\arabic{chapter}.\arabic{lstlisting}}
+%   \let\c@table\c@theorem
+%   \let\c@table\c@figure
+%   \let\c@table\c@lstlisting
+%   \let\thetable\thefigure
+%   \let\thetable\thelstlisting
+%   \let\c@figure\c@lstlisting
+%   \let\c@figure\c@theorem
+%   \let\c@lstlisting\c@theorem
+%   \let\thefigure\thelstlisting
+%   \let\ftype@lstlisting\ftype@figure\ftype@table
+%   % give the floats the same precedence
+% }
+% \makeatother
+
 \makeatletter
-\AtBeginDocument{%
   \renewcommand*{\thetable}{\arabic{chapter}.\arabic{table}}
   \renewcommand*{\thefigure}{\arabic{chapter}.\arabic{figure}}
+\makeatother
+
+\makeatletter
+\AtBeginDocument{%
   \renewcommand*{\thelstlisting}{\arabic{chapter}.\arabic{lstlisting}}
-  \let\c@table\c@theorem
-  \let\c@table\c@figure
-  \let\thetable\thefigure
-  \let\c@table\c@lstlisting
-  \let\thetable\thelstlisting
-  \let\c@figure\c@lstlisting
-  \let\c@figure\c@theorem
-  \let\c@lstlisting\c@theorem
-  \let\thefigure\thelstlisting
-  \let\ftype@lstlisting\ftype@figure\ftype@table % give the floats the same precedence
 }
 \makeatother
 
