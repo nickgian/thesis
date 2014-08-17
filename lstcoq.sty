@@ -80,16 +80,17 @@ basicstyle=\small,
 captionpos=b,
 %
 % flexible columns
+basewidth={2em, 0.5em},
 columns=[l]flexible,
 %
 % Style for (listings') identifiers
 identifierstyle={\ttfamily\color{black}},
 % Style for declaration keywords
-keywordstyle=[1]{\ttfamily\color{dkviolet}},
+keywordstyle=[1]{\ttfamily\bfseries\color{dkviolet}},
 % Style for gallina keywords
-keywordstyle=[2]{\ttfamily\color{dkgreen}},
+keywordstyle=[2]{\ttfamily\bfseries\color{dkgreen}},
 % Style for sorts keywords
-keywordstyle=[3]{\ttfamily\color{ltblue}},
+keywordstyle=[3]{\ttfamily\bfseries\color{ltblue}},
 % Style for tactics keywords
 keywordstyle=[4]{\ttfamily\color{dkblue}},
 % Style for terminators keywords
@@ -99,23 +100,24 @@ keywordstyle=[5]{\ttfamily\color{dkred}},
 % Style for strings
 stringstyle=\ttfamily,
 % Style for comments
-commentstyle={\ttfamily\color{dkgreen}},
+commentstyle={\ttfamily\itshape\color{dkgreen}},
 %
 %moredelim=**[is][\ttfamily\color{red}]{/&}{&/},
 literate=
-    {\\forall}{{\color{dkgreen}{$\forall\;$}}}1
-    {\\exists}{{$\exists\;$}}1
-    {<-}{{$\leftarrow\;$}}1
-    {=>}{{$\Rightarrow\;$}}1
+    {forall}{{\color{dkgreen}{$\forall\;$}}}1
+    {exists}{{$\exists\;$}}1
+    {<-}{{$\leftarrow\;\;$}}1
+    {=>}{{$\Rightarrow\;\;$}}1
     {==}{{\code{==}\;}}1
     {==>}{{\code{==>}\;}}1
 %    {:>}{{\code{:>}\;}}1
-    {->}{{$\rightarrow\;$}}1
-    {<->}{{$\leftrightarrow\;$}}1
-    {<==}{{$\leq\;$}}1
+    {->}{{$\rightarrow\;\;$}}1
+    {<-->}{{$\longleftrightarrow\;\;$}}1
+    {<->}{{$\leftrightarrow\;\;$}}1
+    {<==}{{$\leq\;\;$}}1
     {\#}{{$^\star$}}1 
     {\\o}{{$\circ\;$}}1 
-    {\@}{{$\cdot$}}1 
+%    {\@}{{$\cdot$}}1 
     {\/\\}{{$\wedge\;$}}1
     {\\\/}{{$\vee\;$}}1
     {++}{{\code{++}}}1

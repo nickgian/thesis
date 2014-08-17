@@ -673,11 +673,7 @@ these initial conditions are invariants of the machine and they
 are preserved at every (normal or attacker) step.
 
 These invariants are required for backward simulation between
-the symbolic and the abstract machine. More invariants may
-be required for forward simulation.
-
-\TODO{hopefully try to get to forward simulation and
-see what's the situation there.}
+the symbolic and the abstract machine.
 
 \begin{definition}[Instructions Tagged]\label{instructions_tagged}
   ~ For all addresses \textit{addr} in the memory such that
@@ -710,35 +706,37 @@ see what's the situation there.}
   \end{align*}
 \end{definition}
 
+Additionally we need two (\TODO{Or three}) more invariants for forward
+simulation. These two invariants enforce that all Jump and Jal instructions
+are tagged with a unique identifier.
+
+\begin{definition}[Jumps Tagged]\label{jumps_tagged}
+  For all addresses \textit{addr} and instructions \textit{i} such
+  that $\rd{mem}{addr}=i@\INSTR{x}$ and $decode~i = Jump r$, it holds that
+  $$\exists id, word\_to\_id addr = id \land x = id$$
+\end{definition}
+
+\begin{definition}[Jals Tagged]\label{jals_tagged}
+  For all addresses \textit{addr} and instructions \textit{i} such
+  that $\rd{mem}{addr}=i@\INSTR{x}$ and $decode~i = Jal r$, it holds that
+  $$\exists id, word\_to\_id addr = id \land x = id$$
+\end{definition}
+
 We define a predicate \emph{initial} that determines whether a symbolic
 state is an initial state.
 
 \begin{definition}[Symbolic Initial States]\label{symbolic_initial_pred}
-  ~ A symbolic state $s^S$ is an initial state ($initial^S ~ s^S$)
-  if \cref{instructions_tagged,entry_tagged,valid_jmp_tagged} hold for $s^S$
-  and additionally the tag on the \pc is set to \DATAname.
+  ~ A symbolic state $s^S$ is an initial state ($initial^S ~ s^S$) if
+  \cref{instructions_tagged,entry_tagged,valid_jmp_tagged,jumps_tagged,jals_tagged}
+  hold for $s^S$ and additionally the tag on the \pc is set to
+  \DATAname.
 \end{definition}
-
-%should i remove code from here?
-% \lstheader{sym_initial}{Initial Symbolic states predicate}
-% Definition invariants st :=
-%   instructions_tagged (Symbolic.mem st) /\
-%   valid_jmp_tagged (Symbolic.mem st) /\
-%   entry_points_tagged (Symbolic.mem st) /\
-%   registers_tagged (Symbolic.regs st).
-
-% Definition initial (s : Symbolic.state t) :=
-%   (common.tag (Symbolic.pc s)) = DATA /\
-%   invariants s.
-% \end{lstlisting}
 
 It's straightforward by the semantics of the step relations to prove
 that both normal and attacker steps preserve each of the invariants.
 We only need to assume that this holds for monitor services (\IE if we
 were to provide some monitor services they would have to preserve
 these invariants).
-
-%write this in latex form and then use appendix for these.
 
 \begin{lemma}[Symbolic Invariants preserved by normal steps]
 \label{step_preserves_invariants}
@@ -771,15 +769,16 @@ symbolic machine is stopping if:
 \item All steps in the trace are attacker steps (\stepa{}{}{})
 \end{enumerate}
 
-\subsection{Symbolic-Abstract backward simulation}
+\subsection{Symbolic-Abstract  simulation}
 \label{sec:refinement_SA}
 
-The Symbolic-Abstract backward simulation formally defines the
-connection between the two machines. We prove a
-1-backward simulation theorem for
-both normal and attacker steps. This means that every
-step of the symbolic machine is matched by one step
-of the abstract machine.
+The Symbolic-Abstract simulation formally defines the connection
+between the two machines. We prove a 1-backward simulation theorem for
+both normal and attacker steps. This means that every step of the
+symbolic machine can be matched by one step of the abstract machine.
+Additionally we prove a 1-forward simulation for normal steps,
+which means that every step of the abstract machine can be matched
+by one on the symbolic machine.
 
 \begin{definition}[1-Backward Simulation]
 \label{simulation_LH}
@@ -811,18 +810,22 @@ We visualize the above definition with the following diagram:
 (Plain lines denote premises, dashed ones conclusions.)
 \end{definition}
 
+\begin{definition}[1-Forward Simulation]
+\label{fwd_simulation_LH}
+  A high-level machine simulates a low-level machine with respect to a
+  $simulation~relation~\sim$ between low-level machine states and
+  high-level machine states, if $s^H_1 \sim s_1^L$ and
+  \stepn{s^H_1}{s^H_2} implies that there exists $s^L_2$ such that,
+  $s^H_2 \sim s^L_2$ and \stepn{s^L_1}{s^L_2}.
+\end{definition}
+
 Intuitively, backward simulation is enough to capture the desired
 security property. Our intuition is further strengthened later, when
 we prove that the \CFI property given by \cref{cfi} is preserved by
-backward refinement. However, a machine that cannot take any step
-also enjoys \CFI vacuously. Forward simulation would guarantee us that
-if we start from two states in relation ($s^A_1 \sim s_1^S$), then a
-step in the abstract machine (\stepn{s^A_1}{s^A_2}) is matched by a
-step in the symbolic machine (\stepn{s^S_1}{s^S_2}) and the resulting
-states are related by the simulation relation ($s^A_2 \sim s^S_2$). We
-have not proved forward simulation but we believe it holds.
-
-\TODO{Try to change that}
+backward refinement. However, a trivial machine that cannot take any step
+also enjoys \CFI vacuously. Forward simulation guarantees that this is not
+the case for our symbolic machine and proves that it is a meaningful
+implementation of the abstract machine.
 
 \subsubsection{Simulation Relation}
 \label{sec:sim_relation}
@@ -854,9 +857,7 @@ component of the state.
   An abstract register set \textit{areg} is in simulation with a
   symbolic register set \textit{sreg}, if for all registers \textit{r} and words
   \textit{x} it holds that
-  $$(\exists\mathit{ut \in (\id \cup \lbrace \bot \rbrace)}, 
-  ~ \rd{\mathit{sreg}}{\mathit{r}} = 
-  \atom{x}{ut})
+  $$ \rd{\mathit{sreg}}{\mathit{r}} = \atom{x}{\DATA})
   \iff \rd{\mathit{areg}}{\mathit{r}} = \mathit{x}$$
 \end{definition}
 
@@ -899,7 +900,7 @@ captures the notion that a violation in the abstract machine is also a
 violation in the symbolic machine and vice-versa.
 
 We give one more definition of correctness, for the case of monitor
-services.  The intuition is the same, but because monitor services
+services. The intuition is the same, but because monitor services
 live outside the addressable memory of the machines, it's statement
 needs to be adapted a bit.
 
@@ -938,10 +939,11 @@ and the abstract machine share.
 
 We start with some helpful lemmas about registers and memory
 updates. These lemmas serve as the basis for proving simulation for
-instructions that change the registers or the memory.  The
+instructions that change the registers or the memory. The
 corresponding Coq definitions and proofs can be found.
 \TODO{cite appendix}
 
+\TODO{fix this}
 \begin{lemma}[Registers Update Backward Simulation]
 \label{refine_registers_upd}
 For all symbolic register sets (\textit{sreg,sreg'}),
@@ -993,8 +995,8 @@ that steps now refer to attacker steps.
 \begin{definition}[1-Backward Simulation Attacker]
 \label{simulation_LH_attacker}
   A low-level machine simulates a high-level machine with respect to
-  a $simulation~relation~\sim$ between low-level and high-level machinestates,
-  if $s^H_1 \sim s_1^L$ and \stepa{s^L_1}{s^L_2}{L} implies that there
+  a $simulation~relation~\sim$ between low-level and high-level machine states,
+  if $s^H_1 \sim s^L_1$ and \stepa{s^L_1}{s^L_2}{L} implies that there
   exists $s^H_2$ such that, $s^H_2 \sim s^L_2$ and \stepa{s^H_1}{s^H_2}{H}.
 \end{definition}
 
@@ -1147,6 +1149,66 @@ simulation for attacker steps as defined by \cref{simulation_LH_attacker}.
 \Cref{simulation_LH_attacker} holds for the Symbolic (low-level) and
 the Abstract (high-level) machines when the two machines are related
 by $\sim$.
+\end{theorem}
+
+\subsubsection{Proving 1-backward simulation for normal steps}
+\label{sec:backward_SA_normal}
+\TODO{CHANGE THIS TO FORWARD SIMULATION}
+Proving a 1-backward simulation for normal steps is relatively
+straight-forward, mostly thanks to the fact that the symbolic
+machine abstracts away many details of the concrete machine
+that would make the proofs more tedious. Additionally we do
+not have to provide such proofs for any monitor service as
+we did not use any. Therefore we will only have to reason
+about the small set of instructions that the symbolic
+and the abstract machine share. 
+
+We start with some helpful lemmas about registers and memory
+updates. These lemmas serve as the basis for proving simulation for
+instructions that change the registers or the memory. The
+corresponding Coq definitions and proofs can be found.
+\TODO{cite appendix}
+
+\TODO{fix this}
+\begin{lemma}[Registers Update Backward Simulation]
+\label{refine_registers_upd}
+For all symbolic register sets (\textit{sreg,sreg'}),
+abstract register sets (\textit{areg}), registers (\textit{r}),
+words (\textit{v,v'}) and tags (\textit{tg,tg'}),
+\begin{align*}
+  & \mathit{areg} \sim_{regs} \mathit{sreg} \implies \\
+  & \rd{\mathit{sreg}}{\mathit{r}} = \atom{v}{tg} \implies \\
+  & \upd{\mathit{sreg}}{\mathit{r}}{\atom{v'}{tg'}} = \mathit{sreg'} \implies \\
+  & ~~ \exists \mathit{areg'}, \\
+  & ~~~~ \upd{\mathit{areg}}{\mathit{r}}{v'} = \mathit{areg'} \land \\
+  & ~~~~  \mathit{areg'} \sim_{regs} \mathit{sreg'}
+\end{align*}
+\end{lemma}
+
+\begin{lemma}[Memory Update Backward Simulation]
+\label{refine_memory_upd}
+For all symbolic memories (\textit{smem,smem'}),
+abstract data memories (\textit{amem}) and
+words (\textit{addr,v,v'}),
+\begin{align*}
+  & \mathit{amem} \sim_{dmem} \mathit{smem} \implies \\
+  & \rd{\mathit{smem}}{\mathit{addr}} = \atom{v}{\DATA} \implies \\
+  & \upd{\mathit{smem}}{\mathit{addr}}{\atom{v'}{\DATA}} = \mathit{smem'} \implies \\
+  & ~~ \exists \mathit{amem'}, \\
+  & ~~~~ \upd{\mathit{amem}}{\mathit{addr}}{v'} = \mathit{amem'} \land \\
+  & ~~~~  \mathit{amem'} \sim_{dmem} \mathit{smem'}
+\end{align*}
+\end{lemma}
+
+With these definitions and lemmas we are able to prove 1-backward simulation
+for normal steps between the Symbolic and the Abstract machine as defined
+by \cref{simulation_LH}, where the low-level machine is the Symbolic machine and
+the high-level machine is the Abstract machine.
+
+\begin{theorem}[1-Backward Simulation Symbolic-Abstract]
+\label{simulation_SA}
+\Cref{simulation_LH} holds for the Symbolic (low-level) and
+the Abstract (high-level) machines.
 \end{theorem}
 
 \section{The Concrete  Machine}\label{sec:concrete_cfi}
@@ -2010,7 +2072,7 @@ instantiated with the symbolic and abstract machines.
 
 \begin{lemma}[Symbolic Step Decidable]
   \label{step_classic_symbolic}
-  \cref{step_classic} holds for the Symbolic machine.
+  \Cref{step_classic} holds for the Symbolic machine.
 \end{lemma}
 \begin{proof}
   Decidability for Symbolic normal steps
@@ -2022,7 +2084,7 @@ instantiated with the symbolic and abstract machines.
 \end{proof}
 \begin{lemma}[Symbolic-Abstract Initial States]
   \label{initial_refine_SA}
-  \cref{initial_refine} holds for Symbolic-Abstract machines.
+  \Cref{initial_refine} holds for Symbolic-Abstract machines.
 \end{lemma}
 \begin{proof}
   To prove that there exists an abstract
@@ -2040,7 +2102,7 @@ instantiated with the symbolic and abstract machines.
 
 \begin{lemma}[Unchecked steps of Symbolic machine]
   \label{cfg_nocheck_SA}
-  \cref{cfg_nocheck} holds for the Symbolic machine.
+  \Cref{cfg_nocheck} holds for the Symbolic machine.
 \end{lemma}
 \begin{proof}
   Vacuously true in the case the low-level machine is
@@ -2049,7 +2111,7 @@ instantiated with the symbolic and abstract machines.
 
 \begin{lemma}[Successor Functions]
   \label{cfg_equiv_SA}
-  \cref{cfg_equiv} holds for the Symbolic-Abstract machines.
+  \Cref{cfg_equiv} holds for the Symbolic-Abstract machines.
 \end{lemma}
 \begin{proof}
   The proof is mostly straight-forward by case analysis on the
@@ -2058,7 +2120,7 @@ instantiated with the symbolic and abstract machines.
 
 \begin{lemma}[No Attacker Steps on Violation]
   \label{av_no_attacker_S}
-  \cref{av_no_attacker} holds for the Abstract machine.
+  \Cref{av_no_attacker} holds for the Abstract machine.
 \end{lemma}
 \begin{proof}
   The proof proceeds by contradiction. 
