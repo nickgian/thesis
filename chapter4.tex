@@ -384,11 +384,16 @@ tamper the machine at the user level cannot interfere.
 
 Finally, we define what it means for the abstract machine to be ``stopping'' by
 defining a predicate on execution traces:
+
+\begin{definition}[Abstract Stopping Predicate]
+\label{abstract_stopping}
+~
 \begin{enumerate}
 \item All states in the trace are stuck with respect to normal steps
   (\stepn{}{})
 \item All steps in the trace are attacker steps (\stepa{}{}{})
 \end{enumerate}
+\end{definition}
 
 \subsection{CFI proof for the Abstract Machine}\label{abstract_proof}
 
@@ -763,11 +768,16 @@ For all symbolic states (\textit{st, st}'),
 
 Similar to the abstract machine, we say that an execution trace of the
 symbolic machine is stopping if:
-\begin{enumerate}
+
+\begin{definition}[Symbolic Stopping Predicate]
+\label{symbolic_stopping}
+~
+\begin{itemize}
 \item All states in the trace are stuck with respect to normal steps
   (\stepn{}{})
 \item All steps in the trace are attacker steps (\stepa{}{}{})
-\end{enumerate}
+\end{itemize}
+\end{definition}
 
 \subsection{Symbolic-Abstract  simulation}
 \label{sec:refinement_SA}
@@ -779,6 +789,8 @@ symbolic machine can be matched by one step of the abstract machine.
 Additionally we prove a 1-forward simulation for normal steps,
 which means that every step of the abstract machine can be matched
 by one on the symbolic machine.
+
+\TODO{Could use some help on improving the text above}
 
 \begin{definition}[1-Backward Simulation]
 \label{simulation_LH}
@@ -943,16 +955,15 @@ instructions that change the registers or the memory. The
 corresponding Coq definitions and proofs can be found.
 \TODO{cite appendix}
 
-\TODO{fix this}
 \begin{lemma}[Registers Update Backward Simulation]
 \label{refine_registers_upd}
-For all symbolic register sets (\textit{sreg,sreg'}),
+For all symbolic register sets (\textit{sreg,sreg}'),
 abstract register sets (\textit{areg}), registers (\textit{r}),
-words (\textit{v,v'}) and tags (\textit{tg,tg'}),
+words (\textit{v,v}'),
 \begin{align*}
   & \mathit{areg} \sim_{regs} \mathit{sreg} \implies \\
-  & \rd{\mathit{sreg}}{\mathit{r}} = \atom{v}{tg} \implies \\
-  & \upd{\mathit{sreg}}{\mathit{r}}{\atom{v'}{tg'}} = \mathit{sreg'} \implies \\
+  & \rd{\mathit{sreg}}{\mathit{r}} = \atom{v}{\DATA} \implies \\
+  & \upd{\mathit{sreg}}{\mathit{r}}{\atom{v'}{\DATA}} = \mathit{sreg'} \implies \\
   & ~~ \exists \mathit{areg'}, \\
   & ~~~~ \upd{\mathit{areg}}{\mathit{r}}{v'} = \mathit{areg'} \land \\
   & ~~~~  \mathit{areg'} \sim_{regs} \mathit{sreg'}
@@ -961,7 +972,7 @@ words (\textit{v,v'}) and tags (\textit{tg,tg'}),
 
 \begin{lemma}[Memory Update Backward Simulation]
 \label{refine_memory_upd}
-For all symbolic memories (\textit{smem,smem'}),
+For all symbolic memories (\textit{smem,smem}'),
 abstract data memories (\textit{amem}) and
 words (\textit{addr,v,v'}),
 \begin{align*}
@@ -1151,63 +1162,64 @@ the Abstract (high-level) machines when the two machines are related
 by $\sim$.
 \end{theorem}
 
-\subsubsection{Proving 1-backward simulation for normal steps}
-\label{sec:backward_SA_normal}
-\TODO{CHANGE THIS TO FORWARD SIMULATION}
-Proving a 1-backward simulation for normal steps is relatively
-straight-forward, mostly thanks to the fact that the symbolic
-machine abstracts away many details of the concrete machine
-that would make the proofs more tedious. Additionally we do
-not have to provide such proofs for any monitor service as
-we did not use any. Therefore we will only have to reason
-about the small set of instructions that the symbolic
-and the abstract machine share. 
+\subsubsection{Proving 1-forward simulation for normal steps}
+\label{sec:forward_SA_normal}
 
-We start with some helpful lemmas about registers and memory
-updates. These lemmas serve as the basis for proving simulation for
-instructions that change the registers or the memory. The
-corresponding Coq definitions and proofs can be found.
-\TODO{cite appendix}
+The 1-forward simulation proof between the abstract and the symbolic
+machine is similar to the 1-backward simulation proof. Again, we take
+the same approach and prove some auxiliary lemmas about memory
+and registers updates.
 
-\TODO{fix this}
-\begin{lemma}[Registers Update Backward Simulation]
-\label{refine_registers_upd}
-For all symbolic register sets (\textit{sreg,sreg'}),
-abstract register sets (\textit{areg}), registers (\textit{r}),
-words (\textit{v,v'}) and tags (\textit{tg,tg'}),
+\begin{lemma}[Registers Update Forward Simulation]
+\label{refine_registers_upd_fwd}
+For all abstract register sets (\textit{areg,areg}'), symbolic
+register sets (\textit{sreg}), registers (\textit{r}) and words
+(\textit{v'}),
 \begin{align*}
   & \mathit{areg} \sim_{regs} \mathit{sreg} \implies \\
-  & \rd{\mathit{sreg}}{\mathit{r}} = \atom{v}{tg} \implies \\
-  & \upd{\mathit{sreg}}{\mathit{r}}{\atom{v'}{tg'}} = \mathit{sreg'} \implies \\
-  & ~~ \exists \mathit{areg'}, \\
-  & ~~~~ \upd{\mathit{areg}}{\mathit{r}}{v'} = \mathit{areg'} \land \\
+  & \upd{\mathit{areg}}{\mathit{r}}{v'} = \mathit{areg'} \implies \\
+  & ~~ \exists \mathit{sreg'}, \\
+  & ~~~~ \upd{\mathit{sreg}}{\mathit{r}}{\atom{v'}{\DATA}} = \mathit{sreg'} \land \\
   & ~~~~  \mathit{areg'} \sim_{regs} \mathit{sreg'}
 \end{align*}
 \end{lemma}
 
-\begin{lemma}[Memory Update Backward Simulation]
-\label{refine_memory_upd}
-For all symbolic memories (\textit{smem,smem'}),
-abstract data memories (\textit{amem}) and
-words (\textit{addr,v,v'}),
+\begin{lemma}[Memory Update Forward Simulation]
+\label{refine_memory_upd_fwd}
+For all abstract data memories (\textit{dmem,dmem}'),
+symbolic memories (\textit{smem}) and
+words (\textit{addr,v'}),
 \begin{align*}
-  & \mathit{amem} \sim_{dmem} \mathit{smem} \implies \\
-  & \rd{\mathit{smem}}{\mathit{addr}} = \atom{v}{\DATA} \implies \\
-  & \upd{\mathit{smem}}{\mathit{addr}}{\atom{v'}{\DATA}} = \mathit{smem'} \implies \\
-  & ~~ \exists \mathit{amem'}, \\
-  & ~~~~ \upd{\mathit{amem}}{\mathit{addr}}{v'} = \mathit{amem'} \land \\
-  & ~~~~  \mathit{amem'} \sim_{dmem} \mathit{smem'}
+  & \mathit{dmem} \sim_{dmem} \mathit{smem} \implies \\
+  & \upd{\mathit{dmem}}{\mathit{addr}}{v'} = \mathit{dmem'} \implies \\
+  & ~~ \exists \mathit{smem'}, \\
+  & ~~~~ \upd{\mathit{smem}}{\mathit{addr}}{\atom{v'}{\DATA}} = \mathit{smem'} \land \\
+  & ~~~~  \mathit{dmem'} \sim_{dmem} \mathit{smem'}
 \end{align*}
 \end{lemma}
 
-With these definitions and lemmas we are able to prove 1-backward simulation
-for normal steps between the Symbolic and the Abstract machine as defined
-by \cref{simulation_LH}, where the low-level machine is the Symbolic machine and
-the high-level machine is the Abstract machine.
+\begin{lemma}[Outside Memory]
+\label{refine_memory_none}
+For all abstract data memories (\textit{dmem}),
+abstract instruction memories (\textit{imem}),
+symbolic memories (\textit{smem}) and words (\textit{addr}),
+\begin{align*}
+  & \mathit{dmem} \sim_{dmem} \mathit{smem} \implies \\
+  & \mathit{imem} \sim_{imem} \mathit{smem} \implies \\
+  & \rd{\mathit{imem}}{\mathit{addr}} = \varnothing\implies \\
+  & \rd{\mathit{dmem}}{\mathit{addr}} = \varnothing\implies \\
+  & \rd{\mathit{smem}}{\mathit{addr}} = \varnothing
+\end{align*}
+\end{lemma}
 
-\begin{theorem}[1-Backward Simulation Symbolic-Abstract]
-\label{simulation_SA}
-\Cref{simulation_LH} holds for the Symbolic (low-level) and
+For proving forward simulation between the abstract and the symbolic
+machine it is required that all indirect jumps are tagged with a
+unique identifier, which we enforce by the invariants
+\labelcref{jumps_tagged,jals_tagged}.
+
+\begin{theorem}[1-Forward Simulation Abstract-Symbolic]
+\label{fwd_simulation_SA}
+\Cref{fwd_simulation_LH} holds for the Symbolic (low-level) and
 the Abstract (high-level) machines.
 \end{theorem}
 
@@ -1622,10 +1634,14 @@ user mode.
 We can summarize the conditions that hold for an execution trace to
 be stopping.
 
-\begin{enumerate}
+\begin{definition}[Concrete Stopping Predicate]
+\label{concrete_stopping}
+~
+\begin{itemize}
 \item There is an optional prefix of attacker steps (\stepa{}{}{})
 \item There is an optional suffix of monitor steps (\stepn{}{})
-\end{enumerate}
+\end{itemize}
+\end{definition}
 
 \section{Generic Preservation Theorem}
 \label{sec:cfi_preservation}
@@ -2118,7 +2134,7 @@ instantiated with the symbolic and abstract machines.
   opcode of the instruction.
 \end{proof}
 
-\begin{lemma}[No Attacker Steps on Violation]
+\begin{lemma}[No Abstract Attacker Steps on Violation]
   \label{av_no_attacker_S}
   \Cref{av_no_attacker} holds for the Abstract machine.
 \end{lemma}
@@ -2129,4 +2145,55 @@ instantiated with the symbolic and abstract machines.
   by the second premise that $(s^H_1,s^H_2) \not \in \SUCCm{H}$,
   therefore we reached a contradiction and it must be that
   $s^H_1 \not \to^H_a s^H_2$.
+\end{proof}
+
+\begin{lemma}[Abstract stopping implies Symbolic stopping]
+  \label{as_implies_ss}
+  \Cref{as_implies_cs} holds for the Symbolic-Abstract machines.
+\end{lemma}
+\begin{proof}
+  According to \cref{symbolic_stopping} we have to prove that all steps
+  in the symbolic trace are attacker steps and all states in the symbolic
+  trace are stuck with respect to normal steps.
+  The proof proceeds by induction on the trace refinement.
+  \begin{itemize}
+  \item \textbf{Base Case} In this case the two traces are singletons.
+    It vacuously holds that all steps of the symbolic machine are
+    attacker steps. To show that the state forming the singleton trace
+    is stuck we resort to a contradiction.
+
+    Suppose that the state ($s^S$) is not stuck, therefore there
+    exists some state $s^S_c$ such that
+    $\stepn{s^S}{s^S_c}$. Additionally we know by trace refinement that
+    $s^H \sim s^S$. By 1-backward simulation (checked step) we
+    conclude that there exists some state $s^H_c$ such that
+    $\stepn{s^H}{s^H_c}$. But the abstract trace is stopping and by
+    \cref{abstract_stopping} all states in it are stuck with respect
+    to normal steps. Therefore we reached a contradiction, thus it
+    must be that $s^S$ is a stuck state.    
+  \item \textbf{Zero Step} In this case there is an unchecked step
+    in the trace. But all steps of the symbolic machine are checked,
+    so we immediately reach a contradiction.
+  \item \textbf{One Step} In this case, the trace refinement relation
+    gives us that there is a normal step at the abstract level, which
+    contradicts with the fact that the abstract machine is stuck
+    with respect to normal steps by \cref{abstract_stopping}.
+  \item \textbf{Attacker Step} The two traces are now augmented by an
+    attacker step at their beginning ($s^H \to_a s^H_0 \to_a \ldots
+    \to_a s^H_n$ and $s^L \to_a s^L_0 \to \ldots \to s^L_m$). By the
+    induction hypothesis we easily obtain that the tail of the
+    symbolic trace is stopping. We need to prove that new step is an
+    attacker step and that the new state is stuck with respect to
+    normal steps. The former is trivial as we are in the case an
+    attacker step is taken. To show that $s^L$ is stuck with
+    respect to normal steps, we once again resort to a contradiction.
+    
+    Suppose that there exists some $s^L_c$ such that $s^L \to_n s^L_c$.
+    We additionally know that $s^H \sim s^L$ by the trace refinement
+    relation. By backward simulation we get that there exists
+    some state $s^H_c$ such that $s^H \to_n s^H_c$. But we know that
+    the abstract trace is stopping, therefore all states in it
+    are stuck with respect to normal steps, thus we reached
+    a contradiction.
+  \end{itemize}
 \end{proof}
