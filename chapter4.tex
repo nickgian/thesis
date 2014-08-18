@@ -1,25 +1,25 @@
 \chapter{Formally Verified Control-Flow Integrity Micro-Policy}
 \label{ch:verified_cfi}
 
-Using the micro-policies framework described in \ref{sec:framework} we
-proved that the concrete machine instantiated with a \CFI micro-policy
-like the one described in \ref{sec:cfi_fine} \ii{simulates} an
-abstract machine that has \CFI by construction. We do this proof by
-using the symbolic machine as an intermediate step, to prove backwards
-simulation between the symbolic and the abstract machine and
-afterwards by leveraging the framework of section \ref{sec:framework}
-we obtain a backwards refinement between the concrete and the abstract
-machine.
+Using the micro-policies framework described in \cref{sec:framework}
+we proved that the concrete machine instantiated with a
+fine-grained\CFI micro-policy like the one described in
+\cref{sec:cfi_fine} \ii{simulates} an abstract machine that has \CFI
+by construction. We do this proof by using the symbolic machine as an
+intermediate step, first proving backward simulation between the symbolic
+and the abstract machine and afterwards by leveraging the framework of
+section \cref{sec:framework} we obtain a backward refinement between
+the concrete and the abstract machine.
 
 In addition, we provide an attacker model for all the machines used
 and we prove that a property capturing the notion of \CFI holds even
 when the attacker tampers with the machine, similarly to what is
 proposed in \cite{AbadiBEL09}, but adapted to the setting of our
 machines. We do this by first proving this property for the abstract
-machine and then by using a generic preservation theorem we developed
-we prove that this property is \emph{preserved} by backwards
+machine and then by using a generic preservation theorem we developed,
+we prove that this property is \emph{preserved} by backward
 refinement and thus transferring the property to the symbolic and
-consequently to the concrete machine. This proof structure, allows us
+consequently to the concrete machine. This proof structure, allows us to
 build our proofs in a modular way and additionally reduced the proof
 effort, as it allowed us to reuse the preservation theorem for proving
 \CFI for both the symbolic and the concrete machine and allowed us to
@@ -30,7 +30,7 @@ concerned the concrete machine.
 
 \section{Representing control-flow graphs}\label{sec:cfi_tags}
 
-Our approach for enforcing \CFI, as explained in \ref{sec:cfi_fine},
+Our approach for enforcing \CFI, as explained in \cref{sec:cfi_fine},
 requires that we encode the nodes in the control-flow graph in terms
 of identifiers, which in turn are used to tag all sources and targets
 of indirect control-flows.
@@ -72,7 +72,7 @@ size).
 However, one drawback is that one wrong specification in a type class would
 disallow us to instantiate it and would require that we go back and change
 all parts that used this wrong specification (\EG in our case, the 
-\emph{machine\_types} class was widely used). Therefore one should be careful
+\emph{cfi\_id} class was widely used). Therefore one should be careful
 when doing heavy use of such mechanisms.
 
 Returning to the identifiers, looking at the definition in \cref{id_class},
@@ -89,8 +89,7 @@ control-flow with respect to a binary relation (on the identifiers)
 extend this relation to precisely describe the control-flow of a
 program, by lifting \CFG to a relation \SUCC{} on machine states, that
 includes the set of allowed targets for the rest of the
-instructions. Throughout this thesis we use \CFG to refer to the set
-of allowed jumps. In our Coq development we assumed a translation of
+instructions. In our Coq development we assumed a translation of
 the allowed jumps in form of a function on two identifiers.
 
 
@@ -133,7 +132,7 @@ account for attacker steps, the stepping relation is extended as the union of
 the normal step relation (\stepn{}{}), as defined by the machine semantics, and
 the attacker step relation (\stepa{}{}{}), as defined by the attacker model.
 
-\begin{figure}[ht]
+\begin{figure}[htb!]
 \centering
 \begin{minipage}[b]{0.25\linewidth}
 \centering
@@ -186,7 +185,7 @@ For a machine of type cfi\_machine we give the following definitions:
 \nick{The word relation for succ and cfg is strange since they are
 booleans, is it ok, or does it confuse you, making you believe they are Props?}
 
-The above definition corresponds to the one found in \cite{abadi2005}, however
+The above definition corresponds to the one found in \cite{AbadiBEL09}, however
 it is stronger in the sense that it requires that steps that are in the
 intersection of normal and attacker steps respect the control-flow. If we did
 not allow for any violations then the above definition would be enough, but
@@ -212,10 +211,10 @@ weaker definition.
 
 \section{The Abstract Machine}\label{sec:abstract_cfi}
 
-The abstract machine
-has \CFI, \NXD and \NWC by construction and will serve as a 
-specification for the symbolic and eventually the concrete machine that
-implement \CFI through the tag-based system explained in the previous chapter.
+The abstract machine has \CFI, \NXD and \NWC by construction and will
+serve as a specification for the symbolic and eventually the concrete
+machine that implement \CFI through the tag-based system explained in
+the previous chapter.
 
 Unlike the symbolic and the concrete machine, this abstract machine splits the 
 memory into two disjoint memories, an instruction memory and a data memory. The
@@ -2084,7 +2083,7 @@ preservation theorem is that the
 assumptions \labelcref{machine_refinement_specs} hold when
 instantiated with the symbolic and abstract machines.
 
-\subsubsection{Lifting preservation assumptions for Abstract-Symbolic}
+\paragraph{Lifting preservation assumptions for Symbolic-Abstract machines}
 
 \begin{lemma}[Symbolic Step Decidable]
   \label{step_classic_symbolic}
@@ -2196,4 +2195,14 @@ instantiated with the symbolic and abstract machines.
     are stuck with respect to normal steps, thus we reached
     a contradiction.
   \end{itemize}
+\end{proof}
+
+We can now utilize the preservation theorem for the first time and
+obtain that the Symbolic machine has \CFI.
+
+\begin{theorem}[Symbolic CFI]\label{CFIsymbolic}
+The Symbolic machine has the \CFI property stated by \cref{cfi}.
+\end{theorem}
+\begin{proof}
+  ~ Follows immediately by \cref{backward_refinement_preserves_cfi}.
 \end{proof}
