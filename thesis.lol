@@ -1,7 +1,7 @@
 \contentsline {lstlisting}{\numberline {4.1}Interface of node identifiers}{36}{lstlisting.4.1}
 \contentsline {lstlisting}{\numberline {4.2}Function on ids representing the set of allowed jumps}{36}{lstlisting.4.2}
 \contentsline {lstlisting}{\numberline {4.3}Function on words representing the set of allowed jumps}{37}{lstlisting.4.3}
-\contentsline {lstlisting}{\numberline {4.4}Interface of a cfi\_machine}{38}{lstlisting.4.4}
+\contentsline {lstlisting}{\numberline {4.4}Interface of a cfi\_machine}{37}{lstlisting.4.4}
 \contentsline {lstlisting}{\numberline {4.5}Coq definition of Symbolic tags}{42}{lstlisting.4.5}
 \contentsline {lstlisting}{\numberline {4.6}Transfer function for symbolic machine in Gallina}{43}{lstlisting.4.6}
 \contentsline {lstlisting}{\numberline {4.7}Untag symbolic atom function}{50}{lstlisting.4.7}

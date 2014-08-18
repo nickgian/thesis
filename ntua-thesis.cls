@@ -22,8 +22,8 @@
 
 %% Show section numbering in \subsubsection, and make it visible
 %% in the Table of Contents.
-\setcounter{secnumdepth}{2}
-\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
 
 \pagestyle{fancy}
 % Title Page and Front Matter

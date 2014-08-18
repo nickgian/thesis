@@ -80,7 +80,7 @@ we require that the type of the identifiers \id is an Eqtype (has decidable
 boolean equality) and that there exists conversion functions between elements
 of type \word and \id, satisfying some constraints. 
 
-\QUESTION{Should I give some intuition, as to why word\_to\_id is partial? Is it
+\nick{Should I give some intuition, as to why word\_to\_id is partial? Is it
 obvious?}
 
 As mentioned in \cref{sec:cfi_fine}, we check for violations of the
@@ -183,7 +183,7 @@ For a machine of type cfi\_machine we give the following definitions:
   $(s_i,s_{i+1}) \in$ \SUCC .
 \end{definition}
 
-\QUESTION{The word relation for succ and cfg is strange since they are
+\nick{The word relation for succ and cfg is strange since they are
 booleans, is it ok, or does it confuse you, making you believe they are Props?}
 
 The above definition corresponds to the one found in \cite{abadi2005}, however
@@ -1262,7 +1262,7 @@ instructions with an identifier.
 The conversion from \textit{ids} to \textit{words} is trivial by
 expanding the id to 32-bit words by adding zeros to the high bits.
 
-\QUESTION{To Catalin: Do the above make sense to you?}
+\nick{Do the above make sense to you?}
 
 \lstheader{id_conversion}{Coq definitions of conversion functions for ids and words}
 Definition id_size := Word.int 27.

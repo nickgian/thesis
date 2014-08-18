@@ -138,8 +138,6 @@
 \newcommand*{\ETC}{etc.\xspace}
 
 \newcommand{\TODO}[1]{(\textcolor{red}{\textbf{TODO:}}~#1)}
-\newcommand{\FEEDBACK}[1]{(\textcolor{green}{\textbf{Feedback:}}~#1)}
-\newcommand{\QUESTION}[1]{(\textcolor{blue}{\textbf{Question:}}~#1)}
 
 \definecolor{dkblue}{rgb}{0,0.1,0.5}
 \definecolor{bluegreen}{rgb}{0,0.5,0.5}
@@ -219,7 +217,7 @@
 \newcommand{\stat}[5]{\ensuremath{(#1,#2,#3,#4,#5)}}
 
 \newcommand{\DATA}[0]{\ii{Data}}
-\newcommand{\INSTRname}[0]{\ii{Instr}}
+\newcommand{\INSTRname}[0]{\ii{Code}\xspace}
 \newcommand{\INSTR}[1]{\INSTRname~#1}
 \newcommand{\DATAname}[0]{\ii{Data}\xspace}
 
@@ -321,42 +319,9 @@
 \lstdefinestyle{coq_style}{%
   language=Coq, float=htb!
 }
-\lstdefinestyle{python_style}{%
-  language=python, float=htpb!
-}
-\lstdefinestyle{bash_style}{%
-  language=bash, float=htb!
-}
-\lstdefinestyle{console_style}{%
-  float=htb!, numbers=none
-}
-\lstdefinestyle{diff_style}{%
-  language=diff, float=htb!, numbers=none
-}
-
 \lstnewenvironment{Coq}[2]{%
   \nopagebreak
   \lstset{style=coq_style,label={#1},caption={#2}}
-}{}
-\lstnewenvironment{erlang}[2]{%
-  \nopagebreak
-  \lstset{style=erlang_style,label={#1},caption={#2}}
-}{}
-\lstnewenvironment{python}[2]{%
-  \nopagebreak
-  \lstset{style=python_style,label={#1},caption={#2}}
-}{}
-\lstnewenvironment{bash}[2]{%
-  \nopagebreak
-  \lstset{style=bash_style,label={#1},caption={#2}}
-}{}
-\lstnewenvironment{console}[2]{%
-  \nopagebreak
-  \lstset{style=console_style,label={#1},caption={#2}}
-}{}
-\lstnewenvironment{diff}[2]{%
-  \nopagebreak
-  \lstset{style=diff_style,label={#1},caption={#2}}
 }{}
 
 \newcommand{\includecode}[4][Coq]{%

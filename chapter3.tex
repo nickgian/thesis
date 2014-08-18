@@ -84,7 +84,7 @@ destinations and sources with a tag \MARK{} and the rest of the instructions as
 their instruction tag to the \pc. We then have to check that the tag on the
 destination matches the tag on the tag on the \pc.
 
-\begin{figure}[H]
+\begin{figure}[htb!]
 \infrule[Mark]{
   \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace
   }{
@@ -158,12 +158,12 @@ performance and security. As shown in \cite{pump_asplos2015}, we can enforce a
 \emph{fine-grained} \CFI policy with an average runtime overhead of less than 3\%
 (maximum overhead of less than 10\%), on the SPEC2006 benchmarks.
 
-\ch{Shrink and polish this}\nick{done} We follow the standard approach, by
-designing a composed micro-policy that enforces \NXD, \NWC and \CFI.  We
-considered designs that lifted the \NXD and \NWC restrictions but we
-rejected them, for the time being, as there did not seem to be any
+\ch{Shrink and polish this}\nick{done} We follow the standard
+approach, by designing a composed micro-policy that enforces \NXD,
+\NWC and \CFI.  We considered designs that lifted the \NXD and \NWC
+restrictions but we rejected them, as there did not seem to be any
 considerable advantages (\IE{ compatibility with self-modifying
-programs, JIT compilers, \ETC}). Moreover unlike other \CFI
+  programs, JIT compilers, \ETC}). Moreover unlike other \CFI
 enforcement mechanisms we do not have to rely on the CPU or the
 operating system to enforce \NXD and \NWC, therefore lifting these
 restrictions would not reduce our assumptions and consequently would
@@ -193,7 +193,10 @@ all contents in memory that are considered executable instructions and
 are sources or targets of indirect control flows and \INSTR{$\bot$} to
 tag all other instructions. The rules to enforce \NWC and \NXD are
 intuitively the same and only change to account for the splitting of
-the \INSTRname{} tag.
+the \INSTRname tag.
+
+\nick{if/when we move coarse-grained to appendix, then we don't follow
+the same idea...}
 
 We follow the same idea as with coarse-grained \CFI, propagating the
 instruction tag of instructions that are sources of indirect flows to
@@ -225,7 +228,7 @@ the \CFG relation.
 % \caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
 % \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htb!]
 \infrule[Flow/Check]{
   \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace \andalso 
   (src,dst) \in \CFGm
