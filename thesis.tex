@@ -148,6 +148,8 @@
 \definecolor{olive}{rgb}{0.5, 0.5, 0.0}
 \definecolor{teal}{rgb}{0.0,0.5,0.5}
 
+
+
 \newcommand{\ch}[1]{\ifdraft{\color{dkblue}\em (CH: #1)}\fi}
 \newcommand{\nick}[1]{\ifdraft{\color{dkred}\em (NG: #1)}\fi}
 \newcommand{\chfoot}[1]{\ifdraft\footnote{\color{dkblue}\em (CH: #1)}\fi}
@@ -269,7 +271,7 @@
 % with a reflexive-transitive closure.
 \usepackage{tikz}
 \usepgflibrary{plotmarks}
-\usetikzlibrary{matrix,arrows,decorations.pathmorphing} 
+\usetikzlibrary{matrix,arrows,decorations.pathmorphing,positioning,backgrounds,fit} 
 
 \tikzset{snake it/.style={decorate, decoration=snake}}
 

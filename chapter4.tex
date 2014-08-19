@@ -26,7 +26,67 @@ effort, as it allowed us to reuse the preservation theorem for proving
 do most of the reasoning at the symbolic level, even for proofs that
 concerned the concrete machine.
 
-\TODO{Maybe draw a diagram about proof structure here?}
+  \begin{center}
+    \begin{tikzpicture}
+      [machine/.style={rectangle,draw=teal!80,text=black,very thick,minimum height=1cm},
+       cfi/.style={rectangle,draw,thick,dashed,draw=teal!80,text=black},
+       >=stealth]
+
+      % abstract
+      \node [machine,fill=teal!10] (abstract) {Abstract Machine};
+
+      % symbolic-rule
+      \node (symbolic label) [below=2.5cm of abstract] {Symbolic Machine};
+      \node [rectangle,draw,dashed,-,thick,fill=teal!20,rounded corners]
+            (symbolic rules) [right=of symbolic label] {CFI Micro-Policy};
+      \begin{pgfonlayer}{background}
+        \node [machine,fill=teal!10,fit={(symbolic label) (symbolic rules)}]
+              (symbolic) {};
+      \end{pgfonlayer}
+      \node [cfi,dashed,right=of symbolic,fill=teal!10] (symbolic cfi) {CFI Property};
+      
+      %abstract cfi
+      \node [cfi,fill=teal!10] (abstract cfi)  at (abstract -| symbolic cfi) {CFI Property};
+      \draw [thick] (abstract) to (abstract cfi);
+
+      %symbolic cfi
+      \draw [thick] (symbolic) to (symbolic cfi);
+      \draw [->,thick]
+              (abstract cfi)
+              to node [right] {Preserved}
+              (symbolic cfi);
+
+      % concrete
+      \node (concrete label) [below=2.5cm of symbolic label] {Concrete
+        Machine};
+      \node [rectangle,draw,dashed,thick,-,fill=teal!20,rounded corners]
+            (fault handler) [right=of concrete label] {CFI Policy Monitor};
+      \begin{pgfonlayer}{background}
+        \node [machine,fill=teal!10,fit={(concrete label) (fault handler)}]
+              (concrete) {};
+      \end{pgfonlayer}
+      \node [cfi,dashed,fill=teal!10] (concrete cfi) at (concrete -| symbolic cfi) {CFI Property};
+      % \draw [thick,dashed] (concrete) to (concrete cfi);
+
+      \draw [<->,thick]
+            (abstract)
+            -- node [left] {Simulates}
+            (abstract.center |- symbolic.north);
+
+      \draw [<->,thick]
+            (abstract.center |- symbolic.south)
+            -- node [left] {Simulates}
+            (abstract.center |- concrete.north);
+
+      \draw [thick] (concrete) to (concrete cfi);
+      \draw [->,thick]
+              (symbolic cfi)
+              to[] node [right] {Preserved}
+              (concrete cfi);
+    \end{tikzpicture}
+  \end{center}
+
+\TODO{Think about labels, what should be dashed and not and how to improve diagram.}
 
 \section{Representing control-flow graphs}\label{sec:cfi_tags}
 
