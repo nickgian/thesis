@@ -2,7 +2,7 @@
 \contentsline {lstlisting}{\numberline {4.2}Function on ids representing the set of allowed jumps}{37}{lstlisting.4.2}
 \contentsline {lstlisting}{\numberline {4.3}Function on words representing the set of allowed jumps}{37}{lstlisting.4.3}
 \contentsline {lstlisting}{\numberline {4.4}Interface of a cfi\_machine}{38}{lstlisting.4.4}
-\contentsline {lstlisting}{\numberline {4.5}Coq definition of Symbolic tags}{42}{lstlisting.4.5}
+\contentsline {lstlisting}{\numberline {4.5}Coq definition of Symbolic tags}{43}{lstlisting.4.5}
 \contentsline {lstlisting}{\numberline {4.6}Transfer function for symbolic machine in Coq pseudo-code}{43}{lstlisting.4.6}
 \contentsline {lstlisting}{\numberline {4.7}Untag symbolic atom function}{50}{lstlisting.4.7}
 \contentsline {lstlisting}{\numberline {4.8}Option Map function}{50}{lstlisting.4.8}
