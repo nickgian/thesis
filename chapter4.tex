@@ -519,37 +519,36 @@ We implement the \TRANSFER function based on the rules found in
 \ref{sec:cfi_fine}, using Gallina to define a function mapping
 input vectors (mvector) to output vectors (rvector).
 
-\lstheader{transfer_coq}{Transfer function for symbolic machine in Gallina}
+\lstheader{transfer_coq}{Transfer function for symbolic machine in Coq pseudo-code}
 Definition cfi_handler (ivec : Symbolic.IVec cfi_tags) : 
            option (Symbolic.OVec cfi_tags (Symbolic.op ivec)) :=
-  match ivec return 
-          option (Symbolic.OVec cfi_tags (Symbolic.op ivec)) with
-  | mkIVec   (JUMP as op) (INSTR (Some n))  (INSTR (Some m))  _
-  | mkIVec   (JAL  as op) (INSTR (Some n))  (INSTR (Some m))  _  =>
+  match ivec with
+  | mkIVec   (Jump as op) (Code (Some n))  (Code (Some m))  _
+  | mkIVec   (Jal  as op) (Code (Some n))  (Code (Some m))  _  =>
     if cfg n m then 
-      Some (@mkOVec cfi_tags op (INSTR (Some m)) (default_rtag op))
+      Some (mkOVec (Code (Some m)) (default_rtag op))
     else 
       None
-  | mkIVec   (JUMP as op)  DATA  (INSTR (Some n))  _
-  | mkIVec   (JAL  as op)  DATA  (INSTR (Some n))  _   =>
-    Some (@mkOVec cfi_tags op (INSTR (Some n)) (default_rtag op))
-  | mkIVec   JUMP   DATA  (INSTR None)  _
-  | mkIVec   JAL    DATA  (INSTR None)  _  =>
+  | mkIVec   (Jump as op)  Data  (Code (Some n))  _
+  | mkIVec   (Jal  as op)  Data  (Code (Some n))  _   =>
+    Some (mkOVec (Code (Some n)) (default_rtag op))
+  | mkIVec   Jump   Data  (Code None)  _
+  | mkIVec   Jal    Data  (Code None)  _  =>
     None
-  | mkIVec   STORE  (INSTR (Some n))  (INSTR (Some m))  [_ ; _ ; DATA] =>
-    if cfg n m then Some (@mkOVec cfi_tags STORE DATA DATA) else None
-  | mkIVec   STORE  DATA  (INSTR _)  [_ ; _ ; DATA]  =>
-    Some (@mkOVec cfi_tags STORE DATA DATA)
-  | mkIVec   STORE  _  _  _  => None
-  | mkIVec   op     (INSTR (Some n))  (INSTR (Some m))  _  =>
-    (* this includes op = SERVICE *)
+  | mkIVec   Store  (Code (Some n))  (Code (Some m))  [_ ; _ ; Data] =>
+    if cfg n m then Some (mkOVec Data Data) else None
+  | mkIVec   Store  Data  (Code _)  [_ ; _ ; Data]  =>
+    Some (mkOVec Data Data)
+  | mkIVec   Store  _  _  _  => None
+  | mkIVec   op     (Code (Some n))  (Code (Some m))  _  =>
+    (* this includes op = Service *)
     if cfg n m then 
-      Some (@mkOVec cfi_tags op DATA (default_rtag op)) 
+      Some (mkOVec Data (default_rtag op)) 
     else 
       None
-  | mkIVec   op     DATA  (INSTR _)  _  =>
-    (* this includes op = SERVICE, fall-throughs checked statically *)
-    Some (@mkOVec cfi_tags op DATA (default_rtag op))
+  | mkIVec   op     Data  (Code _)  _  =>
+    (* this includes op = Service, fall-throughs checked statically *)
+    Some (mkOVec Data (default_rtag op))
   | mkIVec _ _ _ _ => None
   end.
 \end{lstlisting}
@@ -558,6 +557,8 @@ It may make it less painful on the eye...
 Thanks to dependent types it also looks super ugly too,
 probably make it pseudo-code at some point
 }
+\nick{simplified the above to be closer to the rest of the document
+and avoid all the dependent type magic/hackery}
 
 Although, the rules in \cref{sec:cfi_fine} were fairly simply,
 expressing them using Gallina's pattern matching increased their
@@ -1979,7 +1980,7 @@ We start with an auxiliary lemma that states that if there is a trace
 refinement between a high-level trace and a low-level trace and then
 we split the high-level trace to sub-traces in a certain way, then
 there exists low-level sub-traces such that trace refinement holds
-between the sub-traces. Naturally, with \cref{cfi} in mind,  we choose to split 
+between the sub-traces. Naturally, with \cref{cfi} in mind, we choose to split 
 the high-level trace at the step that violates the control-flow.
 
 \begin{figure}[htb!]
@@ -2005,6 +2006,14 @@ the high-level trace at the step that violates the control-flow.
   \node (n17) at (15,-2)  {$s^L_k$};
   \node (n18) [draw=none,style={fill=white}] at (16.5,-2)  {$\ldots$};
   \node (n19) at (18,-2)  {$s^L_m$};
+
+%Drawing like stupid people do
+%Will continue once approved by Catalin because it is time wasting.
+\node (n8label) [fill=white,font=\small] at (14,1.5)  {};
+\node (trlabel) [fill=white,font=\footnotesize] at (7,1.5) {$tr^H$};
+\draw[-,dashed,very thin] (n1) |- (trlabel);
+\draw[-,dashed,very thin] (trlabel.east) |- (n8label.center);
+\draw[-,dashed,very thin] (n8label.center) |- (n8.north);
 
 \path[thick, every node/.style={}]
 (n1) edge [] node {} (n2)
@@ -2032,6 +2041,7 @@ the high-level trace at the step that violates the control-flow.
 (n16) edge [] node {} (n17)
 (n17) edge [] node {} (n18)
 (n18) edge [] node {} (n19);
+% (n1.center) edge [dashed,very thin,-,transform canvas={shift={(0,0.6)}}] node {$tr^H$} (n8.center);
 \end{tikzpicture} \\
 \end{center}
 \caption{Not yet done figure}

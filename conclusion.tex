@@ -5,10 +5,74 @@
 There are many directions still left to explore before we can consider
 our work done. Some of them include writing the \CFI monitor code and
 verifying it, increasing precision by enforcing call-stack protection,
-scaling to more complex architectures, looking for ways to enforce
-\CFI like properties on self modifying programs and more.
+scaling to more complex architectures and looking for ways to enforce
+\CFI-like policies on self modifying programs.
 
 \subsection{Writing and Verifying Monitor Code}
 
+In this thesis, we described the \CFI micro-policy and reasoned about
+its security properties by using a high-level specification of the
+policy monitor, expressed in terms of a \TRANSFER function written in
+Coq. In reality, when we leveraged the micro-policies framework we
+\emph{assumed} the existence of machine code implementing the \CFI
+policy monitor and its correctness as specified by the high-level
+\TRANSFER function.
+
+Although we have not written the machine code for the policy monitor -
+and consequently not verified it - we consider the existence of
+correct code implementing the policy monitor as a realistic
+assumption. Azevedo \ETAL provided code for a dynamic sealing
+micro-policy in \cite{pump_popl2015}, although they did not verify it.
+Furthermore in \cite{PicoCoq2013}, that can be considered as a predecessor
+to the micro-policies project, machine code for an IFC
+monitor was obtained using structured code generators and a verified
+DSL compiler.
+\nick{shrink references to IFC and sealing? I want them as a
+witness to my claims about the possibility of verifying the cfi
+monitor code}
+
+Arguably the code for a dynamic sealing monitor is simpler than the
+code for a \CFI monitor, but even an efficient implementation of a
+\CFI monitor would probably resemble a compiled switch statement/match
+expression, for which there are plenty of resources on efficient
+compilation strategies. One could even write the \CFI policy monitor
+by hand, however we decided not to attempt this, as it seemed that
+without verifying it, there was little added value considering the
+amount of effort required. Furthermore, in order to be able to at
+least test the correctness of the implementation, we would be required
+to provide machine code for programs and to also compute their control-flow
+graph, which would be tedious and time consuming without the appropriate tools.
+
+As noted in \cite{pump_popl2015} it would make more sense to go
+through the effort of writing and verifying machine code for a more
+realistic architecture.  In a standard RISC architecture setting
+(\EG. ARM) we could write the policy monitor in a higher-level
+language (even C) and use a (verified) compiler (\EG CompCert
+\cite{leroy09:compcert}) to obtain the machine code. Furthermore, we
+could leverage existing verification frameworks, either for low-level
+code \cite{Chlipala2013,JensenBK13} or for the high-level language we
+used to code the policy monitor (\EG
+\cite{Appel:2011:VST:1987211.1987212} in the case of C code), in order
+to verify the correctness of our implementation.
+
+\nick{probably rephrase that and somehow unify the citation to
+VST and compcert?}
+
+% due to the
+% general scope of the micro-policies framework it makes more sense to
+% devise an expressive DSL for micro-policies and build a compiler that
+% would automatically emit efficient machine code. This approach was
+% taken in \cite{PicoCoq2013}, that can be considered as a predecessor
+% to the micro-policies project, where the machine code for an IFC
+% monitor was obtained using structured code generators and a verified
+% DSL compiler. Although their approach lacked generality and
+% expressiveness to encode a wide-range of micro-policies it strengthens
+% our intuition about the feasibility of such a project. Furthermore
+% as the authors of \cite{pump_popl2015} mention it would make
+% more sense to write the machine code for the policy monitors for
+% a more realistic architecture. This would even allow us
+% to use a high-level language to code the policy monitor and perhaps
+% enable the re-use of existing verification frameworks in order
+% to verify its correctness.
 
 \subsection{Call-Stack Protection/ XFI}
