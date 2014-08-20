@@ -555,7 +555,7 @@ tags, in a fashion similar to what was shown in
 \cref{sec:nwc_nxd,sec:cfi_fine}.  We instantiate the symbolic machine,
 according to the aforementioned sections, with a set of tags
 \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}} where id is drawn from the
-class of identifiers \cref{cfi_id}.
+class of identifiers \cref{id_class}.
 
 \lstheader{cfi_tags}{Coq definition of Symbolic tags}
 Context {ids : @cfi_id t}.
@@ -1405,7 +1405,7 @@ of the \emph{encode} function ($decode (encode~t) = t$) and
 
 We can now instantiate the backward refinement between the concrete
 and the symbolic machine that is provided by the micro-policies
-framework \cite{pump_popl2015}. For the concrete to symbolic backward
+framework \cite{popl2015}. For the concrete to symbolic backward
 refinement we no longer get a 1-backward simulation, due to the fact
 that the steps the concrete policy monitor takes are not matched by
 any steps of the symbolic machine. For user mode steps (\IE when the

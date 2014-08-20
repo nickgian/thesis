@@ -1,3 +1,4 @@
+\contentsline {lstlisting}{\numberline {2.1}Transfer function for NWC and NXD in pseudo-code}{26}{lstlisting.2.1}
 \contentsline {lstlisting}{\numberline {4.1}Interface of node identifiers}{36}{lstlisting.4.1}
 \contentsline {lstlisting}{\numberline {4.2}Function on ids representing the set of allowed jumps}{37}{lstlisting.4.2}
 \contentsline {lstlisting}{\numberline {4.3}Function on words representing the set of allowed jumps}{37}{lstlisting.4.3}

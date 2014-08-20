@@ -13,20 +13,11 @@
 % PACKAGE SETTINGS =============================================================
 
 \usepackage[cm-default]{fontspec}
-% \usepackage{tikz}
-% \usetikzlibrary{arrows,shadows} % for pgf-umlsd
-% \usepackage[underline=false,rounded corners=false]{pgf-umlsd}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{thmtools}
 \usepackage{listings}
-%% \usepackage{algorithmic}
-%% \usepackage{amsfonts}
-%% \usepackage{multirow}
-%% \usepackage{array}
-%% \usepackage{tabularx}
-%% \usepackage{mdwlist}
 \usepackage{graphicx}
 \usepackage{xunicode}
 \usepackage{xltxtra}
@@ -34,7 +25,6 @@
 \usepackage{url}
 \usepackage{color}
 \usepackage{bytefield}
-%% \usepackage{rotating}
 \usepackage[format=hang,textformat=simple]{caption}
 \usepackage{wrapfig}
 \usepackage{float}
@@ -194,10 +184,7 @@
 \newcommand{\stepa}[3]{\ensuremath{#1\to_a^{#3}#2}}
 \newcommand{\longstep}[2]{\begin{array}[t]{l@{\;}l}&#1\\\to&#2\end{array}}
 
-% \newcommand{\rret}{r_{\!\ii{ret}}}
-% \newcommand{\rarg}[1]{r_{\!\ii{arg#1}}}
 \newcommand{\old}{_{\mathit{old}}}
-% \newcommand{\undefined}{\uparrow}
  \newcommand{\trapaddr}{\ii{trapaddr}}
  \newcommand{\handler}[8]{\ii{transfer}(#1,#2,#3,#4,#5,#6) = (#7,#8)}
 \newcommand{\rulelookup}[8]{%
@@ -340,12 +327,12 @@
 \title{Formally Verified Tag-Based Enforcement of\\Control Flow Integrity}
 % Monitor, Mechanism -- too low level
 % Formally Verified Tag-Based Control Flow Integrity Enforcement
-\author{Nick Giannarakis}
-\thesis[του]{Νίκου Γιανναράκη}
+\author{Νικόλαος Γιανναράκης}
+\thesis[του]{Νικόλαου Γιανναράκη}
 \presenting{11}{9}{2014}
-\supervisor[Αν. Καθηγητής ]{Κωστής Σαγώνας} % the space is necessary
-\epitropiF[Αν. Καθηγητής ]{Νικόλαος Παπασπύρου}
-\epitropiS[Αν. Καθηγητής  ]{Ιώαννης Σμαραγδάκης }
+\supervisor[Αν. Καθηγητής ]{Νικόλαος Παπασπύρου} % the space is necessary
+\epitropiF[Αν. Καθηγητής ]{Κωστής Σαγώνας}
+\epitropiS[Αν. Καθηγητής  ]{Ιώαννης Σμαραγδάκης}
 \department{Σχολή Ηλεκτρολόγων Μηχανικών και Μηχανικών Υπολογιστών}
 \division{Τομέας Τεχνολογίας Πληροφορικής και Υπολογιστών}
 \lab{Εργαστήριο Τεχνολογίας Λογισμικού}

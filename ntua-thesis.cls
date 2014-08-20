@@ -22,8 +22,8 @@
 
 %% Show section numbering in \subsubsection, and make it visible
 %% in the Table of Contents.
-\setcounter{secnumdepth}{3}
-\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
 
 \pagestyle{fancy}
 % Title Page and Front Matter
@@ -448,8 +448,8 @@
 %
 \fancyhf{}
 \fancyhead[LE,RO]{\thepage}
-\fancyhead[LO]{\slshape\nouppercase{{\leftmark}}}
-\fancyhead[LE]{\slshape\nouppercase{{\leftmark}}}
+\fancyhead[LO]{\slshape\nouppercase{{\rightmark}}}
+\fancyhead[RE]{\slshape\nouppercase{{\leftmark}}}
 \addtolength{\headheight}{2pt}
 \setlength{\headwidth}{\textwidth}
 \addtolength{\topmargin}{-2pt}

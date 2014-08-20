@@ -132,7 +132,7 @@ allowed and the result tags are indifferent for the enforced policy.''
 Unsurprisingly, designing a security policy, reasoning about its
 effectiveness against potential attackers and encoding it as a
 micro-policy can become a complex task. Azevedo \ETAL
-\cite{pump_popl2015} built a generic framework for defining and
+\cite{popl2015} built a generic framework for defining and
 verifying micro-policies on top of a machine modeling a tagged RISC
 processor (referred to as concrete machine), formalized this framework
 in Coq and used it to define and formally verify micro-policies for
@@ -173,7 +173,7 @@ machine adheres to the specification that is set by the abstract
 machine.
 
 All the machines introduced in the original paper by Azevedo \ETAL
-\cite{pump_popl2015}, as well as this thesis, have a similar
+\cite{popl2015}, as well as this thesis, have a similar
 structure. In particular, they share a common RISC-based instruction
 set (with a few - uninteresting for the scope of this thesis -
 exceptions) and they have a fixed number of general-purpose registers,
@@ -217,7 +217,7 @@ In \cref{symbolic_step} we give, in form of inference rules, the
 stepping relation for the Symbolic machine, demonstrating how the
 transfer function and the tag propagation works at each step.
 
-\begin{figure}[htpb!]
+\begin{figure}[htb]
 \small
 %Nop
 \infrule[Nop]{
@@ -344,7 +344,18 @@ overwrite. Returning to the example micro-policy in \ref{sec:nwc_nxd}
 we can define the transfer function that is used by the symbolic machine
 as a Coq function.
 
-\TODO{Actually define it - but wait for beautified coq code to kick in}
+\lstheader{transfer_coq_nwc_nxd}{Transfer function for NWC and NXD in pseudo-code}
+Definition transfer ivec : option ovec :=
+  match ivec with
+  | mkIVec   Store  _ Code  [_ ; _ ; Data] =>
+    Some (mkOVec _ Data)
+  | mkIVec   Store  _  _  _  => None
+  | mkIVec   _      _  Code _   =>
+    Some (mkOVec _ _)
+  | mkIVec _ _ _ _ => None
+  end.
+\end{lstlisting}
+\nick{heavily abusing notation with \_ on result vectors}
 
 \section{A Programmable Unit for Metadata Processing}\label{sec:pump}
 
@@ -448,7 +459,7 @@ If the lookup fails, then the \emph{input vector} is saved in memory, the
 current \pc is stored in \epc and the machine traps to the \emph{miss handler}.
 The above are demonstrated in the two example rules in \cref{cstep_store}.
 
-\begin{figure}[!htb]
+\begin{figure}[htb]
 \infrule[Store]{
   \mem[\pc] = \atom{i}{t_i} \andalso \ii{decode}~i = \ii{Store}~r_p~r_s \\
   \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
