@@ -2089,7 +2089,7 @@ the high-level trace at the step that violates the control-flow.
   \node (n8) at (14,0)  {$s^H_n$};
   \node (n9) at (0,-2) {$s^L_0$};
   \node (n10) at (2,-2)  {$s^L_1$};
-  \node (n11) at (4,-2)  {$s^L_1$};
+  \node (n11) at (4,-2)  {$s^L_2$};
   \node (n12) [draw=none,style={fill=white}] at (6,-2)  {$\ldots$}; 
   \node (n13) [style={fill=red!60}] at (8,-2)  {$s^L_{v1}$};
   \node (n14) [style={fill=red!60}] at (10,-2)  {$s^L_{v2}$};
@@ -2100,12 +2100,57 @@ the high-level trace at the step that violates the control-flow.
   \node (n19) at (18,-2)  {$s^L_m$};
 
 %Drawing like stupid people do
-%Will continue once approved by Catalin because it is time wasting.
-\node (n8label) [fill=white,font=\small] at (14,1.5)  {};
-\node (trlabel) [fill=white,font=\footnotesize] at (7,1.5) {$tr^H$};
+%trH
+\node (n8label) [fill=white,font=\small] at (14,2)  {};
+\node (trlabel) [fill=white,font=\footnotesize] at (7,2) {$tr^H$};
+
 \draw[-,dashed,very thin] (n1) |- (trlabel);
 \draw[-,dashed,very thin] (trlabel.east) |- (n8label.center);
 \draw[-,dashed,very thin] (n8label.center) |- (n8.north);
+
+%trhdH
+\node (n1start) [fill=none] at (0,1.5) {};
+\node (n3label) [fill=white,font=\small] at (4,1.5) {};
+\node (trhdlabel) [style={rectangle},fill=white,font=\footnotesize] at (2,1.5) {$tr^H_{hd}$};
+
+\draw[-,dashed,very thin] (n1start) |- (trhdlabel);
+\draw[-,dashed,very thin] (trhdlabel.east) |- (n3label.center);
+\draw[-,dashed,very thin] (n3label.center) |- (n3.center);
+
+%trtlH
+\node (n8start) [fill=none] at (14,1.5) {};
+\node (n6label) [fill=white,font=\small] at (10,1.5) {};
+\node (trtllabel) [style={rectangle},fill=white,font=\footnotesize] at (12,1.5) {$tr^H_{tl}$};
+
+\draw[-,dashed,very thin] (n8start.center) |- (trtllabel);
+\draw[-,dashed,very thin] (trtllabel.west) |- (n6label.center);
+\draw[-,dashed,very thin] (n6label.center) |- (n6.north);
+
+%trL
+\node (n19label) [fill=white,font=\small] at (18,-4) {};
+\node (tllabel) [fill=white,font=\footnotesize] at (9,-4) {$tr^L$};
+
+\draw[-,dashed,very thin] (n9) |- (tllabel.west);
+\draw[-,dashed,very thin] (tllabel.east) |- (n19label.center);
+\draw[-,dashed,very thin] (n19label.center) |- (n19.south);
+
+%trhdL
+\node (n9start) [fill=none] at (0,-3.5) {};
+\node (n12label) [fill=white,font=\small] at (6,-3.5) {};
+\node (trhdLlabel) [style={rectangle},fill=white,font=\footnotesize] at (3,-3.5) {$tr^L_{hd}$};
+
+\draw[-,dashed,very thin] (n9start) |- (trhdLlabel);
+\draw[-,dashed,very thin] (trhdLlabel.east) |- (n12label.center);
+\draw[-,dashed,very thin] (n12label.center) |- (n12.center);
+
+%trtlL
+\node (n19start) [fill=none] at (18,-3.5) {};
+\node (n15label) [fill=white,font=\small] at (12,-3.5) {};
+\node (trtlLlabel) [style={rectangle},fill=white,font=\footnotesize] at (15,-3.5) {$tr^L_{tl}$};
+
+\draw[-,dashed,very thin] (n19start.center) |- (trtlLlabel);
+\draw[-,dashed,very thin] (trtlLlabel.west) |- (n15label.center);
+\draw[-,dashed,very thin] (n15label.center) |- (n15.south);
 
 \path[thick, every node/.style={}]
 (n1) edge [] node {} (n2)
@@ -2136,8 +2181,12 @@ the high-level trace at the step that violates the control-flow.
 % (n1.center) edge [dashed,very thin,-,transform canvas={shift={(0,0.6)}}] node {$tr^H$} (n8.center);
 \end{tikzpicture} \\
 \end{center}
-\caption{Not yet done figure}
+\caption{Splitting trace refinement on violation}
 \end{figure}
+
+\nick{this became kind of heavy with all the subtrace lines. Could lose the
+  whole trace (trH and trL) lines as a first step and use two boxes
+  that enclose the refined subtraces.}
 
 \begin{lemma}[Refine Traces Split]
 \label{refine_traces_split}
