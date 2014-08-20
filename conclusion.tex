@@ -28,7 +28,7 @@ to the micro-policies project, machine code for an IFC
 monitor was obtained using structured code generators and a verified
 DSL compiler.
 \nick{shrink references to IFC and sealing? I want them as a
-witness to my claims about the possibility of verifying the cfi
+witness to my claims about the possibility of writing/verifying the cfi
 monitor code}
 
 Arguably the code for a dynamic sealing monitor is simpler than the
@@ -46,7 +46,7 @@ graph, which would be tedious and time consuming without the appropriate tools.
 As noted in \cite{pump_popl2015} it would make more sense to go
 through the effort of writing and verifying machine code for a more
 realistic architecture.  In a standard RISC architecture setting
-(\EG. ARM) we could write the policy monitor in a higher-level
+(\EG ARM) we could write the policy monitor in a higher-level
 language (even C) and use a (verified) compiler (\EG CompCert
 \cite{leroy09:compcert}) to obtain the machine code. Furthermore, we
 could leverage existing verification frameworks, either for low-level

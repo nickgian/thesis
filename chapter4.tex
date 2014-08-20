@@ -1408,21 +1408,23 @@ and the symbolic machine that is provided by the micro-policies
 framework \cite{pump_popl2015}. For the concrete to symbolic backward
 refinement we no longer get a 1-backward simulation, due to the fact
 that the steps the concrete policy monitor takes are not matched by
-any steps of the symbolic machine. The framework does however provide
-a proof of 1-backward simulation as defined by \cref{simulation_LH},
-where the low-level machine is now the concrete machine and the
-high-level one the symbolic machine, with respect to a simulation
-relation ($\sim_U$) when the tag of the \pc is \USERname (user state).
+any steps of the symbolic machine. For user mode steps (\IE when the
+tag of the \pc is \USERname) the framework does provide a proof of
+1-backward simulation as defined by \cref{simulation_LH}, with respect
+to a simulation relation ($\sim_U$), where the low-level machine is
+now the concrete machine and the high-level machine is the symbolic
+machine.
 
-For \MONITOR steps a weaker simulation relation ($\sim_M$) is used,
-to eventually obtain a $\lbrace 0,1 \rbrace$-backward simulation.
+For \MONITOR steps a weaker simulation relation ($\sim_M$) is used.
+Eventually we obtain a $\lbrace 0,1 \rbrace$-backward simulation between
+the concrete and the symbolic machine.
 
 \begin{definition}[Weak simulation relation for Monitor steps]
 \label{weak_simulation_relation}
   A concrete state $s^C$ is in weak simulation with a symbolic state $s^S$
   ($s^S \sim_M s^C$), if the tag of the \pc of state $s^C$ is \MONITOR and
   there exists a concrete user state $s_0^C$ such that $s^S \sim_U s^C_0$
-  and there is an execution trace $s^C_0 \to_n \ldots \to_n s^C$ with only
+  and there is an execution trace $s^C_0 \to_n \ldots \to_n s^C$ formed only by
   monitor steps (all states have \MONITOR tag on the \pc).
   
   We visualize the above definition with the following diagram:
@@ -1448,30 +1450,52 @@ to eventually obtain a $\lbrace 0,1 \rbrace$-backward simulation.
 \vspace{-\smallskipamount}
 \end{definition}
 
+We define the simulation relation $\sim_{CS}$ between the concrete
+and symbolic machines inductively.
+
+\begin{figure}[htb!]
+\centering
+\begin{minipage}[b]{0.25\linewidth}
+\centering
+\infrule[]{s^S \sim_{U} s^C
+  }{s^S \sim_{CS} s^C}
+\label{cs_user_sim}
+\end{minipage}
+\hspace{0.5cm}
+\begin{minipage}[b]{0.15\linewidth}
+\centering
+\infrule[]{s^S \sim_{M} s^C
+  }{s^S \sim_{CS} s^C}
+\label{cs_weak_sim}
+\end{minipage}
+\caption{Concrete-Symbolic simulation relation}
+\end{figure}
+
+
 \begin{theorem}[$\lbrace 0,1 \rbrace$-Backward simulation between Concrete and Symbolic Machines]
 \label{backward_simulation_CS}
-  For all concrete states $s^C_1, s^C_2$ and symbolic states $s^S_1$:
-  \begin{itemize}
-    \item If $s^S_1 \sim_U s^C_1$ and $\stepn{s^C_1}{s^C_2}$ then there exists
-      $s^S_2$ such that $s^S_2 \sim_U s^C_2$ and $\stepn{s^S_1}{s^S_2}$
-    \item If $s^S_1 \sim_M s^C_1$ and $\stepn{s^C_1}{s^C_2}$ then
-      $s^S_1 \sim_M s^C_2$
-    \end{itemize}
+  For all concrete states $s^C_1, s^C_2$ and symbolic states $s^S_1$ such that,
+  $s^S_1 \sim_{CS} s^C_1$ and \stepn{s^C_1}{s^C_2} it holds that
+  $s^S_1 \sim_{CS} s^C_2$ or there exists $s^S_2$ such that
+  \stepn{s^S_1}{s^S_2} and $s^S_2 \sim_U s^C_2$.
 \end{theorem}
 
 Using the 1-backward simulation between the symbolic and abstract
 machines (\cref{simulation_SA}) and the $\lbrace 0,1 \rbrace$-backward
 simulation between the concrete and the symbolic machine
 (\cref{backward_simulation_CS}), we can obtain our first result, which
-is the refinement between the concrete machine running a policy
+is the backward refinement between the concrete machine running a policy
 monitor that enforces \CFI and the abstract machine with respect
 to a refinement relation ($\sim_{CA}$) between concrete and abstract states.
+We define $\sim_{CA}$ in terms of the simulation relation between the
+concrete and the symbolic machine ($\sim_{CS}$) and the simulation relation
+between the symbolic and the abstract machine ($\sim_{SA}$).
 
 \begin{figure}[htb!]
 \infrule[]{
   s^S \sim_{CS} s^C \andalso s^A \sim_{SA} s^S
   }{s^A \sim_{CA} s^C}
-\caption{Refinement relation between concrete and abstract machines}
+\caption{Refinement relation between Concrete and Abstract machines}
 \label{refinement_CA}
 \end{figure}
 
@@ -1599,13 +1623,13 @@ by $\sim_U$.
 
 Once again we construct a function that decides the validity of all
 control-flows \SUCC{C}, this time for the concrete machine. \SUCC{C}
-allows all flows to, from and in monitor mode and only expresses
-the desired control-flow for user mode.
+allows all flows involving monitor mode and only restricts
+the control-flow for user mode execution.
 
 \begin{figure}[htb!]
 \small
 \infrule[MonitorFlows]{
-   in\_kernel~s_1~||~in\_kernel~s_2
+   in\_monitor~s_1~||~in\_monitor~s_2
   }{(s_1, s_2) \in \SUCCm{C}}
 \bigskip
 
@@ -1669,7 +1693,7 @@ relation $\sim_U$. This ensures that concrete initial states satisfy
 both the invariants we enforced on symbolic initial states and any
 low-level invariants enforced by $\sim_U$.
 
-\begin{definition}[Concrete Initial States]\label{concrete_initia_predl}
+\begin{definition}[Concrete Initial States]\label{concrete_initia_pred}
   ~ A concrete state $s^C$ is an initial state if there exists a
   symbolic state $s^S$ such that $initial^S ~ s^S$ and $s^S \sim_U
   s^C$.
@@ -1702,10 +1726,14 @@ be stopping.
 \label{concrete_stopping}
 ~
 \begin{itemize}
-\item There is an optional prefix of attacker steps (\stepa{}{}{})
-\item There is an optional suffix of monitor steps (\stepn{}{})
+\item There is an optional prefix of attacker steps (\stepa{}{}{C}) and
+  all states in the prefix are user states.
+\item There is an optional suffix of monitor steps (\stepn{}{}) and
+  all states in the suffix are monitor steps.
 \end{itemize}
 \end{definition}
+
+\TODO{Diagram showing stopping?}
 
 \section{Generic Preservation Theorem}
 \label{sec:cfi_preservation}
@@ -1805,7 +1833,7 @@ Class machine_refinement
 
     check : (@state cmachine) -> (@state cmachine) -> bool;
 
-    backwards_refinement_normal :
+    backward_refinement_normal :
       forall ast cst cst'
         (REF: refine_state ast cst)
         (STEP: step cst cst'),
@@ -1815,7 +1843,7 @@ Class machine_refinement
              refine_state ast cst' \/
              exists ast', step ast ast' /\ refine_state ast' cst');
 
-    backwards_refinement_attacker :
+    backward_refinement_attacker :
       forall ast cst cst'
         (REF: refine_state ast cst)
         (STEPA: step_a cst cst'),
@@ -2208,7 +2236,7 @@ instantiated with the symbolic and abstract machines.
 \end{proof}
 
 \begin{lemma}[No Abstract Attacker Steps on Violation]
-  \label{av_no_attacker_S}
+  \label{av_no_attacker_A}
   \Cref{av_no_attacker} holds for the Abstract machine.
 \end{lemma}
 \begin{proof}
@@ -2276,6 +2304,206 @@ obtain that the Symbolic machine has \CFI.
 
 \begin{theorem}[Symbolic CFI]\label{CFIsymbolic}
 The Symbolic machine has the \CFI property stated by \cref{cfi}.
+\end{theorem}
+\begin{proof}
+  ~ Follows immediately by \cref{backward_refinement_preserves_cfi}.
+\end{proof}
+
+
+\subsection{CFI proof for the Concrete Machine}
+\label{sec:concrete_proof}
+
+We will now leverage the preservation theorem for a second time,
+to transfer the \CFI property from the symbolic to the concrete
+machine. 
+
+For this we instantiate the preservation theorem with symbolic machine
+as the high-level machine and the concrete as the low-level machine. A
+step is considered checked only if both states forming the step are in
+user mode. Instantiating the machine\_refinement class
+(\labelcref{machine_refinement}) in this case is not as
+straight-forward as before due to the fact that we have unchecked
+steps as well, but we can still take advantage of the $\lbrace 0,1
+\rbrace$-backward simulation (\cref{backward_simulation_CS}) provided
+by the micro-policies framework. We use $\sim_{CS}$ as the refinement
+relation.
+
+\begin{theorem}[Backward Refinement Normal]
+\label{backward_refinement_normal_CS}
+  Backward refinement holds for the concrete-symbolic instance
+  of \labelcref{machine_refinement}. 
+\end{theorem}
+\begin{proof}
+  For a normal step (\stepn{s^C_1}{s^C_2}) of the concrete machine and
+  for some symbolic state $s^S_1$ such that $s^S_1 \sim_{CS} s^C_1$,
+  we distinguish between three cases.
+
+  \begin{enumerate}
+  \item $s^C_1$ and $s^C_2$ are user states. In this case the step is
+    checked and by the second case of \cref{backward_simulation_CS} we obtain
+    the 1-backward simulation required by \labelcref{machine_refinement}.
+  \item $s^C_1$ is a user state and $s^C_2$ is a monitor state. In this case
+    the step is unchecked and the symbolic machine does not take a step.
+    We prove that the simulation relation ($sim_{CS}$) is preserved by
+    proving the weak simulation relation. The state $s^C_2$ is in
+    monitor mode and there exists a concrete state ($s^C_1$) such that
+    $s^S_1 \sim_U s^C_1$ and additionally \stepn{s^C_1}{s^C_2} therefore
+    by \labelcref{weak_simulation_relation} we obtain that
+    $s^S_1 \sim_M s^C_2$ and consequently $s^S_1 \sim_{CS} s^C_2$.
+  \item $s^C_1$ is a monitor state. In this case the step is
+    unchecked and \cref{backward_simulation_CS} proves
+    our goal.
+  \end{enumerate}
+\end{proof}
+
+For simulation of attacker steps the \cref{simulation_CS_attacker}
+applies directly.
+
+We now have to show that the assumptions 
+\labelcref{step_classic,initial_refine,cfg_nocheck,cfg_equiv,av_no_attacker,as_implies_cs}
+hold for this instantiation of the preservation theorem.
+
+\paragraph{Lifting preservation assumptions for Concrete-Symbolic machines}
+
+\begin{lemma}[Concrete Step Decidable]
+  \label{step_classic_concrete}
+  \Cref{step_classic} holds for the Concrete machine.
+\end{lemma}
+\begin{proof}
+  We apply the same technique, we used for Symbolic steps in
+  \cref{step_classic_symbolic}.
+\end{proof}
+\begin{lemma}[Concrete-Symbolic Initial States]
+  \label{initial_refine_CS}
+  \Cref{initial_refine} holds for Concrete-Symbolic machines.
+\end{lemma}
+\begin{proof}
+  The proof of this is trivial by the way we defined initial states of
+  the concrete machine in \cref{concrete_initia_pred}.
+\end{proof}
+
+\begin{lemma}[Unchecked steps of Concrete machine]
+  \label{cfg_nocheck_CS}
+  \Cref{cfg_nocheck} holds for the Concrete machine.
+\end{lemma}
+\begin{proof}
+  An unchecked step $s^C_1 \to_n s^C_2$ implies
+  that either $in\_monitor~s^C_1$ or $in\_monitor~s^C_2$.
+  By rule \emph{MonitorFlows} of \labelcref{concrete_succ}
+  $(s^C_1,s^C_2) \in \SUCCm{C}$.
+\end{proof}
+
+\begin{lemma}[Successor Functions]
+  \label{cfg_equiv_CS}
+  \Cref{cfg_equiv} holds for the Concrete-Symbolic machines.
+\end{lemma}
+\begin{proof}
+  The proof proceeds by case analysis on the type
+  of instruction. \nick{this one is not too hard, long and ugly to list..}
+\end{proof}
+
+\begin{lemma}[No Symbolic Attacker Steps on Violation]
+  \label{av_no_attacker_S}
+  \Cref{av_no_attacker} holds for the Abstract machine.
+\end{lemma}
+\begin{proof}
+  
+  We sketch the intuition behind the proof.  Suppose $s^S_1 \to_n
+  s^S_2$.  For all instructions other than Jump and Jal there is a
+  clear contradiction, as $(s^S_1,s^S_2) \not \in \SUCCm{S}$ implies
+  that the \pc of the new state is not the one mandated by the
+  operational semantics which cannot be because $s^S_1 \to_n
+  s^S_2$. \nick{crappy at explaining the obvious, well done} 
+  
+  In the case of a jump or jal instruction, it must be that the
+  instruction is a self-loop, because $s^S_1 \to^{S}_a s^S_2$
+  implies that $s^S_1.pc = s^S_2.pc$. 
+  If the tag of the instruction at \pc is \INSTR{x} where
+  $x \in id$, we distinguish two cases:
+
+  \begin{enumerate}
+    \item If the tag on the \pc of $s^S_1$ is different than
+      \INSTR{x}, according to the semantics of normal steps
+      for Jump/Jal instructions the tag on the instruction executed
+      is propagated to the tag on \pc of $s^S_2$, therefore the tag on
+      the \pc of $s^S_2$ should be \INSTR{x}. But by
+      the semantics of the symbolic attacker, the tag on the \pc
+      of $s^S_1$ and $s^S_2$ remains the same. Contradiction.
+    \item If the tag on the pc of $s^s_1$ is \INSTR{x}, 
+      by $(s^S_1,s^S_2) \not \in SUCCm{S}$ we know that
+      $(x,x) \not \in \CFGm$. Therefore by the transfer
+      function (\labelcref{transfer_coq}) $s^S_1 \not \to_n s^S_2$.
+      Contradiction.
+    \end{enumerate}
+\end{proof}
+
+\begin{lemma}[Symbolic stopping implies Concrete stopping]
+  \label{ss_implies_cs}
+  \Cref{as_implies_cs} holds for the Concrete-Symbolic machines.
+\end{lemma}
+\begin{proof}
+  According to \cref{concrete_stopping} we have to prove that the
+  trace is made up of some optional attacker steps at first and then
+  by some optional monitor steps. By \labelcref{as_implies_cs}, we
+  know that for some $s^S_1, s^S_2$ it holds that there is step
+  step $s^S_1 \to_n s^S_2$ and additionally $(s^S_1,s^S_2) \not \in
+  SUCCm{S}$. The proof proceeds by inversion on the construction of
+  trace refinement.
+  \begin{itemize}
+  \item \textbf{Base Case} In this case both the symbolic and
+    the concrete traces are singletons made up of
+    $s^S_2$ and $s^C_2$ respectively. The stopping condition
+    holds vacuously since the trace is a singleton.
+  \item \textbf{Zero Step} In this case an unchecked step $s^C_2 \to_n
+    s^C_3$ is taken and the trace is of the form $s^C_2 \to_n s^C_3 \to
+    \ldots \to s^C_n$. The prefix of the trace is made up of one
+    state that is in user mode ($s^C_2$) and it vacuously holds that
+    it is made up of attacker steps. For the suffix of the trace
+    $s^C_3 \to \ldots \to s^C_n$ we distinguish between two cases.
+    \begin{itemize}
+    \item In case the mvector for $s^S_2$ exists, as there was a
+      violation, intuitively the transfer function will not allow any
+      steps from this state. At the concrete level, the policy monitor
+      will take a number of monitor steps and eventually halt the
+      machine.
+    \item In case the mvector for $s^S_2$, since $s^C_2 \to_n s^C_3$
+      it must be that the step $s^S_1 \to_n s^S_2$ tried to access
+      monitor data (\EG jumped to monitor code). Again the policy
+      monitor takes a number of monitor steps and eventually
+      halts the machine.
+    \end{itemize}
+  \item \textbf{One step} In this case the trace refinement relation
+    gives us that $s^S_2 \to_n s^S_3$ for some $s^S_3$. But we know
+    that $s^S_2$ is in the stopping trace of the symbolic machine and
+    all states in that trace are stuck with respect to normal steps,
+    therefore we reach a contradiction.
+  \item \textbf{Attacker step} In this case an attacker step $s^C_2
+    \to_a^{C} s^C_3$ is taken and the trace is of the form $s^C_2
+    \to_a^{C} s^C_3 \to \ldots \to s^C_n$. We distinguish between
+    two sub-cases.
+    \begin{itemize} 
+    \item The whole trace $s^C_2 \to \ldots \to s^C_n$
+      is made of attacker steps and there is suffix of monitor
+      steps in it.
+    \item At some point in the trace there is a normal step $s^C_i
+      \to_n s^C_j$. Intuitively because attacker steps cannot change
+      tags we know that $s^C_i \to_n s^C_j$ will be a step from user
+      to monitor mode. The monitor will detect the violation and take
+      a series of steps before eventually halting the machine.
+      \end{itemize}
+      \nick{this is super simplified, but the details are so gory..
+      in general the proof of stopping for the concrete machine is very
+    watered down. Perhaps I will return to explain a few things
+  about forming mvectors and the difference between symbolic mvectors
+  and concrete ones}
+    \end{itemize}
+\end{proof}
+
+We now invoke the preservation theorem for a second time, to transfer
+the \CFI property from the Symbolic to the Concrete machine.
+
+\begin{theorem}[Concrete CFI]\label{CFIconcrete}
+The Concrete machine has the \CFI property stated by \cref{cfi}.
 \end{theorem}
 \begin{proof}
   ~ Follows immediately by \cref{backward_refinement_preserves_cfi}.
