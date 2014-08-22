@@ -2,19 +2,24 @@
 
 \ch{The beginning of this chapter is very rough. Jumping from one thing
   to the other without any logical connection.}
+\nick{The structure you proposed for this chapter is not clear to me.
+Lose the related work title completely?
+Or keep the related work section and break the rest into
+3 subsections (fine-grained,coarse-grained,verification)?}
 
-Restricting the control-flow of a program in some way is a technique widely
-spread among security researchers\ch{This sounds awful}.
+
+Restricting the control-flow of a program in some way has been proven
+as an effective technique to mitigate a wide range of attacks.
 For example non-executable data (NXD)
 can be considered as a form of (very) coarse-grained \CFI where control-flow is
 not allowed to reach any memory region that holds non-executable data. Another
 popular mitigation technique is to protect return addresses on the stack,
 thus restricting the control-flow on returns.
 
-Moreover it is common that security properties are enforced dynamically by code
-that is statically injected to the program (\EG Inlined Reference Monitors (IRM)
-\cite{Erlingsson04} follow that approach), thus some form of \CFI is required in
-order to ensure that these checks are not circumvented.
+% Moreover it is common that security properties are enforced dynamically by code
+% that is statically injected to the program (\EG Inlined Reference Monitors (IRM)
+% \cite{Erlingsson04} follow that approach), thus some form of \CFI is required in
+% order to ensure that these checks are not circumvented.
 
 \section{Related Work}
 
@@ -29,16 +34,18 @@ order to ensure that these checks are not circumvented.
   footnote or a parenthesis) that all this is about their
   implementation, not their theory which is discussed later on.}
 
-Abadi \ETAL~\cite{abadi2005}
-first proposed a technique to enforce \CFI based on IRMs.
-In particular, they proposed to mark all valid targets of \emph{indirect}
-control transfers with a unique identifier and inject checks before all
-indirect jumps (including return instructions). However they assume that any
-two destinations are equivalent, in the sense that they share the same
-identifier, if the CFG contains edges from the same  set of sources, which may
-significantly reduce the precision of the CFG.
-The authors also note that a 2-ID approach where one identifier is used for
-calls and another for returns could provide adequate security in many cases.
+Abadi \ETAL~\cite{abadi2005} first proposed a technique to enforce
+\CFI based on Inlined Reference Monitors (IRMs). In particular, the
+method they described (and to some extent formalized) marked all valid
+targets of \emph{indirect} control transfers with a unique identifier
+and injected checks before all indirect jumps (including return
+instructions). However due to high runtime overhead, their actual
+implementation assumed that any two destinations are equivalent, in
+the sense that they share the same identifier, if the CFG contains
+edges from the same set of sources, which significantly reduced the
+precision of the CFG. The authors also note that a 2-ID approach where
+one identifier is used for calls and another for returns could provide
+adequate security in many cases.
 
 The work of Abadi \ETAL sparked interest of researchers who tried to improve
 some of the weaknesses of the initial implementation, usually by choosing
@@ -61,16 +68,16 @@ between returns to sensitive and non-sensitive functions. Their implementation
 also supports interaction between protected and un-protected modules, which
 makes it an attractive solution to coarse-grained \CFI.
 
-The \chrev{security of the}
-above \chrev{coarse-grained}
-techniques are evaluated in \cite{outofcontrol_ieeesp2014} where
-the authors demonstrate code-reuse attacks against binaries protected by
-coarse-grained \CFI. These attacks illustrate the need for fine-grained
-\CFI which however incurs a high runtime-overhead penalty making deployment
-of such a mechanism unlikely.
+The security of the above coarse-grained techniques is evaluated in
+\cite{outofcontrol_ieeesp2014} where the authors demonstrate
+code-reuse attacks against binaries protected by coarse-grained
+\CFI. These attacks illustrate the need for fine-grained \CFI which
+however incurs a high runtime-overhead penalty making deployment of
+such a mechanism unlikely.
 
 \ch{There is more recent related work (not formal, but fine-grained):
 \cite{NiuT14} which you should definitely also mention here.}
+\nick{will do so, need to have a look at the paper first}
 
 \paragraph{Standard assumptions for effective \CFI}\label{sec:cfi_assumptions}
 
@@ -178,24 +185,23 @@ their benchmarks report a 240\% runtime overhead. The authors of
 mechanism focused on the kernel of an operating system. Their runtime
 overhead can also reach 100\%.
 
-\section{Micro-Policy for Fine-Grained Control-Flow Integrity}\label{sec:cfi_fine}
+\section{Micro-Policy for Fine-Grained Control-Flow Integrity}
+\label{sec:cfi_fine}
 
 The PUMP hardware allows us to avoid taking the difficult decision between
 performance and security. As shown in \cite{pump_asplos2015}, we can enforce a
 \emph{fine-grained} \CFI policy with an average runtime overhead of less than 3\%
 (maximum overhead of less than 10\%), on the SPEC2006 benchmarks.
+\nick{again here, what should I say about overheads and what should I cite?}
 
-\ch{Shrink and polish this}\nick{done} We follow the standard
-approach, by designing a composed micro-policy that enforces \NXD,
-\NWC and \CFI\ch{I don't think this is standard in any way.
-  Abadi at al were {\bf assuming} NXD and NWC from other mechanisms,
-  not enforcing it themselves.}.
-We considered designs that lifted the \NXD and \NWC
-restrictions but we rejected them, as there did not seem to be any
-considerable advantages (\IE{ compatibility with self-modifying
-  programs, JIT compilers, \ETC}). Moreover unlike other \CFI
-enforcement mechanisms we do not have to rely on the CPU or the
-operating system to enforce \NXD and \NWC, therefore lifting these
+We follow the standard approach and require both \NXD and \NWC in
+order to correctly enforce \CFI. We designed a composed micro-policy
+that enforces \NXD, \NWC and \CFI. We considered designs that lifted
+the \NXD and \NWC restrictions but we rejected them, as there did not
+seem to be any considerable advantages (\IE{ compatibility with
+  self-modifying programs, JIT compilers, \ETC}). Moreover unlike
+other \CFI enforcement mechanisms we do not have to rely on the CPU or
+the operating system to enforce \NXD and \NWC, therefore lifting these
 restrictions would not reduce our assumptions and consequently would
 not increase our confidence in the robustness of our approach.
 
@@ -213,9 +219,7 @@ a binary relation (on the identifiers) $\mathcal{CFG}$.
 %\ch{I have more intuition about addresses than about identifiers}
 We use the set of tags \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}}
 where \id is a unique identifier (\IE used to tag the contents of only
-one location in the memory). One \strikeout{simply}\chrev{simple}\ch{simply
-  is an adverb, you need an adjective here, so simple}
-way to achieve this is to use
+one location in the memory). One simple way to achieve this is to use
 the address of the instruction as it's \id, for example an instruction
 stored at address 100 would be tagged \INSTR{100}. This is the
 approach we take in our development. Adapting the rules from
