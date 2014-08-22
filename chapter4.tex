@@ -24,7 +24,7 @@ the concrete and the abstract machine.
 
 In addition, we provide an attacker model for all the machines used
 and we prove that a property capturing the notion of \CFI holds even
-when the attacker ca tamper all data on the machine, similarly to what is
+when the attacker can tamper all data on the machine, similarly to what is
 proposed in \cite{AbadiBEL09}, but adapted to the setting of our
 machines. We do this by first proving this property for the abstract
 machine and then by using a generic preservation theorem we developed,
@@ -1846,7 +1846,8 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
           (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
         \end{tikzpicture}
       \end{center}
-      \caption{1-backward simulation for attacker}
+      \caption{1-backward simulation for attacker\ch{Nice diagrams,
+               but the text is too small for the a and n on the arrows}}
     \end{figure}
     \bigskip
   \end{minipage}
@@ -1854,7 +1855,8 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
 
 The class machine\_refinement captures the above specifications.
 
-\lstheader{machine_refinement}{Interface of machine\_refinement}
+\lstheader{machine_refinement}{Interface of machine\_refinement\ch{
+  Wouldn't this look better in LaTeX than in Coq?}}
 Variable amachine : cfi_machine. (*high-level machine*)
 Variable cmachine : cfi_machine. (*low-level machine*)
 
@@ -1888,7 +1890,8 @@ relation on execution traces. We define this trace refinement relation
 inductively and we say that two traces are in refinement if they
 are built this way.
 
-\lstheader{refine_traces}{Inductive definition of trace refinement}
+\lstheader{refine_traces}{Inductive definition of trace refinement\ch{
+  Could write these rules nicer in LaTeX?}}
 Inductive refine_traces :
   list (@state amachine) -> list (@state cmachine) -> Prop :=
 | TRNil : forall ast cst,
@@ -2235,6 +2238,10 @@ traces $s^H_{u2} ~ :: ~ tr^H_{tl}$ and $s^L_{u2} ~ :: ~ tr^L_{tl}$ are in
 refinement, $s^H_{u1} \sim s^L_{u1}$, $s^H_{u2} \sim s^L_{u2}$ and
 $s^L_{u1} \to_n s^L_{u2}$.
 \end{lemma}
+\ch{The $x ++ y$ above looks horrible for math notation;
+  at the very least you should use $x \mathrel{++} y$,
+  but maybe come with better notation, like $\cdot$ for
+  both cons and append?}
 
 Combining
 \cref{refine_traces_preserves_trace_has_cfi,refine_traces_split} we
