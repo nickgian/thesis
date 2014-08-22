@@ -4,38 +4,73 @@
 \ch{Btw, you should remind the reader that everything in this chapter
   was formalized in Coq, and the development is available upon request
   or whatever we might even make it public before you submit.}
+\nick{rephrased the intro, old one in comment. Still needs some iterations.}
 
-Using the micro-policies framework described in \cref{sec:framework}
-we proved that the concrete machine instantiated with a
-fine-grained \CFI micro-policy like the one described in
-\cref{sec:cfi_fine}\ch{can't instantiate the concrete
-  machine with symbolic rules, there is a mismatch here,
-  you probably mean: ``the concrete machine running monitor 
-  code implementing the micro-policy in \cref{sec:cfi_fine}''}
-\ii{simulates} an abstract machine that has \CFI
-by construction.\ch{Not simulation is the main result;
-  simulation is just a way of proving CFI for the concrete machine,
-  which is the main result and should come first.}
-We do this proof by using the symbolic machine as an
-intermediate step, first proving backward simulation between the symbolic
-and the abstract machine and afterwards by leveraging the framework of
-section \cref{sec:framework} we obtain a backward refinement between
-the concrete and the abstract machine.
+In this chapter we develop our main results. In particular, we used
+Coq to prove a property capturing the notion of \CFI, similar to what
+was proposed by Abadi \ETAL in \cite{AbadiBEL09}, for the concrete
+machine running monitor code that implements the micro-policy of
+\cref{sec:cfi_fine}. 
 
-In addition, we provide an attacker model for all the machines used
-and we prove that a property capturing the notion of \CFI holds even
-when the attacker can tamper all data on the machine, similarly to what is
-proposed in \cite{AbadiBEL09}, but adapted to the setting of our
-machines. We do this by first proving this property for the abstract
-machine and then by using a generic preservation theorem we developed,
-we prove that this property is \emph{preserved} by backward
-refinement and thus transferring the property to the symbolic and
-consequently to the concrete machine. This proof structure, allows us to
-build our proofs in a modular way and additionally reduced the proof
-effort, as it allowed us to reuse the preservation theorem for proving
-\CFI for both the symbolic and the concrete machine and allowed us to
-do most of the reasoning at the symbolic level, even for proofs that
-concerned the concrete machine.
+In order to obtain this result we propose a generic preservation
+theorem that states that the \CFI property is preserved, under certain
+assumptions, by $\lbrace 0,1 \rbrace$-backward simulation. This
+allowed us to structure our proofs in a modular way and to avoid a
+direct - and several times more complex - proof of \CFI on the
+concrete machine. Furthermore this preservation theorem, allowed us to
+obtain a proof for \CFI for the Concrete machine by using the
+micro-policies framework of \cref{sec:framework} in order to easily
+obtain a $\lbrace 0,1 \rbrace$-backward simulation between the
+Concrete and the Symbolic machine. As a result the proof effort
+required, was considerably reduced, as we essentially had to do most
+of our reasoning at the Symbolic machine level.
+
+The reusable nature of our preservation theorem led us to add one more
+level of abstraction, by providing an Abstract machine that has \CFI
+by construction and therefore the proof of the \CFI property for this
+Abstract machine is trivial. Additionally we proved a 1-backward
+simulation between the Symbolic and the Abstract machine, which
+allowed us to invoke the generic preservation theorem in order to
+transfer the \CFI property from the Abstract to the Symbolic machine
+and consequently to the Concrete machine by invoking the preservation
+theorem for a second time.
+
+Finally, in addition to the easily obtainable backward refinement between
+the Concrete and the Abstract machine, we prove a 1-forward
+simulation between the Abstract and the Symbolic machine. These refinement
+proofs provide us with additional assurance in the correctness of
+our micro-policy.
+
+\nick{mention in the end (here) that our proofs can be found somewhere?}
+
+% We proved in Coq that the concrete machine running monitor code that
+% implements the micro-policy of \cref{sec:cfi_fine} Using the
+% micro-policies framework described in \cref{sec:framework} we proved
+% that the concrete machine running monitor code implementing the
+% micro-policy in \cref{sec:cfi_fine} \ii{simulates} an abstract machine
+% that has \CFI by construction.\ch{Not simulation is the main result;
+%   simulation is just a way of proving CFI for the concrete machine,
+%   which is the main result and should come first.}  We do this proof
+% by using the symbolic machine as an intermediate step, first proving
+% backward simulation between the symbolic and the abstract machine and
+% afterwards by leveraging the framework of section \cref{sec:framework}
+% we obtain a backward refinement between the concrete and the abstract
+% machine.
+
+% In addition, we provide an attacker model for all the machines used
+% and we prove that a property capturing the notion of \CFI holds even
+% when the attacker can tamper all data on the machine, similarly to what is
+% proposed in \cite{AbadiBEL09}, but adapted to the setting of our
+% machines. We do this by first proving this property for the abstract
+% machine and then by using a generic preservation theorem we developed,
+% we prove that this property is \emph{preserved} by backward
+% refinement and thus transferring the property to the symbolic and
+% consequently to the concrete machine. This proof structure, allows us to
+% build our proofs in a modular way and additionally reduced the proof
+% effort, as it allowed us to reuse the preservation theorem for proving
+% \CFI for both the symbolic and the concrete machine and allowed us to
+% do most of the reasoning at the symbolic level, even for proofs that
+% concerned the concrete machine.
 
 \begin{figure}[H]
   \begin{center}
@@ -467,15 +502,14 @@ A function is defined in the actual Coq development.
 \end{figure}
 
 Notice that a monitor service is allowed to return anywhere. As we
-mentioned before, monitor services, execute in a protected\ch{a protected what?}
-by the
-monitor environment where we assume that an attacker who can only
-tamper the machine at the user level cannot interfere.
+mentioned before, monitor services at the concrete level, execute in a
+protected environment, therefore we do not want to protect their
+returns and this is reflected here.
 
-\subsection{Stopping predicate for the abstract machine}
+\subsection{Stopping predicate for the Abstract machine}
 \label{sec:abstract_stopping}
 
-Finally, we define what it means for the abstract machine to be ``stopping'' by
+Finally, we define what it means for the Abstract machine to be ``stopping'' by
 defining a predicate on execution traces:
 
 \begin{definition}[Abstract Stopping Predicate]
@@ -492,15 +526,19 @@ defining a predicate on execution traces:
 
 \subsection{CFI proof for the Abstract Machine}\label{abstract_proof}
 
-Regarding initial states, we only require that the \ok bit is set to true.
-We can now instantiate the class of the machines defined in
-\cref{cfi_machine}, with the abstract machine and prove that the abstract machine
-has \CFI according to \cref{cfi}.
-We first prove a helpful lemma\ch{, which intuitively says that ...}.
+Regarding initial states, we only require that the \ok bit is set to
+true.  We can now instantiate the class of the machines defined in
+\cref{cfi_machine}, with the abstract machine and prove that the
+abstract machine has \CFI according to \cref{cfi}.  We first prove a
+helpful lemma, which states a step that is both a normal and an
+attacker step is always safe according to the \SUCC{A} function. The
+intuition behind this, is that attacker steps retain the \ok bit while
+a normal step that violates the control-flow would change the \ok bit
+to false.
 
 \begin{lemma}[Step Intersection]
 \label{attacker_no_v}
-For all states \textit{st st'} such that \stepa{st}{st'}{A}
+For all states \textit{st, st}' such that \stepa{st}{st'}{A}
 and \stepn{st}{st'}, $(\mathit{st},\mathit{st'}) \in \SUCCm{A}$.
 \end{lemma}
 
@@ -1801,8 +1839,8 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
         s^H_1 & s^H_2 \\};
       \path[->]
       (m-1-1) edge [snake it,-] node {} (m-2-1)
-      edge [above] node [above,very near end,font=\tiny] {n} (m-1-2)
-      (m-2-1.east|-m-2-2) edge [dashed, above,very near end,font=\tiny] node {n}
+      edge [above] node [above,very near end,font=\small] {n} (m-1-2)
+      (m-2-1.east|-m-2-2) edge [dashed, above,very near end,font=\small] node {n}
       node {} (m-2-2)
       (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
     \end{tikzpicture}
@@ -1821,7 +1859,7 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
             s^H\\};
           \path[->]
           (m-1-1) edge [snake it,-,above] node {} (m-2-1)
-          (m-1-1.east|-m-1-2) edge [above,font=\tiny, very near end] node {n}
+          (m-1-1.east|-m-1-2) edge [above,font=\small, very near end] node {n}
           node {} (m-1-2)
           (m-1-2) edge [snake it,dashed,-] node {} (m-2-1);
         \end{tikzpicture}
@@ -1840,8 +1878,8 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
             s^H_1 & s^H_2 \\};
           \path[->]
           (m-1-1) edge [snake it,-] node {} (m-2-1)
-          edge [above] node [above,very near end,font=\tiny] {a} (m-1-2)
-          (m-2-1.east|-m-2-2) edge [dashed, above,very near end,font=\tiny] node {a}
+          edge [above] node [above,very near end,font=\small] {a} (m-1-2)
+          (m-2-1.east|-m-2-2) edge [dashed, above,very near end,font=\small] node {a}
           node {} (m-2-2)
           (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
         \end{tikzpicture}
@@ -2492,12 +2530,12 @@ hold for this instantiation of the preservation theorem.
 
 \begin{lemma}[No Symbolic Attacker Steps on Violation]
   \label{av_no_attacker_S}
-  \Cref{av_no_attacker} holds for the Abstract machine.
+  \Cref{av_no_attacker} holds for the Symbolic machine.
 \end{lemma}
 \begin{proof}
 
   We sketch the intuition behind the proof.  Suppose $s^S_1 \to_n
-  s^S_2$.  For all instructions other than Jump and Jal there is a
+  s^S_2$. For all instructions other than Jump and Jal there is a
   clear contradiction, as $(s^S_1,s^S_2) \not \in \SUCCm{S}$ implies
   that the \pc of the new state is not the one mandated by the
   operational semantics which cannot be because $s^S_1 \to_n

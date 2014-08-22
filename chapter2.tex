@@ -43,6 +43,12 @@ input tags to a set of output tags\ch{unclear whether this
   though if this was clearly a (pseudo-Coq) term, and if you used the
   same notation as in the symbolic rules below: CI, PC, etc. So
   $\ii{transfer}(\ii{opcode}, \ii{PC}, \ii{CI}, \ldots) = \ii{Some}~\ldots$}
+\nick{then this would not match the syntax we use when defining the rules.
+I think it just captures the type in an (as mentioned) abstract way.
+We could match the notation by using the record notation like
+$$opcode:{PC,CI,...} \rightarrow {PC',RES}$$ but it wouldn't disambiguate
+match in terms of what you are saying. It would still give one notation
+less to worry about and would be something familiar for the examples later}
 $$(opcode, tag_{pc},tag_{instr}, tag_{arg1}, tag_{arg2}, tag_{arg3})
 \rightarrow (tag_{pc'},tag_{result})$$
 informally read as, ``if the next instruction to be executed is opcode, the
