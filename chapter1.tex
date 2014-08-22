@@ -38,24 +38,39 @@ oriented programming) that allows them to chain together existing
 pieces of code to achieve malicious behavior without directly
 introducing new code.  Abadi~\ETAL\cite{abadi2005} introduced a
 property called Control Flow Integrity (CFI), which provides effective
-protection against control-flow hijacking attacks.  CFI enforces that
+protection against control-flow hijacking attacks. CFI enforces that
 any execution of a program will respect a statically computed control
-flow graph (CFG).  \ch{missing references throughout}
+flow graph (CFG), thus thwarting all attacks that attempt to alter
+the control-flow of a program, irregardless if the attacker
+tries to redirect the control-flow to attacker injected code or
+to an existing piece of code. \ch{missing references throughout}
+
+\section{Contributions}\label{sec:contributions}
+%could also be just a \paragraph
 
 The main contribution of this thesis is the formalization and
-verification of a dynamic monitor for CFI, based on a generic
-hardware-software security mechanism.
+verification in Coq of a dynamic monitor enforcing CFI, based on a
+generic hardware-software security mechanism.
+
+A direct proof that the mechanism correctly enforces CFI would be
+complex and would probably be less structured and less
+reusable. Instead we chose to prove correctness by
+\emph{refinement}. As a first step, we introduce an abstract machine
+that has CFI by construction. We provide a specification for the
+dynamic monitor and consequently prove a two-way (backward and
+forward) simulation between the abstract machine and a concrete
+machine running a monitor that satisfies our specification. This
+result shows that the concrete machine precisely emulates all
+behaviors of the \emph{correct by design} abstract machine.
+
+Furthermore, we provide a precise attacker model and prove in Coq that
+every step of the concrete machine has CFI even in the presence of the
+attacker. In particular we prove a variant of the CFI property
+proposed by Abadi~\ETAL\cite{AbadiBEL09}.
 %
-We provide a precise attacker model and prove in Coq that the monitor
-enforces a variant of the CFI property proposed by
-Abadi~\ETAL\cite{AbadiBEL09}.
-%
-To obtain this result we prove refinement between a concrete
-machine running a monitor satisfying our Coq specification
-and an abstract machine having CFI by construction.
-%
-We conclude the proof using a novel generic result stating that under
-certain assumptions CFI is preserved by refinement.
+We do that by using a novel generic result, stating
+that under certain assumptions CFI is preserved by backward simulation.
+
 \ch{Is there anything missing here?}\ch{Yes, this is a good
   start for a short ``Contributions'' paragraph, what's missing
   is a more detailed explanation of the main challenges and solutions
@@ -117,9 +132,4 @@ relations etc.?
   theorems, lemmas, definitions, etc.}
 \item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
 \item Decide capitalization. Symbolic or symbolic machine, enforce it through out the document.
-\item \ch{I would move these to the very end of the thesis, 
-  after appendices (if any) and bibliography:
-  List of Figures
-  List of Listings
-  List of theorems and definitions}
 \end{enumerate}

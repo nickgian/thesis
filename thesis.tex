@@ -354,11 +354,6 @@
 \include{abstract}
 \setlength{\parindent}{\templen}
 \tableofcontents
-\listoffigures
-\renewcommand{\lstlistlistingname}{List of Listings}
-\lstlistoflistings
-\renewcommand{\listtheoremname}{List of theorems and definitions}
-\listoftheorems[ignoreall,show={definition,lemma,theorem}]
 
 
 % \mainmatter
@@ -377,6 +372,12 @@
 \addcontentsline{toc}{chapter}{\bibname} % add bibliography section to toc
 \bibliography{bibliography,safe,local}
 \bibliographystyle{abbrv} % plain/abbrv/alpha/abstract/apalike/...
+\listoffigures
+\renewcommand{\lstlistlistingname}{List of Listings}
+\lstlistoflistings
+\renewcommand{\listtheoremname}{List of theorems and definitions}
+\listoftheorems[ignoreall,show={definition,lemma,theorem}]
+
 % \include{glossary}
 
 %\appendix
