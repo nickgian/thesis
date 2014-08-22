@@ -26,7 +26,7 @@ pulp: $(THESIS).tex $(BIBFILE)
 	-$(PULP) $(THESIS).log
 
 clean:
-	rm -fv *.aux *.log *.bbl *.blg *.toc *.out *.lot *.lof *.lol
+	rm -fv *.aux *.log *.bbl *.blg *.toc *.out *.lot *.lof *.lol _region_.tex *.synctex *~
 
 distclean: clean
 	rm $(THESIS).pdf
