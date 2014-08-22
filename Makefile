@@ -20,7 +20,7 @@ $(THESIS).bbl: $(THESIS).tex $(BIBFILE)
 pulp: $(THESIS).tex $(BIBFILE)
 	rm -f $(THESIS).log
 	-$(TEX) -interaction nonstopmode $< &> /dev/null
-	-bibtex $(THESIS) &> /dev/null
+	-bibtex $(THESIS) | sed -r -e "/Repeated entry---line .* of file .*/,/I'm skipping/ d"
 	-$(TEX) -interaction nonstopmode $< &> /dev/null
 	-$(TEX) -interaction nonstopmode $< &> /dev/null
 	-$(PULP) $(THESIS).log

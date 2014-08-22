@@ -26,4 +26,5 @@
 *.swp
 .swp
 \#*\#
-*.pdf
+thesis.pdf
+*.loe
