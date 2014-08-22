@@ -1,5 +1,6 @@
 \chapter{Micro-policies: Verified, Hardware-Assisted Monitors}\label{ch:policies}
-Currently the hardware provides very limited security mechanisms \TODO{name some;
+Current hardware provides vary limited (coarse-grained)
+security mechanisms \TODO{name some;
   4 protection rings, page-level memory protection via virtual memory},
 leaving most of the work to the software. This requires that the software
 performs various sanity-checks during an execution and that it carefully
@@ -28,9 +29,6 @@ plethora of software written in unsafe languages such as C.
 
 \section{Micro-Policies}\label{sec:micropolicies}
 
-\ch{Can the main idea of the CFI micro-policy be introduced here
-  already? See grant proposal.}
-
 A wide range of security policies can be enforced by associating metadata
 to the data being processed (\EG this is an instruction, this is from the
 network, this is private, \ETC), propagating the metadata as
@@ -38,7 +36,13 @@ instructions are executed and using a set of rules on the metadata to check
 whether a policy is violated and how the tags should be propagated.
 
 Abstractly, these rules form a partial function from a set of
-input tags to a set of output tags
+input tags to a set of output tags\ch{unclear whether this
+  is supposed to be a type or a term; if type then it doesn't
+  match our concrete implementation (just bits) or symbolic abstraction 
+  (where we have a complex dependent type now). It would be better
+  though if this was clearly a (pseudo-Coq) term, and if you used the
+  same notation as in the symbolic rules below: CI, PC, etc. So
+  $\ii{transfer}(\ii{opcode}, \ii{PC}, \ii{CI}, \ldots) = \ii{Some}~\ldots$}
 $$(opcode, tag_{pc},tag_{instr}, tag_{arg1}, tag_{arg2}, tag_{arg3})
 \rightarrow (tag_{pc'},tag_{result})$$
 informally read as, ``if the next instruction to be executed is opcode, the
@@ -72,25 +76,26 @@ wide range of security policies in future computing systems.
   Non-Writable Code \& Non-Executable Data}
 \label{sec:nwc_nxd}
 
-\ch{Make it clearer that this is informal and
-  you will return to the formalization later on}
-\nick{I think I did now}
+% \ch{Make it clearer that this is informal and
+%   you will return to the formalization later on}
+% \nick{I think I did now}
 
-\ch{Symbolic vs concrete rules ... should introduce symbolic rules first,
-  although this is a quite trivial example; ALT: write these as pseudo-Coq
-  functions?}
+% \ch{Symbolic vs concrete rules ... should introduce symbolic rules first,
+%   although this is a quite trivial example; ALT: write these as pseudo-Coq
+%   functions?}
 
-\nick{Saying something explicitly about concrete rules here seems hard
-  because it comes out of the blue without the PUMP. Writing a
-  function would omit introduction of syntax for rules and I am not
-  sure if this is what we want.}
+% \nick{Saying something explicitly about concrete rules here seems hard
+%   because it comes out of the blue without the PUMP. Writing a
+%   function would omit introduction of syntax for rules and I am not
+%   sure if this is what we want.}
 
 In order to demonstrate the mechanism explained above we sketch a
+
 simply micro-policy that enforces that code is not writable(\NWC) and
 data are not executable (\NXD), omitting the formalization to which we
 will return in \cref{ch:verified_cfi}.
 
-Consider the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
+We use the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
 all executable regions in memory as \INSTRname and all non-executable
 as \DATAname then we can enforce \NWC and \NXD by two rules of the form
 
@@ -113,27 +118,26 @@ as \DATAname then we can enforce \NWC and \NXD by two rules of the form
 
 The dashes in the result vector, represent \textit{don't care} values,
 meaning we will not use their values for anything, so any tag (usually
-a default tag set by the policy designer) can be used. Furthermore, we
-are omitting from the input vector the fields that are unused by the
-transfer function. For this simply policy, the transfer function only
-uses the tag on the current instruction (CI) and in the case of a
-Store instruction the tag on the memory access (MR), \IE the tag on the
-memory location we are trying to write. Additionally, if no rule
-applies, execution of the instruction is disallowed. Informally the
-above rules can be read as ``Execution is only allowed if the tag of
-the current instruction is \INSTRname. Furthermore if the opcode
-of the current instruction is Store, execution should be allowed only
-if the tag on the memory being overwritten is \DATA. In that case
-the tag of the new content in the memory should remain \DATA. For all other
-opcodes the result tags are indifferent to the enforced policy.''
-
-%original text
-% ``If the tag on the current instruction is
-% \INSTRname, then if the opcode of the instruction is Store, execution
-% should be allowed only if the tag of the third operand is \DATA. In
-% that case the tag on the new data on the memory should remain
-% \DATA. If the opcode of the instruction is not Store, then it's
-% allowed and the result tags are indifferent for the enforced policy.''
+a default tag set by the policy designer) can be used.\ch{I don't
+really buy your Rest rule then. If I choose the default to be Code
+then this policy is completely broken; while in general the intuition
+of the don't care default tag is that any value would do. So you
+shouldn't be using a don't care for RES I think, but just Data.}
+\nick{but isn't this the case you are describing? you can use Code
+the tag will just get thrown away. Only Store needs to set the result
+tag to DATA. A mov can set the register tag to Code, a load too,
+nobody will care}
+Furthermore, we are omitting from the input vector the fields that are
+unused by the transfer function. For this simple policy, the transfer
+function only uses the tag on the current instruction (\ii{CI}) and in
+the case of a Store instruction the tag on the memory (\ii{MR}), \IE
+the tag on the memory location we are trying to write. If no rule
+applies, the execution of the instruction is disallowed. Informally
+the above rules can be read as ``Execution is allowed only if the tag
+on the current instruction is \INSTRname; if the opcode of the
+instruction is Store, we additionally require that the tag of the
+overwritten memory location is \DATA. In that case the tag on the new
+data on the memory should remain \DATA.''
 
 \section{Generic Verification Framework for Micro-Policies}
 \label{sec:framework}
@@ -194,7 +198,11 @@ with the symbolic machine implies easier proofs of correctness.
 \ch{Introduce the (names of the) various machines and
   how they relate to each-other. Nice diagram?}
 
-\TODO{Write instruction set? maybe not}
+\TODO{Write instruction set? maybe not}\ch{Yes, the instruction syntax
+  and informal semantics would be very helpful for understanding rules
+  later on; not clear if this is the right place, or more likely in
+  the Symbolic machine section (where you already have the semantic
+  rules)}
 
 \subsection{Symbolic Machine}\label{sec:symbolic}
 
@@ -228,7 +236,7 @@ In \cref{symbolic_step} we give, in form of inference rules, the
 stepping relation for the Symbolic machine, demonstrating how the
 transfer function and the tag propagation works at each step.
 
-\begin{figure}[htb]
+\begin{figure}[htbp]
 \small
 %Nop
 \infrule[Nop]{
@@ -370,13 +378,13 @@ Definition transfer ivec : option ovec :=
 
 \section{A Programmable Unit for Metadata Processing}\label{sec:pump}
 
-\ch{Could consider moving this one level up (turn it into chapter)}
+%\ch{Could consider moving this one level up (turn it into chapter)}
 
 \subsection{Hardware Architecture}
 
 The Programmable Unit for Metadata Processing (PUMP) architecture
 \cite{pump_hasp2014} allows us to efficiently implement a wide range
-of micro-policies \cite{pump_asplos2015}, using software to describe
+of micro-policies, using software to describe
 the micro-policy, while the hardware provides efficiency
 by undertaking the propagation of the tags and by using a cache for
 the rules.
@@ -411,7 +419,7 @@ rules of the enforced policy and execution should not continue
 normally (\EG should be halted).
 
 As described in the original PUMP paper by Dehon \ETAL
-\cite{pump_hasp2014} and in \cite{pump_asplos2015} a rich set of
+in \cite{pump_hasp2014} a rich set of
 effective security policies can be efficiently implemented using the
 architecture mentioned above. In particular, implementations of
 dynamic typing, memory safety for heap-based data, control flow
@@ -431,9 +439,11 @@ overhead, there are more overheads associated to such a mechanism. For
 example adding metadata to all the data in the machine, would result
 in a 100\% memory overhead.  In addition, the extra hardware and the
 rule cache along with potentially larger memories could result into a
-400\% overhead on energy usage. \cite{pump_asplos2015} The authors
+400\% overhead on energy usage. The authors
 claim that a careful and well-optimized implementation can reduce
 these numbers, resulting in a 50\% energy overhead.
+\nick{I can use optimized numbers but they are taken out of asplos paper,
+so I am now just taking numbers out of nowhere}
 %
 \ch{use optimized numbers}
 

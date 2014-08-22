@@ -3,14 +3,14 @@
 \section{Motivation}\label{sec:motivation}
 
 Computer hardware and software continuously grow in size and complexity and as a
-result ensuring the absence of exploitable behaviors is becoming increasingly 
-difficult. In the era when \nick{where?}computer systems are used extensively to
+result ensuring the absence of exploitable behaviors is becoming increasingly
+difficult. In the era in which computer systems are used extensively to
 carry important information (e.g. credit card numbers, national security
 documents), it has been widely accepted that security of these systems is a
 priority. Researchers have identified a number of potential vulnerabilities
 which arise from the violation of known but in-practice unenforceable safety
 and security policies.
- 
+
 So far, computer security has been delegated mostly to software, while
 the hardware is being almost completely controlled by the software.
 High-level languages are becoming more widely used, due to features
@@ -18,12 +18,7 @@ such as strong type systems with type inference and automatic memory
 management, making programming less error prone and reducing the
 number of exploitable bugs. Furthermore, in order to strengthen the
 security of computing systems a variety of low-level mitigation
-techniques \cite{Cowan:1998:SAA:1267549.1267554,PaX,
-  Erlingsson:2007:LSS:1793914.1793919}
-\TODO{reference some? stack canaries, ASLR, $W \oplus X$}
-\nick{done}
-% http://prosecco.gforge.inria.fr/personal/hritcu/talks/05-control-hijacking-defenses.pdf
-% Úlfar Erlingsson: Low-Level Software Security: Attacks and Defenses. FOSAD 2007: 92-134
+techniques \cite{Cowan:1998:SAA:1267549.1267554,PaX,Erlingsson07}
 have been proposed, however these are mostly ad-hoc solutions designed
 to prevent specific known attacks, rather than enforcing a security
 policy by preventing a well-defined class of attacks, thus making it
@@ -61,7 +56,10 @@ and an abstract machine having CFI by construction.
 %
 We conclude the proof using a novel generic result stating that under
 certain assumptions CFI is preserved by refinement.
-\ch{Is there anything missing here?}
+\ch{Is there anything missing here?}\ch{Yes, this is a good
+  start for a short ``Contributions'' paragraph, what's missing
+  is a more detailed explanation of the main challenges and solutions
+  proposed in this thesis.}
 
 \section{Thesis Outline}\label{sec:outline}
 \Cref{ch:policies} of this thesis briefly describes the motivation for
@@ -76,7 +74,7 @@ the design choices of our approach regarding enforcement of \CFI.
 
 \Cref{ch:verified_cfi} explains how we used the framework of \cref{ch:policies}
 in order to formally reason about the security properties of the \CFI policy and
-our approach to enforcing it. 
+our approach to enforcing it.
 
 Chapter 5.. conclusions, future work? Appendix with code and/or step
 relations etc.?
@@ -84,8 +82,25 @@ relations etc.?
 \section{What needs to be done}
 
 \begin{enumerate}
+\item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
+  \ch{the abstract is the most important part of your thesis (\IE
+    the part everyone will read), so start working on it soon,
+    so that you can iterate a couple of times.}
+\item \ch{The intro is a good start, but still quite weak: it gives
+    only some motivation, but it's explaining only very briefly what
+    this thesis is about (more like an abstract than an intro). One
+    way to improve this is to work on your talk, and bring that
+    high-level explanation into the intro (a couple more pages, with
+    diagrams etc).}
 \item Re-read and polish the whole thing
 \item Optimize figure placement - once comments are removed and content is settled
+  \ch{I almost never did this; try not to over-constrain LaTeX and it will
+    usually do a good job; for large figures setting p allows LaTeX to
+    display them on a whole page, which is usually a good idea. I've done
+    this for Fig 2.2. and it worked great.}
+  \nick{I agree especially since this is going to be printed and turned into a ``book''
+    but what's really bothering latex is one line of text and then figure/listing
+    and this happens a lot in chapter 4}
 \item mention types on tags and DATA tag on registers
 \item More things on concrete preservation?
 \item A summary on the conclusions?
@@ -94,7 +109,17 @@ relations etc.?
 \item think about appendix if we need one
 \item think about diagrams, do we want more (\EG stopping for concrete machine)
 \item Unified numbering? Theorems,figures,table all having one counter. Last time
-  I tried to do this I failed.
 \item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
 \item Decide capitalization. Symbolic or symbolic machine, enforce it through out the document.
+  I tried to do this it failed. And it seems strange!
+  \ch{I think theorems can have different counter from figures.
+    I would call tables also figures; or if you meat listings, those
+    can have a separate counter.
+  I would use the same counter for
+  theorems, lemmas, definitions, etc.}
+\item \ch{I would move these to the very end of the thesis, 
+  after appendices (if any) and bibliography:
+  List of Figures
+  List of Listings
+  List of theorems and definitions}
 \end{enumerate}

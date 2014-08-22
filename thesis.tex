@@ -34,28 +34,32 @@
 \usepackage[color]{coqdoc}
 \usepackage{tabularx}
 \newcolumntype{m}[1]{>{$}#1<{$}}
-\usepackage{hyperref}
-\hypersetup{%
-    xetex,
-    hyperfootnotes=true,
-    colorlinks=true,
-    pdfpagemode=UseOutlines,
-    pdfstartview=FitH,
-    linkcolor=dkblue,
-    citecolor=blue,
-    urlcolor=magenta,
-    pdftitle={},
-    pdfauthor={Nick Giannarakis},
-    pdfsubject={},
-    pdfkeywords={}
-}
-
+\usepackage[%
+    xetex,%
+    unicode,%
+    hyperfootnotes=true,%
+    colorlinks=true,%
+    pdfpagemode=UseOutlines,%
+    pdfstartview=FitH,%
+    linkcolor=dkblue,%
+    citecolor=blue,%
+    urlcolor=magenta,%
+    pdftitle={},%
+    pdfauthor={Nick Giannarakis},%
+    pdfsubject={},%
+    pdfkeywords={}%
+]{hyperref}
 
 \setromanfont[Mapping=tex-text]{CMU Concrete Roman}
-\setsansfont[Mapping=tex-text]{CMU Concrete Roman}
-\setmonofont[Mapping=tex-text]{CMU Concrete Roman}
-\setmainfont[Mapping=tex-text]{CMU Concrete Roman}
+\setsansfont[Mapping=tex-text]{CMU Sans Serif}
+\setmonofont[Mapping=tex-text]{CMU Typewriter Text}
+\setmainfont[Mapping=tex-text]{CMU Serif}
 
+% CMU Concrete Roman looks nice for headings, but not for text!
+% \setromanfont[Mapping=tex-text]{CMU Concrete Roman}
+% \setsansfont[Mapping=tex-text]{CMU Concrete Roman}
+% \setmonofont[Mapping=tex-text]{CMU Concrete Roman}
+% \setmainfont[Mapping=tex-text]{CMU Concrete Roman}
 
 % CUSTOM COMMANDS ==============================================================
 
@@ -228,12 +232,12 @@
 
 \newcommand{\INITIAL}[1]{\textit{initial~#1}\xspace}
 
-\newcommand{\frule}[8]{#1:\{\ifthenelse{\equal{#2}{}}{}{PC{=}#2\ifthenelse{\equal{#3}{}}{}{,}}
-                           \ifthenelse{\equal{#3}{}}{}{CI{=}#3}\ifthenelse{\equal{#4}{}}{}{,}
-                           \ifthenelse{\equal{#4}{}}{}{OP1{=}#4}\ifthenelse{\equal{#5}{}}{}{,}
-                           \ifthenelse{\equal{#5}{}}{}{OP2{=}#5}\ifthenelse{\equal{#6}{}}{}{,}
-                           \ifthenelse{\equal{#6}{}}{}{MR{=}#6}
-                           \} \to \{PC'{=}#7, RES{=}#8\}} 
+\newcommand{\frule}[8]{#1:\{\ifthenelse{\equal{#2}{}}{}{\mathit{PC}{=}#2\ifthenelse{\equal{#3}{}}{}{,}}
+                           \ifthenelse{\equal{#3}{}}{}{\mathit{CI}{=}#3}\ifthenelse{\equal{#4}{}}{}{,}
+                           \ifthenelse{\equal{#4}{}}{}{\mathit{OP}_1{=}#4}\ifthenelse{\equal{#5}{}}{}{,}
+                           \ifthenelse{\equal{#5}{}}{}{\mathit{OP}_2{=}#5}\ifthenelse{\equal{#6}{}}{}{,}
+                           \ifthenelse{\equal{#6}{}}{}{\mathit{MR}{=}#6}
+                           \} \to \{\mathit{PC}'{=}#7, \mathit{RES}{=}#8\}}
 
 \newcommand{\NXD}[0]{\emph{NXD}\xspace}
 \newcommand{\NWC}[0]{\emph{NWC}\xspace}
@@ -258,7 +262,7 @@
 % with a reflexive-transitive closure.
 \usepackage{tikz}
 \usepgflibrary{plotmarks}
-\usetikzlibrary{matrix,arrows,decorations.pathmorphing,positioning,backgrounds,fit} 
+\usetikzlibrary{matrix,arrows,decorations.pathmorphing,positioning,backgrounds,fit}
 
 \tikzset{snake it/.style={decorate, decoration=snake}}
 
@@ -375,9 +379,9 @@
 \bibliographystyle{abbrv} % plain/abbrv/alpha/abstract/apalike/...
 % \include{glossary}
 
-\appendix
-\chapter{Stuff}
-\include{appendix}
+%\appendix
+%\chapter{Stuff}
+%\include{appendix}
 
 % \printindex
 

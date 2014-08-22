@@ -5,29 +5,29 @@ spread among security researchers. For example non-executable data (NXD)
 can be considered as a form of (very) coarse-grained \CFI where control-flow is
 not allowed to reach any memory region that holds non-executable data. Another
 popular mitigation technique is to protect return addresses on the stack,
-thus restricting the control-flow on returns. 
+thus restricting the control-flow on returns.
 
 Moreover it is common that security properties are enforced dynamically by code
 that is statically injected to the program (\EG Inlined Reference Monitors (IRM)
 \cite{Erlingsson04} follow that approach), thus some form of \CFI is required in
-order to ensure that these checks are not circumvented. 
+order to ensure that these checks are not circumvented.
 
 \section{Related Work}
 
 \subsection{Balancing between performance and security}\label{sec:security_cfi}
 
-Abadi \ETAL first proposed a technique to enforce \CFI based on IRMs. 
-In particular, they proposed to mark all valid targets of \emph{indirect} 
-control transfers with a unique identifier and inject checks before all 
-indirect jumps (including return instructions). However they assume that any 
-two destinations are equivalent, in the sense that they share the same 
+Abadi \ETAL first proposed a technique to enforce \CFI based on IRMs.
+In particular, they proposed to mark all valid targets of \emph{indirect}
+control transfers with a unique identifier and inject checks before all
+indirect jumps (including return instructions). However they assume that any
+two destinations are equivalent, in the sense that they share the same
 identifier, if the CFG contains edges from the same  set of sources, which may
-significantly reduce the precision of the CFG. 
-The authors also note that a 2-ID approach where one identifier is used for 
-calls and another for returns could provide adequate security in many cases. 
+significantly reduce the precision of the CFG.
+The authors also note that a 2-ID approach where one identifier is used for
+calls and another for returns could provide adequate security in many cases.
 
 The work of Abadi \ETAL sparked interest of researchers who tried to improve
-some of the weaknesses of the initial implementation, usually by choosing 
+some of the weaknesses of the initial implementation, usually by choosing
 between performance against precision and vice-versa.
 
 Bletsch \ETAL \cite{Bletsch:2011:MCA:2076732.2076783} followed the work
@@ -39,7 +39,7 @@ the same with the implementation of Abadi \ETAL.
 Zhang \ETAL \cite{Zhang2013} proposed \emph{Compact Control Flow Integrity
 and Randomization} (CCFIR), a new efficient way to enforce coarse-grained \CFI.
 CCFIR collects all valid targets of indirect control-transfers and stores them
-in a random order, in a protected section called ``Springboard section''. 
+in a random order, in a protected section called ``Springboard section''.
 Indirect control-transfers are only allowed to addresses that are in the
 Springboard. Their implementation uses a 3-ID approach where one identifier is
 used for calls and the two other identifiers are for returns, separating them
@@ -60,7 +60,7 @@ which \CFI holds. Two standard assumptions for all mechanisms that attempt to
 enforce \CFI are:
 \begin{itemize}
 \item Non-Executable Data (\emph{NXD}), a security
-mechanism that disallows execution of data. 
+mechanism that disallows execution of data.
 \item Non-Writable Code (\emph{NWC}). Changing the code of a
 program would allow an attacker to circumvent dynamic checks.
 \end{itemize}
@@ -78,8 +78,8 @@ identifiers used to mark nodes in the CFG are unique.
 \ch{consider moving to appendix, or related work section}
 
 We can use the PUMP to implement the coarse-grained \CFI mechanisms described
-earlier. Suppose we want to implement 1-ID \CFI, we tag all indirect flow 
-destinations and sources with a tag \MARK{} and the rest of the instructions as 
+earlier. Suppose we want to implement 1-ID \CFI, we tag all indirect flow
+destinations and sources with a tag \MARK{} and the rest of the instructions as
 \UNMARK. Executing instructions that are sources of indirect flows, propagates
 their instruction tag to the \pc. We then have to check that the tag on the
 destination matches the tag on the tag on the \pc.
@@ -176,7 +176,7 @@ not increase our confidence in the robustness of our approach.
 %The micro-policy we implemented and studied is a composition of a fine-grained
 %\CFI micro-policy and the \NWC, \NXD micro-policies explained above.
 
-Our approach uses unique identifiers to tag the contents of the memory that 
+Our approach uses unique identifiers to tag the contents of the memory that
 correspond to sources and potential destinations of indirect flows according to
 a binary relation (on the identifiers) $\mathcal{CFG}$.
 
@@ -208,11 +208,11 @@ the \CFG relation.
 
 % \begin{figure}[!htpb]
 % \begin{align}
-%  & (Jump/Jal, -,-, -, -, -) \rightarrow (- ,-) 
+%  & (Jump/Jal, -,-, -, -, -) \rightarrow (- ,-)
 %  \text{ if (n,m) } \in \CFGm \label{fine_rule1} \tag{1} \\
-%  & (Jump/Jal, \DATA, \INSTR{m}, -, -, -) \rightarrow (\INSTR{m},-) 
+%  & (Jump/Jal, \DATA, \INSTR{m}, -, -, -) \rightarrow (\INSTR{m},-)
 %  \text{ if (n,m) } \in \CFGm \label{fine_rule2} \tag{2} \\
-%  & (Store, \DATA, \INSTR{\_}, -, -, \DATA) \rightarrow (\DATA,\DATA) 
+%  & (Store, \DATA, \INSTR{\_}, -, -, \DATA) \rightarrow (\DATA,\DATA)
 %  \label{fine_rule3} \tag{3} \\
 %  & (Store, \INSTR{n}, \INSTR{m}, -, -, \DATA) \rightarrow (\DATA,\DATA)
 %  \text{ if (n,m) } \in \CFGm \label{fine_rule4} \tag{4} \\
@@ -220,9 +220,9 @@ the \CFG relation.
 %   \label{fine_rule5} \tag{5} \\
 %  & (-, \INSTR{n}, \INSTR{m}, -, -, -) \rightarrow (\DATA,-)
 %  \text{ if (n,m) } \in \CFGm \label{fine_rule6} \tag{6} \\
-%  & (-, \DATA, \INSTR{m}, -, -, -) \rightarrow (\DATA,-) \label{fine_rule7} 
+%  & (-, \DATA, \INSTR{m}, -, -, -) \rightarrow (\DATA,-) \label{fine_rule7}
 %  \tag{7}\\
-%  & (-, -, -, -, -, -) \rightarrow \varnothing \label{fine_rule8} 
+%  & (-, -, -, -, -, -) \rightarrow \varnothing \label{fine_rule8}
 %  \tag{8}
 % \end{align}
 % \caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
@@ -230,7 +230,7 @@ the \CFG relation.
 
 \begin{figure}[htb!]
 \infrule[Flow/Check]{
-  \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace \andalso 
+  \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace \andalso
   (src,dst) \in \CFGm
   }{
   \frule{\ii{op}}{\INSTR{src}}{\INSTR{dst}}{}{}{} {\INSTR{dst}}{-}
@@ -259,7 +259,7 @@ the \CFG relation.
 \bigskip
 
 \infrule[Rest/Check]{
-  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store} 
+  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store}
   \rbrace \andalso (src,dst) \in \CFGm
   }{
   \frule{\textit{opcode}}{\INSTR{src}}{\INSTR{dst}}{}{}{} {\DATA}{-}
@@ -267,7 +267,7 @@ the \CFG relation.
 \bigskip
 
 \infrule[Rest/NoCheck]{
-  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store} 
+  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store}
   \rbrace \andalso
   \textit{ti} \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
   }{
