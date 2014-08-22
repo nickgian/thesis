@@ -354,7 +354,7 @@
     %\hspace{-3em}
     \s\@supervisor             & \s\@epitropiF              & \s\@epitropiS \\
     %\hspace{-3em}
-    \s\@pre@super Ε.Μ.Π. & \s\@pre@epF Ε.Μ.Π. & \s\@pre@epS Ε.Μ.Π. \\
+    \s\@pre@super Ε.Μ.Π. & \s\@pre@epF Ε.Μ.Π. & \s\@pre@epS Ε.Κ.Π.Α \\
     \end{tabular}
 }
 

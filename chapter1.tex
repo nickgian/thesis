@@ -20,7 +20,6 @@ number of exploitable bugs. Furthermore, in order to strengthen the
 security of computing systems a variety of low-level mitigation
 techniques \cite{Cowan:1998:SAA:1267549.1267554,PaX,
   Erlingsson:2007:LSS:1793914.1793919}
-
 \TODO{reference some? stack canaries, ASLR, $W \oplus X$}
 \nick{done}
 % http://prosecco.gforge.inria.fr/personal/hritcu/talks/05-control-hijacking-defenses.pdf
@@ -34,19 +33,19 @@ mitigation techniques can be circumvented by attackers
 attackers and security researchers.
 
 One common attack technique is to exploit some low-level vulnerability
-such as a buffer overflow to redirect the control flow to attacker
-injected code. This attack can be stopped by a simple protection
-scheme known as $W \oplus X$, which enforces that a memory page is
-either executable or writable but not both.  Unfortunately, clever
-attack techniques can bypass $W \oplus X$. In particular, attackers
-have been using code-reuse attacks (e.g. return/jump - oriented
-programming) that allows them to chain together existing pieces of
-code to achieve malicious behavior without directly introducing new
-code.  Abadi~\ETAL\cite{abadi2005} introduced a property called
-Control Flow Integrity (CFI), which provides effective protection
-against control-flow hijacking attacks.  CFI enforces that any
-execution of a program will respect a statically computed control flow
-graph (CFG).  \ch{missing references throughout}
+such as a buffer overflow, in order to redirect the control flow to
+attacker injected code. This attack can be stopped by a simple
+protection scheme known as $W \oplus X$, which enforces that a memory
+page is either executable or writable but not both.  Unfortunately,
+clever attack techniques can bypass $W \oplus X$. In particular,
+attackers have been using code-reuse attacks (e.g. return/jump -
+oriented programming) that allows them to chain together existing
+pieces of code to achieve malicious behavior without directly
+introducing new code.  Abadi~\ETAL\cite{abadi2005} introduced a
+property called Control Flow Integrity (CFI), which provides effective
+protection against control-flow hijacking attacks.  CFI enforces that
+any execution of a program will respect a statically computed control
+flow graph (CFG).  \ch{missing references throughout}
 
 The main contribution of this thesis is the formalization and
 verification of a dynamic monitor for CFI, based on a generic
@@ -65,15 +64,6 @@ certain assumptions CFI is preserved by refinement.
 \ch{Is there anything missing here?}
 
 \section{Thesis Outline}\label{sec:outline}
-Map
-1. Intro
-2a. Safety and Security Policies
-2b. Micropolicies
-3. CFI description
-4. CFI formalization
-5. Conclusions and Future work
-6. Related work
-
 \Cref{ch:policies} of this thesis briefly describes the motivation for
 effective and efficient security policies, the desired properties a
 robust security policy must satisfy and puts into context the
@@ -104,6 +94,7 @@ relations etc.?
 \item think about appendix if we need one
 \item think about diagrams, do we want more (\EG stopping for concrete machine)
 \item Unified numbering? Theorems,figures,table all having one counter. Last time
-  I tried to do this it failed. And it seems strange!
+  I tried to do this I failed.
 \item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
+\item Decide capitalization. Symbolic or symbolic machine, enforce it through out the document.
 \end{enumerate}
