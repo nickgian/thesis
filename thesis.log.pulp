@@ -1,3 +1,5 @@
-!(warning |
-  unknown |
-  boring | info | message | under | over)
+!(
+  (warning & "Redefining document command") |
+  (warning & "Variant .* already defined; not changing it") |
+  (warning & "Command \\nobreakspace invalid in math mode") |
+  unknown | boring | info | message | under | over)

@@ -34,27 +34,26 @@
 \usepackage[color]{coqdoc}
 \usepackage{tabularx}
 \newcolumntype{m}[1]{>{$}#1<{$}}
-\usepackage{hyperref}
-\hypersetup{%
-    xetex,
-    hyperfootnotes=true,
-    colorlinks=true,
-    pdfpagemode=UseOutlines,
-    pdfstartview=FitH,
-    linkcolor=dkblue,
-    citecolor=blue,
-    urlcolor=magenta,
-    pdftitle={},
-    pdfauthor={Nick Giannarakis},
-    pdfsubject={},
-    pdfkeywords={}
-}
+\usepackage[%
+    xetex,%
+    unicode,%
+    hyperfootnotes=true,%
+    colorlinks=true,%
+    pdfpagemode=UseOutlines,%
+    pdfstartview=FitH,%
+    linkcolor=dkblue,%
+    citecolor=blue,%
+    urlcolor=magenta,%
+    pdftitle={},%
+    pdfauthor={Nick Giannarakis},%
+    pdfsubject={},%
+    pdfkeywords={}%
+]{hyperref}
 
-
-% \setromanfont[Mapping=tex-text]{CMU Concrete Roman}
-% \setsansfont[Mapping=tex-text]{CMU Concrete Roman}
-% \setmonofont[Mapping=tex-text]{CMU Concrete Roman}
-% \setmainfont[Mapping=tex-text]{CMU Concrete Roman}
+\setromanfont[Mapping=tex-text]{CMU Concrete Roman}
+\setsansfont[Mapping=tex-text]{CMU Concrete Roman}
+\setmonofont[Mapping=tex-text]{CMU Concrete Roman}
+\setmainfont[Mapping=tex-text]{CMU Concrete Roman}
 
 
 % CUSTOM COMMANDS ==============================================================
@@ -375,9 +374,9 @@
 \bibliographystyle{abbrv} % plain/abbrv/alpha/abstract/apalike/...
 % \include{glossary}
 
-\appendix
-\chapter{Stuff}
-\include{appendix}
+%\appendix
+%\chapter{Stuff}
+%\include{appendix}
 
 % \printindex
 

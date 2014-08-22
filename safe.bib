@@ -189,20 +189,6 @@ Communications Security},
   url = {http://www.crash-safe.org/node/29},
 }
 
-@unpublished{PUMP_ASPLOS2013,
-title = {A Programmable Unit for Metadata Processing ({PUMP})},
-author = {Udit Dhawan and
-          Vasilakis and
-          Rafi Rubin and
-          Silviu Chiricescu and
-          Benjamin C. Pierce and
-          Jonathan M. Smith and
-          Thomas F. {Knight, Jr.} and
-          Andr\'{e} DeHon},
-year = {2013},
-note = {Under submission}
-}
-
 @inproceedings{pump_hasp2014,
 	author = {Udit Dhawan and Nikos Vasilakis and Raphael Rubin and Silviu Chiricescu and Jonathan M. Smith and Thomas F. Knight and Benjamin C. Pierce and Andr\'{e} DeHon},
 	title = {{PUMP -- A Programmable Unit for Metadata Processing}},
@@ -257,9 +243,11 @@ note = {Under submission}
 @misc{pump_asplos2015,
   author = {Udit Dhawan and
           C\u{a}t\u{a}lin Hri\c{t}cu and
+          Rafi Rubin and
           Nikos Vasilakis and
           Silviu Chiricescu and
           Jonathan M. Smith and
+          Thomas F. {Knight, Jr.} and
           Benjamin C. Pierce and
           Andr\'{e} DeHon},
   title = {Architectural Support for Software-Defined Metadata Processing},
@@ -1049,6 +1037,19 @@ url          =   {http://www.cs.cornell.edu/andru/release/tr783.pdf}
   pages     = {399-422},
   ee        = {http://dx.doi.org/10.1007/s10207-009-0086-1},
   url       = {http://pp.info.uni-karlsruhe.de/publication.php?id=hammer09ijis},
+}
+
+*** Balliu, Dam, Guanciale /Automating Information Flow Analysis of Low Level Code/
+
+@inproceedings{Balliu14,
+  title = {Automating Information Flow Analysis of Low Level Code},
+  author = {Musard Balliu and
+            Mads Dam and
+            Roberto Guanciale},
+  booktitle = {CCS},
+  shortbooktitle = {CCS},
+  url = {http://www.nada.kth.se/~musard/ccs14_draft.pdf},
+  note = {To appear},
 }
 
 ** Dynamic (and static vs. dynamic)
@@ -3401,7 +3402,7 @@ http://fuxi.cs.txstate.edu/~nasdg/papers/2007sp/Beyond%20Stack%20Inspection%3A%2
   booktitle={Proceedings of the 10th Annual Network and Distributed System Security Symposium},
   pages={107--121},
   year={2003},
-  organization={Citeseer}
+  organization={The Internet Society}
 }
 
 
@@ -4614,6 +4615,76 @@ address = {Los Alamitos, CA, USA},
     - caveat: the paper, though well written, is quite UNIX-centric (lots of
       jargon, etc.)
 
+*** Watson et al /A taste of Capsicum: practical capabilities for UNIX/
+
+@article{WatsonALK12,
+  author    = {Robert N. M. Watson and
+               Jonathan Anderson and
+               Ben Laurie and
+               Kris Kennaway},
+  title     = {A taste of {Capsicum}: practical capabilities for {UNIX}},
+  journal   = {Communications of the ACM},
+  volume    = {55},
+  number    = {3},
+  year      = {2012},
+  pages     = {97-104},
+  ee        = {http://doi.acm.org/10.1145/2093548.2093572},
+}
+
+See <safe-git>/reading/watson-cacm12.pdf for a copy
+
+*** Harris et al /Declarative, Temporal, and Practical Programming with Capabilities/
+
+@inproceedings{HarrisJRAW13,
+  author    = {William R. Harris and
+               Somesh Jha and
+               Thomas W. Reps and
+               Jonathan Anderson and
+               Robert N. M. Watson},
+  title     = {Declarative, Temporal, and Practical Programming with Capabilities},
+  booktitle = {IEEE Symposium on Security and Privacy},
+  year      = {2013},
+  pages     = {18-32},
+  ee        = {http://doi.ieeecomputersociety.org/10.1109/SP.2013.11},
+  publisher = {IEEE Computer Society},
+  isbn      = {978-1-4673-6166-8},
+  url       = {https://www.cl.cam.ac.uk/research/security/ctsrd/pdfs/201305-temporal-practical-capabilities.pdf},
+}
+
+*** Watson et al /Towards a theory of application compartmentalisation/
+
+@misc{WatsonMGANL13,
+  author = {Robert N. M. Watson and
+            Steven J. Murdoch and
+            Khilan Gudka and
+            Jonathan Anderson and
+            Peter G. Neumann and
+            Ben Laurie},
+  title = {Towards a theory of application compartmentalisation},
+  howpublished = {Security Protocols Workshop},
+  month = mar,
+  year = {2013},
+  url = {http://www.cl.cam.ac.uk/~kg365/pubs/2013spw-compartmentalisation.pdf},
+}
+
+*** Gudka et al /Exploring Compartmentalisation Hypotheses with SOAAP/
+
+@inproceedings{GudkaWHLM12,
+  author    = {Khilan Gudka and
+               Robert N. M. Watson and
+               Steven Hand and
+               Ben Laurie and
+               Anil Madhavapeddy},
+  title     = {Exploring Compartmentalisation Hypotheses with {SOAAP}},
+  booktitle = {AHANS Workshop},
+  year      = {2012},
+  pages     = {23-30},
+  ee        = {http://doi.ieeecomputersociety.org/10.1109/SASOW.2012.14},
+  publisher = {IEEE Computer Society},
+  isbn      = {978-1-4673-5153-9},
+  url       = {http://www.cl.cam.ac.uk/~kg365/pubs/2012ahans-soaap.pdf},
+}
+
 *** Levy    /Capability Based Computer Systems/
 
 This book was published by Digital Press in 1984. It is still the most
@@ -5370,7 +5441,7 @@ pages = {143--155}
   url = {http://www.ai.mit.edu/projects/aries/Documents/Memos/ARIES-05.pdf}
 }
 
-*** HardBound and SoftBound
+*** HardBound and SoftBound and Watchdog
 
 @inproceedings{DeviettiBMZ08,
   author    = {Joe Devietti and
@@ -5379,14 +5450,14 @@ pages = {143--155}
                Steve Zdancewic},
   title     = {{HardBound}: Architectural Support for Spatial Safety of the
                {C} Programming Language},
-  booktitle = {ASPLOS},
+  booktitle = {13th International Conference on Architectural
+               Support for Programming Languages and Operating Systems},
+  shortbooktitle = {ASPLOS},
   year      = {2008},
   pages     = {103-114},
   ee        = {http://doi.acm.org/10.1145/1346281.1346295},
-  crossref  = {DBLP:conf/asplos/2008},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  url       = {http://acg.cis.upenn.edu/papers/asplos08_hardbound.pdf},
 }
-
 
 @inproceedings{baggy_bounds_usenix_security2009,
  author = {Akritidis, Periklis and Costa, Manuel and Castro, Miguel and Hand, Steven},
@@ -5415,19 +5486,6 @@ pages = {143--155}
  pages = {135--144},
  url = {http://doi.acm.org/10.1145/2259016.2259034},
  doi = {10.1145/2259016.2259034}
-}
-
-@proceedings{DBLP:conf/asplos/2008,
-  editor    = {Susan J. Eggers and
-               James R. Larus},
-  title     = {Proceedings of the 13th International Conference on Architectural
-               Support for Programming Languages and Operating Systems,
-               ASPLOS 2008, Seattle, WA, USA, March 1-5, 2008},
-  booktitle = {ASPLOS},
-  publisher = {ACM},
-  year      = {2008},
-  isbn      = {978-1-59593-958-6},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
 }
 
 @inproceedings{NagarakatteZMZ09,
@@ -5460,6 +5518,22 @@ year = {2013},
 url = {http://acg.cis.upenn.edu/papers/ieeemicro13_comprehensive_safety.pdf}
 }
 
+@inproceedings{NagarakatteMZ14,
+  author    = {Santosh Nagarakatte and
+               Milo M. K. Martin and
+               Steve Zdancewic},
+  title     = {{WatchdogLite}: Hardware-Accelerated Compiler-Based Pointer
+               Checking},
+  booktitle = {12th Annual IEEE/ACM International Symposium on Code Generation
+               and Optimization},
+  shortbooktitle = {CGO},
+  year      = {2014},
+  pages     = {175},
+  publisher = {ACM},
+  isbn      = {978-1-4503-2670-4},
+  ee        = {http://doi.acm.org/10.1145/2544137.2544147},
+  url       = {http://acg.cis.upenn.edu/papers/cgo14_watchdoglite.pdf},
+}
 
 
 @PhdThesis{nagarakatte_phd2013,
@@ -6039,7 +6113,7 @@ targeted at sound IFC / noninterference; RIFLE is not mentioned at all.
 ** Coq reference manual
 
 @manual{coq_manual,
- author      = {{Coq} {Development} {Team}, The},
+ author      = {{The Coq Development Team}},
  title       = {The {Coq} Reference Manual, version 8.4},
  month       = Aug,
  year        = {2012},
@@ -6363,6 +6437,50 @@ year = {2014},
 url = {http://users.ics.forth.gr/~elathan/papers/oakland14.pdf},
 }
 
+@techreport{DaviLSM14,
+  title = {Stitching the Gadgets:
+           On the Ineffectiveness of Coarse-Grained Control-Flow
+           Integrity Protection},
+  author = {Lucas Davi and
+            Daniel Lehmann and
+            Ahmad-Reza Sadeghi and
+            Fabian Monrose},
+  institution = {Technische Universit\"at Darmstadt, CASED},
+  type = {Technical Report},
+  number = {TUD-CS-2014-0800},
+  year = 2014,
+  month = mar,
+  note = {Accepted at USENIX Security 2014},
+  url = {https://www.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_TRUST/PubsPDF/techreport-stitching-gadgets.pdf},
+}
+
+@inproceedings{DaviKS14,
+  author    = {Lucas Davi and
+               Patrick Koeberl and
+               Ahmad-Reza Sadeghi},
+  title     = {Hardware-Assisted Fine-Grained Control-Flow Integrity: Towards
+               Efficient Protection of Embedded Systems Against Software
+               Exploitation},
+  booktitle = {51st Design Automation Conference},
+  shortbooktitle = {DAC},
+  year      = {2014},
+  pages     = {1-6},
+  ee        = {http://doi.acm.org/10.1145/2593069.2596656},
+  publisher = {ACM},
+  isbn      = {978-1-4503-2730-5},
+  url       = {https://www.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_TRUST/PubsPDF/hardware-assisted-cfi.pdf},
+}
+
+@misc{MashtizadehBMB14,
+  title = {Cryptographically Enforced Control Flow Integrity},
+  author = {Ali Jose Mashtizadeh and
+            Andrea Bittau and
+            David Mazi\'eres and
+            Dan Boneh},
+  howpublished = {arXiv:1408.145},
+  url = {http://arxiv.org/abs/1408.1451},
+}
+
 @article{Smashing1996,
 author = {{Aleph One}},
 title = {{Smashing the Stack for Fun and Profit}},
@@ -6394,6 +6512,7 @@ year = {1996}
   author = {John Criswell and
             Nathan Dautenhahn and
             Vikram Adve},
+  booktitle = {IEEE Security and Privacy Symposium},
   shortbooktitle = {IEEE S\&P},
   year = 2014,
   url = {http://sva.cs.illinois.edu/pubs/KCoFI-Oakland-2014.pdf},
@@ -7823,6 +7942,16 @@ year = {2012}
   volume    = {8414},
   isbn      = {978-3-642-54791-1},
   url       = {http://arxiv.org/abs/1401.4339},
+}
+
+@misc{BichhawatRGH14b,
+  title = {Generalizing Permissive-Upgrade in Dynamic Information Flow Analysis},
+  author = {Abhishek Bichhawat and
+            Vineet Rajani and
+            Deepak Garg and
+            Christian Hammer},
+  howpublished = {To appear at PLAS},
+  year = {2014},
 }
 
 * Instructions for editing this file
