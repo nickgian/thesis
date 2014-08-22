@@ -1,7 +1,11 @@
 \chapter{Control-Flow Integrity}\label{ch:cfi}
 
+\ch{The beginning of this chapter is very rough. Jumping from one thing
+  to the other without any logical connection.}
+
 Restricting the control-flow of a program in some way is a technique widely
-spread among security researchers. For example non-executable data (NXD)
+spread among security researchers\ch{This sounds awful}.
+For example non-executable data (NXD)
 can be considered as a form of (very) coarse-grained \CFI where control-flow is
 not allowed to reach any memory region that holds non-executable data. Another
 popular mitigation technique is to protect return addresses on the stack,
@@ -16,7 +20,17 @@ order to ensure that these checks are not circumvented.
 
 \subsection{Balancing between performance and security}\label{sec:security_cfi}
 
-Abadi \ETAL first proposed a technique to enforce \CFI based on IRMs.
+\ch{Before bashing Abadi too much, you should remark the huge
+  distinction between their formalization and property, in which they
+  consider fine-grained CFI (or at least a generic property that can
+  be instantiated to both fine-grained and coarse-grained?), and their
+  implementation in which they enforce a very coarse grained thing.
+  Alternatively, make sure you mention very explicitly (e.g. in a
+  footnote or a parenthesis) that all this is about their
+  implementation, not their theory which is discussed later on.}
+
+Abadi \ETAL~\cite{abadi2005}
+first proposed a technique to enforce \CFI based on IRMs.
 In particular, they proposed to mark all valid targets of \emph{indirect}
 control transfers with a unique identifier and inject checks before all
 indirect jumps (including return instructions). However they assume that any
@@ -47,11 +61,16 @@ between returns to sensitive and non-sensitive functions. Their implementation
 also supports interaction between protected and un-protected modules, which
 makes it an attractive solution to coarse-grained \CFI.
 
-The above techniques are evaluated in \cite{outofcontrol_ieeesp2014} where
+The \chrev{security of the}
+above \chrev{coarse-grained}
+techniques are evaluated in \cite{outofcontrol_ieeesp2014} where
 the authors demonstrate code-reuse attacks against binaries protected by
 coarse-grained \CFI. These attacks illustrate the need for fine-grained
 \CFI which however incurs a high runtime-overhead penalty making deployment
 of such a mechanism unlikely.
+
+\ch{There is more recent related work (not formal, but fine-grained):
+\cite{NiuT14} which you should definitely also mention here.}
 
 \paragraph{Standard assumptions for effective \CFI}\label{sec:cfi_assumptions}
 
@@ -75,7 +94,15 @@ identifiers used to mark nodes in the CFG are unique.
 
 \subsection{Coarse-grained CFI Micro-Policy}\label{sec:cfi_coarse}
 
-\ch{consider moving to appendix, or related work section}
+\ch{Turn this into a paragraph that comes when talking about
+  coarse-grained CFI (and by the way we can encode it as a
+  micro-policy)? This is clearly not related work, so it shouldn't be
+  a subsection. Maybe a better way to structure this Section is:
+  Coarse-grained CFI (including this Micro-policy),
+  Fine-grained CFI,
+  Verification of CFI?}
+
+%\ch{consider moving to appendix, or related work section}
 
 We can use the PUMP to implement the coarse-grained \CFI mechanisms described
 earlier. Suppose we want to implement 1-ID \CFI, we tag all indirect flow
@@ -151,7 +178,7 @@ their benchmarks report a 240\% runtime overhead. The authors of
 mechanism focused on the kernel of an operating system. Their runtime
 overhead can also reach 100\%.
 
-\section{Fine-Grained Control-Flow Integrity Micro-Policy}\label{sec:cfi_fine}
+\section{Micro-Policy for Fine-Grained Control-Flow Integrity}\label{sec:cfi_fine}
 
 The PUMP hardware allows us to avoid taking the difficult decision between
 performance and security. As shown in \cite{pump_asplos2015}, we can enforce a
@@ -160,7 +187,10 @@ performance and security. As shown in \cite{pump_asplos2015}, we can enforce a
 
 \ch{Shrink and polish this}\nick{done} We follow the standard
 approach, by designing a composed micro-policy that enforces \NXD,
-\NWC and \CFI.  We considered designs that lifted the \NXD and \NWC
+\NWC and \CFI\ch{I don't think this is standard in any way.
+  Abadi at al were {\bf assuming} NXD and NWC from other mechanisms,
+  not enforcing it themselves.}.
+We considered designs that lifted the \NXD and \NWC
 restrictions but we rejected them, as there did not seem to be any
 considerable advantages (\IE{ compatibility with self-modifying
   programs, JIT compilers, \ETC}). Moreover unlike other \CFI
@@ -181,9 +211,11 @@ correspond to sources and potential destinations of indirect flows according to
 a binary relation (on the identifiers) $\mathcal{CFG}$.
 
 %\ch{I have more intuition about addresses than about identifiers}
-Consider the set of tags \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}}
+We use the set of tags \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}}
 where \id is a unique identifier (\IE used to tag the contents of only
-one location in the memory). One simply way to achieve this is to use
+one location in the memory). One \strikeout{simply}\chrev{simple}\ch{simply
+  is an adverb, you need an adjective here, so simple}
+way to achieve this is to use
 the address of the instruction as it's \id, for example an instruction
 stored at address 100 would be tagged \INSTR{100}. This is the
 approach we take in our development. Adapting the rules from
@@ -196,9 +228,12 @@ intuitively the same and only change to account for the splitting of
 the \INSTRname tag.
 
 \nick{if/when we move coarse-grained to appendix, then we don't follow
-the same idea...}
+the same idea...}\ch{for now let's try to incorporate the coarse-grained
+  micro-policy in 3.1.1 and have an explicit reference to that subsubsection
+  here}
 
-We follow the same idea as with coarse-grained \CFI, propagating the
+We follow the same idea as with coarse-grained \CFI\ch{from 3.1.1},
+propagating the
 instruction tag of instructions that are sources of indirect flows to
 the tag on the \pc of the next state and upon execution of the next
 instruction, checking that the tag on the \pc and on the instruction
@@ -273,7 +308,7 @@ the \CFG relation.
   }{
   \frule{\textit{opcode}}{\DATA}{\textit{ti}}{}{}{} {\DATA}{-}
   }
-\caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
+\caption{Rules enforcing fine-grained \CFI\strikeout{, \NXD and \NWC}}
 \end{figure}
 
 We note in the above rules that the tag on the \PCname is \DATAname when

@@ -34,6 +34,7 @@
 \usepackage[color]{coqdoc}
 \usepackage{tabularx}
 \newcolumntype{m}[1]{>{$}#1<{$}}
+\usepackage[normalem]{ulem}
 \usepackage[%
     xetex,%
     unicode,%
@@ -159,6 +160,7 @@
 \newcommand{\ud}[1]{\ifdraft{\color{cyan}[UD -- #1]}\fi}
 \newcommand{\udrev}[1]{\ifdraft{\color{cyan}#1}\else #1\fi}
 \newcommand{\aaa}[1]{\ifdraft{\color{dkgreen}\em (AAA: #1)}\fi}
+\newcommand{\strikeout}[1]{\ifdraft\sout{#1}\fi{}}
 
 \newcommand*{\ii}[1]{\textit{#1}}
 
