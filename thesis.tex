@@ -233,12 +233,12 @@
 
 \newcommand{\INITIAL}[1]{\textit{initial~#1}\xspace}
 
-\newcommand{\frule}[8]{#1:\{\ifthenelse{\equal{#2}{}}{}{PC{=}#2\ifthenelse{\equal{#3}{}}{}{,}}
-                           \ifthenelse{\equal{#3}{}}{}{CI{=}#3}\ifthenelse{\equal{#4}{}}{}{,}
-                           \ifthenelse{\equal{#4}{}}{}{OP1{=}#4}\ifthenelse{\equal{#5}{}}{}{,}
-                           \ifthenelse{\equal{#5}{}}{}{OP2{=}#5}\ifthenelse{\equal{#6}{}}{}{,}
-                           \ifthenelse{\equal{#6}{}}{}{MR{=}#6}
-                           \} \to \{PC'{=}#7, RES{=}#8\}}
+\newcommand{\frule}[8]{#1:\{\ifthenelse{\equal{#2}{}}{}{\mathit{PC}{=}#2\ifthenelse{\equal{#3}{}}{}{,}}
+                           \ifthenelse{\equal{#3}{}}{}{\mathit{CI}{=}#3}\ifthenelse{\equal{#4}{}}{}{,}
+                           \ifthenelse{\equal{#4}{}}{}{\mathit{OP}_1{=}#4}\ifthenelse{\equal{#5}{}}{}{,}
+                           \ifthenelse{\equal{#5}{}}{}{\mathit{OP}_2{=}#5}\ifthenelse{\equal{#6}{}}{}{,}
+                           \ifthenelse{\equal{#6}{}}{}{\mathit{MR}{=}#6}
+                           \} \to \{\mathit{PC}'{=}#7, \mathit{RES}{=}#8\}}
 
 \newcommand{\NXD}[0]{\emph{NXD}\xspace}
 \newcommand{\NWC}[0]{\emph{NWC}\xspace}
