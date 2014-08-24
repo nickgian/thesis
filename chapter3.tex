@@ -123,16 +123,6 @@ overhead can also reach 100\%.
 
 \subsection{Coarse-grained CFI Micro-Policy}\label{sec:cfi_coarse}
 
-\ch{Turn this into a paragraph that comes when talking about
-  coarse-grained CFI (and by the way we can encode it as a
-  micro-policy)? This is clearly not related work, so it shouldn't be
-  a subsection. Maybe a better way to structure this Section is:
-  Coarse-grained CFI (including this Micro-policy),
-  Fine-grained CFI,
-  Verification of CFI?}
-
-%\ch{consider moving to appendix, or related work section}
-
 We can use the PUMP to implement the coarse-grained \CFI mechanisms described
 earlier. Suppose we want to implement 1-ID \CFI, we tag all indirect flow
 destinations and sources with a tag \MARK{} and the rest of the instructions as
@@ -230,28 +220,6 @@ that the tag on the \pc and on the instruction are in some
 relation. In the case of coarse-grained \CFI we required that they
 match but for fine-grained \CFI we require that they are in the \CFG
 relation.
-
-% \begin{figure}[!htpb]
-% \begin{align}
-%  & (Jump/Jal, -,-, -, -, -) \rightarrow (- ,-)
-%  \text{ if (n,m) } \in \CFGm \label{fine_rule1} \tag{1} \\
-%  & (Jump/Jal, \DATA, \INSTR{m}, -, -, -) \rightarrow (\INSTR{m},-)
-%  \text{ if (n,m) } \in \CFGm \label{fine_rule2} \tag{2} \\
-%  & (Store, \DATA, \INSTR{\_}, -, -, \DATA) \rightarrow (\DATA,\DATA)
-%  \label{fine_rule3} \tag{3} \\
-%  & (Store, \INSTR{n}, \INSTR{m}, -, -, \DATA) \rightarrow (\DATA,\DATA)
-%  \text{ if (n,m) } \in \CFGm \label{fine_rule4} \tag{4} \\
-%  & (Store, -, -, -, -, \INSTR{\_}) \rightarrow \varnothing
-%   \label{fine_rule5} \tag{5} \\
-%  & (-, \INSTR{n}, \INSTR{m}, -, -, -) \rightarrow (\DATA,-)
-%  \text{ if (n,m) } \in \CFGm \label{fine_rule6} \tag{6} \\
-%  & (-, \DATA, \INSTR{m}, -, -, -) \rightarrow (\DATA,-) \label{fine_rule7}
-%  \tag{7}\\
-%  & (-, -, -, -, -, -) \rightarrow \varnothing \label{fine_rule8}
-%  \tag{8}
-% \end{align}
-% \caption{Rules enforcing fine-grained \CFI, \NXD and \NWC}
-% \end{figure}
 
 \begin{figure}[htb!]
 \infrule[Flow/Check]{

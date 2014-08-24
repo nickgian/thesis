@@ -21,14 +21,14 @@ machine. As a result the proof effort required, was considerably
 reduced, as we essentially had to do most of our reasoning at the
 Symbolic level.
 
-The reusable nature of our preservation theorem led us to add one more
-level of abstraction, by providing an Abstract machine that has \CFI
-by construction and therefore a trivial proof of the \CFI property.
-We proved a 1-backward simulation between the Symbolic and the
-Abstract machine, which allowed us to invoke the preservation theorem
-in order to transfer the \CFI property from the Abstract to the
-Symbolic machine and consequently to the Concrete machine by invoking
-the preservation theorem for a second time.
+The reusable nature of our preservation theorem allowed us to use the
+Symbolic machine as an intermediate step between an Abstract machine
+that has \CFI by construction and therefore a trivial proof of the
+\CFI property.  We proved a 1-backward simulation between the Symbolic
+and the Abstract machine, which allowed us to invoke the preservation
+theorem in order to transfer the \CFI property from the Abstract to
+the Symbolic machine and consequently to the Concrete machine by
+invoking the preservation theorem for a second time.
 
 Finally, we prove a 1-forward simulation between the Abstract and the
 Symbolic machine and thus have a complete two-way refinement between
@@ -440,7 +440,7 @@ of the monitor service is only allowed if the \ok bit is set to true.
 \caption{Step rule for monitor services of abstract machine}
 \end{figure}
 
-\TODO{Put all rules in appendix?}\ch{Yes, or even here in a large figure}
+\TODO{put all rules here in a large figure}
 
 \subsection{Attacker model}\label{sec:abstract_attacker}
 
@@ -453,8 +453,9 @@ but not the rest of the state.
   \ii{dom}~\dmem = \ii{dom}~\dmem' \andalso
   \ii{dom}~\reg = \ii{dom}~\reg'
 }{
-  \acfistat{\imem}{\dmem}{\reg}{\pc}{\ok} \to_a^A
-  \acfistat{\imem}{\dmem'}{\reg'}{\pc}{\ok}
+  \stepa{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ok}}
+  {\acfistat{\imem}{\dmem'}{\reg'}{\pc}{\ok}}
+  {A}
 }
 \caption{Attacker model for the abstract machine}
 \end{figure}
@@ -468,7 +469,7 @@ instructions, by extending the set of allowed jumps \CFG we
 introduced earlier.
 
 Below we give a specification of the \SUCC{A} function for the abstract machine,
-in \chrev{the} form of inference rules.
+in the form of inference rules.
 A function is defined in the actual Coq development.
 
 \begin{figure}[ht]
@@ -694,13 +695,6 @@ Definition cfi_handler (ivec : Symbolic.IVec cfi_tags) :
   | mkIVec _ _ _ _ => None
   end.
 \end{lstlisting}
-\TODO{Should I remove the aggressive capitilization above?
-It may make it less painful on the eye...
-Thanks to dependent types it also looks super ugly too,
-probably make it pseudo-code at some point
-}
-\nick{simplified the above to be closer to the rest of the document
-and avoid all the dependent type magic/hackery}
 
 Although, the rules in \cref{sec:cfi_fine} were fairly simply,
 expressing them using Gallina's pattern matching increased their
@@ -715,9 +709,9 @@ functions to agree and although for small definitions like the one
 above, testing or manually reviewing the code will reveal most if not
 all bugs, the importance of formal verification in software
 engineering and critical software is made obvious even for definitions
-that may seem trivial at first. The correctness of the transfer
-function will come from simulation proofs between the abstract and the
-symbolic machine.
+that may seem trivial at first. Eventually the correctness of the
+transfer function will come from the two-way simulation proofs between
+the abstract and the symbolic machine.
 
 \subsection{Attacker model}\label{sec:symbolic_attacker}
 
@@ -737,7 +731,6 @@ the following relations:
 
 These attacker capabilities on symbolic atoms are lifted to
 the memory and registers by a pointwise extension.
-\TODO{be more specific about pointwise?}
 
 \begin{figure}[htbp]
 \infrule{
@@ -930,7 +923,9 @@ both normal and attacker steps. This means that every step of the
 symbolic machine can be matched by one step of the abstract machine.
 Additionally we prove a 1-forward simulation for normal steps,
 which means that every step of the abstract machine can be matched
-by one on the symbolic machine.
+by one on the symbolic machine. Intuitively the above theorems show
+that the symbolic machine precisely emulates all behaviors of
+the abstract machine.
 
 \TODO{Could use some help on improving the text above}
 
@@ -1818,16 +1813,16 @@ along with the simulation proofs of
 \cref{sec:refinement_SA,sec:refinement_CS}, in order to prove \CFI
 (\cref{cfi}) for the concrete machine.
 
-The statement of the theorem is parameterized by two machines that are
-instances of cfi\_machine (\cref{cfi_machine}).  Moreover, we require
-that a $\lbrace 0,1 \rbrace$-backward simulation between the two
-machines, holds for normal steps and a 1-backward simulation for
-attacker steps.  The $\lbrace 0,1 \rbrace$ simulation for normal
-steps, stems from the fact that the steps of the concrete machine in
-monitor mode are not matched by any steps on the symbolic (or the
-abstract) level. We generalize this, by a notion of \emph{checked
-  steps} on the steps of the low-level machine.  Intuitively we only
-check for control-flow violations when a checked step is taken.
+The statement of the theorem is parameterized by two \CFI machines
+(\cref{cfi_machine}. Moreover, we require that a $\lbrace 0,1
+\rbrace$-backward simulation between the two machines, holds for
+normal steps and a 1-backward simulation for attacker steps.  The
+$\lbrace 0,1 \rbrace$ simulation for normal steps, stems from the fact
+that the steps of the concrete machine in monitor mode are not matched
+by any steps on the symbolic (or the abstract) level. We generalize
+this, by a notion of \emph{checked steps} on the steps of the
+low-level machine. Intuitively we only check for control-flow
+violations when a checked step is taken.
 
 We require a strong 1-backward simulation for checked steps and
 a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
@@ -1889,44 +1884,58 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
           (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
         \end{tikzpicture}
       \end{center}
-      \caption{1-backward simulation for attacker\ch{Nice diagrams,
-               but the text is too small for the a and n on the arrows}}
+      \caption{1-backward simulation for attacker}
     \end{figure}
     \bigskip
   \end{minipage}
 \end{minipage}
 
-The class machine\_refinement captures the above specifications.
+Formally we capture the above specifications with the following definitions:
 
-\lstheader{machine_refinement}{Interface of machine\_refinement\ch{
-  Wouldn't this look better in LaTeX than in Coq?}}
-Variable amachine : cfi_machine. (*high-level machine*)
-Variable cmachine : cfi_machine. (*low-level machine*)
+\begin{definition}[$\lbrace 0,1\rbrace$-Backward Simulation for normal steps]
+\label{backward_simulation_preservation}
+  For all states $s^H_1$ of the high-level machine and $s^L_1, s^L_2$ of
+  the low-level machine, such that $s^H_1 \sim s^L_1$ and $s^L_1 \to_n s^L_2$
+  with a checked step, there exists $s^H_2$ such that,
+  $s^H_2 \sim s^L_2$ and \stepn{s^H_1}{s^H_2}.
+  If $s^L_1 \to_n s^L_2$ is an unchecked step then either the same as above
+  holds or $s^H_1 \sim s^L_2$.
+\end{definition}
 
-(* General notion of refinement between two machines*)
-Class machine_refinement
-  (amachine : cfi_machine) (cmachine : cfi_machine) := {
-    refine_state : (@state amachine) -> (@state cmachine) -> Prop;
+\begin{definition}[1-Backward Simulation for attacker steps]
+\label{backward_simulation_a_preservation}
+  \Cref{simulation_LH} holds for attacker steps.
+\end{definition}
 
-    check : (@state cmachine) -> (@state cmachine) -> bool;
+% \lstheader{machine_refinement}{Interface of machine\_refinement\ch{
+%   Wouldn't this look better in LaTeX than in Coq?}}
+% Variable amachine : cfi_machine. (*high-level machine*)
+% Variable cmachine : cfi_machine. (*low-level machine*)
 
-    backward_refinement_normal :
-      forall ast cst cst'
-        (REF: refine_state ast cst)
-        (STEP: step cst cst'),
-        (check cst cst' = true ->
-        exists ast', step ast ast' /\ refine_state ast' cst')
-        /\ (check cst cst' = false ->
-             refine_state ast cst' \/
-             exists ast', step ast ast' /\ refine_state ast' cst');
+% (* General notion of refinement between two machines*)
+% Class machine_refinement
+%   (amachine : cfi_machine) (cmachine : cfi_machine) := {
+%     refine_state : (@state amachine) -> (@state cmachine) -> Prop;
 
-    backward_refinement_attacker :
-      forall ast cst cst'
-        (REF: refine_state ast cst)
-        (STEPA: step_a cst cst'),
-        exists ast', step_a ast ast' /\ refine_state ast' cst'
-}.
-\end{lstlisting}
+%     check : (@state cmachine) -> (@state cmachine) -> bool;
+
+%     backward_refinement_normal :
+%       forall ast cst cst'
+%         (REF: refine_state ast cst)
+%         (STEP: step cst cst'),
+%         (check cst cst' = true ->
+%         exists ast', step ast ast' /\ refine_state ast' cst')
+%         /\ (check cst cst' = false ->
+%              refine_state ast cst' \/
+%              exists ast', step ast ast' /\ refine_state ast' cst');
+
+%     backward_refinement_attacker :
+%       forall ast cst cst'
+%         (REF: refine_state ast cst)
+%         (STEPA: step_a cst cst'),
+%         exists ast', step_a ast ast' /\ refine_state ast' cst'
+% }.
+% \end{lstlisting}
 
 From these relations on single steps, we can build a refinement
 relation on execution traces. We define this trace refinement relation
@@ -1963,6 +1972,7 @@ Inductive refine_traces :
     refine_traces (ast' :: axs) (cst' :: cxs) ->
     refine_traces (ast :: ast' :: axs) (cst :: cst' :: cxs).
 \end{lstlisting}
+\TODO{make these inference rules}
 
 In \cref{refine_traces} we distinguish between three separate cases,
 from which we may build two traces that are in refinement.
@@ -1993,8 +2003,9 @@ $s^L_2$ cannot be a normal step. Intuitively this is used to enforce
 that if a step is in the intersection of the normal and attacker step
 relations, one should prefer the normal step to build the trace.
 
-We can now extend the backward refinements of \cref{machine_refinement}
-to whole execution traces which we relate with refine\_traces.
+We can now extend the backward refinement
+\cref{backward_simulation_preservation,backward_simulation_a_preservation}
+to whole execution traces which we relate with \cref{refine_traces}.
 
 \begin{theorem}[Trace Backward Refinement]
   \label{backward_refinement_traces}
@@ -2050,47 +2061,47 @@ stopping trace for the low-level machine.
 
 Again we create an interface for these assumptions using type-classes.
 
-\lstheader{machine_refinement_specs}{Assumptions under which CFI preservation holds}
+% \lstheader{machine_refinement_specs}{Assumptions under which CFI preservation holds}
 
-Class machine_refinement_specs := {
+% Class machine_refinement_specs := {
 
-  step_classic : forall (cst cst': @state cmachine),
-    (step cst cst') \/ (~step cst cst');
+%   step_classic : forall (cst cst': @state cmachine),
+%     (step cst cst') \/ (~step cst cst');
 
-  initial_refine : forall (cst : @state cmachine),
-    initial cst ->
-    exists (ast : @state amachine), initial ast /\ refine_state ast cst;
+%   initial_refine : forall (cst : @state cmachine),
+%     initial cst ->
+%     exists (ast : @state amachine), initial ast /\ refine_state ast cst;
 
-  cfg_nocheck : forall asi csi csj,
-    refine_state asi csi ->
-    step csi csj ->
-    check csi csj = false ->
-    succ csi csj = true;
+%   cfg_nocheck : forall asi csi csj,
+%     refine_state asi csi ->
+%     step csi csj ->
+%     check csi csj = false ->
+%     succ csi csj = true;
 
-  cfg_equiv : forall (asi asj : @state amachine) csi csj,
-    refine_state asi csi ->
-    refine_state asj csj ->
-    step asi asj ->
-    check csi csj = true ->
-    step csi csj ->
-    succ csi csj = succ asi asj;
+%   cfg_equiv : forall (asi asj : @state amachine) csi csj,
+%     refine_state asi csi ->
+%     refine_state asj csj ->
+%     step asi asj ->
+%     check csi csj = true ->
+%     step csi csj ->
+%     succ csi csj = succ asi asj;
 
-  av_no_attacker : forall (asi asj : @state amachine) csi,
-    refine_state asi csi ->
-    succ asi asj = false ->
-    step asi asj ->
-    ~ step_a asi asj;
+%   av_no_attacker : forall (asi asj : @state amachine) csi,
+%     refine_state asi csi ->
+%     succ asi asj = false ->
+%     step asi asj ->
+%     ~ step_a asi asj;
 
-  as_implies_cs : forall axs cxs asi asj csi csj,
-    check csi csj = true ->
-    succ asi asj = false ->
-    step asi asj ->
-    refine_state asi csi ->
-    refine_traces (asj :: axs) (csj :: cxs) ->
-    stopping (asj :: axs) ->
-    stopping (csj :: cxs)
-}.
-\end{lstlisting}
+%   as_implies_cs : forall axs cxs asi asj csi csj,
+%     check csi csj = true ->
+%     succ asi asj = false ->
+%     step asi asj ->
+%     refine_state asi csi ->
+%     refine_traces (asj :: axs) (csj :: cxs) ->
+%     stopping (asj :: axs) ->
+%     stopping (csj :: cxs)
+% }.
+% \end{lstlisting}
 
 Under these assumptions we can now obtain a preliminary result about
 our \CFI definitions.
@@ -2140,11 +2151,12 @@ also has \CFI.
   \end{itemize}
 \end{proof}
 
-We have now proved that the $\lbrace 0,1 \rbrace$-backward simulation
-of \cref{machine_refinement} preserves the \CFI property of execution
-traces. We will use this preliminary result to prove that this
-backward simulation also preserves the \CFI property of machines
-described by \cref{cfi}.
+We have now proved that a $\lbrace 0,1 \rbrace$-backward simulation
+for normal steps and a 1-backward simulation for attacker steps as per
+\cref{backward_simulation_preservation,backward_simulation_a_preservation}
+preserves the \CFI property of execution traces. We will use this
+preliminary result to prove that these backward simulations also
+preserve the \CFI property as described by \cref{cfi}.
 
 We start with an auxiliary lemma that states that if there is a trace
 refinement between a high-level trace and a low-level trace and then
@@ -2268,23 +2280,19 @@ the high-level trace at the step that violates the control-flow.
 
 \begin{lemma}[Refine Traces Split]
 \label{refine_traces_split}
-\renewcommand{\baselinestretch}{1.25}\normalsize
-If the traces $s^H_0 \to \ldots \to s^H_n$ (referred to as $tr^H$) and $s^L_0 \to
-\ldots \to s^L_m$ (referred to as $tr^L$) are in refinement and there is a splitting
-of the high-level trace such that $tr^H = tr^H_{hd} ~ ++ ~ s^H_{u1}
-~ :: ~ s^H_{u2} ~ ++ ~ tr^H_{tl}$ and additionally $s^H_{u1} \to_n s^H_{u2}$
-and $(s^H_{u1},s^H_{u2}) \not \in \SUCCm{H}$, then there exists a
-splitting of the low-level trace such that $tr^L = tr^L_{hd} ~ ++ ~
-s^L_{u1} ~ :: ~ s^L_{u2} ~ ++ ~ tr^L_{tl}$, the traces $tr^H_{hd} ~ ++ ~
-[s^H_{u1}]$ and $tr^L_{hd} ~ ++ ~ [s^L_{u1}]$ are in refinement, the
-traces $s^H_{u2} ~ :: ~ tr^H_{tl}$ and $s^L_{u2} ~ :: ~ tr^L_{tl}$ are in
-refinement, $s^H_{u1} \sim s^L_{u1}$, $s^H_{u2} \sim s^L_{u2}$ and
-$s^L_{u1} \to_n s^L_{u2}$.
+\renewcommand{\baselinestretch}{1.25}\normalsize If the traces $s^H_0
+\to \ldots \to s^H_n$ (referred to as $tr^H$) and $s^L_0 \to \ldots
+\to s^L_m$ (referred to as $tr^L$) are in refinement and there is a
+splitting of the high-level trace such that $tr^H = tr^H_{hd} \cdot
+s^H_{u1} \cdot s^H_{u2} \cdot tr^H_{tl}$ and additionally $s^H_{u1}
+\to_n s^H_{u2}$ and $(s^H_{u1},s^H_{u2}) \not \in \SUCCm{H}$, then
+there exists a splitting of the low-level trace such that $tr^L =
+tr^L_{hd}  \cdot  s^L_{u1}  \cdot  s^L_{u2}  \cdot  tr^L_{tl}$, the
+traces $tr^H_{hd}  \cdot  s^H_{u1}$ and $tr^L_{hd}  \cdot  s^L_{u1}$
+are in refinement, the traces $s^H_{u2}  \cdot  tr^H_{tl}$ and
+$s^L_{u2}  \cdot  tr^L_{tl}$ are in refinement, $s^H_{u1} \sim
+s^L_{u1}$, $s^H_{u2} \sim s^L_{u2}$ and $s^L_{u1} \to_n s^L_{u2}$.
 \end{lemma}
-\ch{The $x ++ y$ above looks horrible for math notation;
-  at the very least you should use $x \mathrel{++} y$,
-  but maybe come with better notation, like $\cdot$ for
-  both cons and append?}
 
 Combining
 \cref{refine_traces_preserves_trace_has_cfi,refine_traces_split} we
@@ -2294,11 +2302,11 @@ can now prove that $\lbrace 0,1 \rbrace$-backward simulation preserves
 \begin{theorem}[CFI Preservation]
 \label{backward_refinement_preserves_cfi}
 If a low-level machine simulates (as defined by
-\cref{machine_refinement}) a high-level machine and the high-level
-machine has \CFI then the low-level machine also has \CFI under the
-assumptions \labelcref{machine_refinement_specs}.
+\cref{backward_simulation_preservation,backward_simulation_a_preservation})
+a high-level machine and the high-level machine has \CFI then the
+low-level machine also has \CFI under the assumptions
+\labelcref{step_classic,initial_refine,cfg_nocheck,cfg_equiv,av_no_attacker,as_implies_cs}.
 \end{theorem}
-\TODO{informal proof?}
 
 \subsection{CFI proof for the Symbolic Machine}
 \label{sec:symbolic_proof}
@@ -2307,14 +2315,17 @@ To prove \CFI for the symbolic machine, we instantiate the
 preservation theorem of \cref{sec:cfi_preservation} with the abstract
 machine as the high-level machine and the symbolic machine as the
 low-level machine. For the symbolic machines all steps are considered
-checked. Instantiating class \labelcref{machine_refinement} with the
-symbolic and abstract machines is trivial by using the 1-backward simulation
-for both normal and attacker steps from \cref{sec:refinement_SA}.
+checked. Proving
+\cref{backward_simulation_preservation,backward_simulation_a_preservation}
+for the symbolic (low-level) and abstract (high-level) machines is
+trivial by using the 1-backward simulation for both normal and
+attacker steps from \cref{sec:refinement_SA}.
 
 The only thing left to prove before being able to use the \CFI
-preservation theorem is that the
-assumptions \labelcref{machine_refinement_specs} hold when
-instantiated with the symbolic and abstract machines.
+preservation theorem is that the required
+assumptions 
+\labelcref{step_classic,initial_refine,cfg_nocheck,cfg_equiv,av_no_attacker,as_implies_cs}
+hold for this instantiation.
 
 \paragraph{Lifting preservation assumptions for Symbolic-Abstract machines}
 
@@ -2363,7 +2374,7 @@ instantiated with the symbolic and abstract machines.
 \end{lemma}
 \begin{proof}
   The proof is mostly straight-forward by case analysis on the
-  opcode of the instruction.
+  instruction.
 \end{proof}
 
 \begin{lemma}[No Abstract Attacker Steps on Violation]
@@ -2451,18 +2462,17 @@ machine.
 For this we instantiate the preservation theorem with symbolic machine
 as the high-level machine and the concrete as the low-level machine. A
 step is considered checked only if both states forming the step are in
-user mode. Instantiating the machine\_refinement class
-(\labelcref{machine_refinement}) in this case is not as
-straight-forward as before due to the fact that we have unchecked
-steps as well, but we can still take advantage of the $\lbrace 0,1
-\rbrace$-backward simulation (\cref{backward_simulation_CS}) provided
-by the micro-policies framework. We use $\sim_{CS}$ as the refinement
-relation.
+user mode. Providing a $\lbrace 0,1 \rbrace$-backward simulation for
+normal steps in this case is not as straight-forward as before due to
+the fact that we have unchecked steps as well, but we can still take
+advantage of the $\lbrace 0,1 \rbrace$-backward simulation
+(\cref{backward_simulation_CS}) provided by the micro-policies
+framework. We use $\sim_{CS}$ as the refinement relation.
 
 \begin{theorem}[Backward Refinement Normal]
 \label{backward_refinement_normal_CS}
-  Backward refinement holds for the concrete-symbolic instance
-  of \labelcref{machine_refinement}.
+ \Cref{backward_simulation_preservation} holds when instantiated
+ with the Concrete (low-level) and the Symbolic (high-level) machine.
 \end{theorem}
 \begin{proof}
   For a normal step (\stepn{s^C_1}{s^C_2}) of the concrete machine and
@@ -2472,7 +2482,7 @@ relation.
   \begin{enumerate}
   \item $s^C_1$ and $s^C_2$ are user states. In this case the step is
     checked and by the second case of \cref{backward_simulation_CS} we obtain
-    the 1-backward simulation required by \labelcref{machine_refinement}.
+    the 1-backward simulation required.
   \item $s^C_1$ is a user state and $s^C_2$ is a monitor state. In this case
     the step is unchecked and the symbolic machine does not take a step.
     We prove that the simulation relation ($sim_{CS}$) is preserved by
@@ -2529,8 +2539,8 @@ hold for this instantiation of the preservation theorem.
   \Cref{cfg_equiv} holds for the Concrete-Symbolic machines.
 \end{lemma}
 \begin{proof}
-  The proof proceeds by case analysis on the type
-  of instruction. \nick{this one is not too hard, long and ugly to list..}
+  The proof proceeds by case analysis on the instruction. \nick{this
+    one is not too hard, long and ugly to list..}
 \end{proof}
 
 \begin{lemma}[No Symbolic Attacker Steps on Violation]
