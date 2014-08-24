@@ -75,4 +75,39 @@ VST and compcert?}
 % enable the re-use of existing verification frameworks in order
 % to verify its correctness.
 
-\subsection{Call-Stack Protection/ XFI}
+\subsection{Call-Stack Protection}
+
+\CFI enforces that the execution path of a program follows a
+pre-computed, \textit{static} control-flow graph. Thus it cannot
+enforce that a function returns to the original callsite it was called
+from. We can increase the precision of \CFI on returns, by using a
+protected call-stack. This is the approach taken in \cite{AbadiBEL09} in
+order to increase precision on returns.
+
+We believe that we can use the micro-policies mechanism to enforce a
+calling convention and increase the precision of the \CFI
+micro-policy. This would certainly include reserving a part of the
+memory as a call-stack and protecting it in a fashion similar (but
+stronger) to the \NWC micro-policy. We then have to populate this
+protected call-stack in a meaningful way. We have not yet concluded on
+an efficient and effective way to do this although we have studied a
+few options. One rather crude approach to this would be to use tags
+and rules to enforce that suitable book-keeping instructions,
+manipulating the call-stack, are executed before and after each
+call. This would most probably have the desired effectiveness, however
+it may be too restrictive in some contexts. A more elegant solution
+would be to use the tag on the \pc, the tag on the ra register and the
+tags on the protected call-stack part of the memory, to store suitable
+meta-data (\EG call depth) in order to determine whether a return
+should be allowed or not.
+
+Concerning the formal verification of such a micro-policy, an
+ambitious goal would be to prove refinement between the concrete
+machine running a dynamic monitor for call-stack protection and
+an abstract machine with a separate protected-call stack. This however,
+would result in a complex refinement relation due to the fact that
+the concrete machine would have to execute some book-keeping instructions
+which the abstract machine would not.
+
+
+

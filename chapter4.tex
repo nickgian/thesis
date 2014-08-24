@@ -1,47 +1,41 @@
 \chapter{Formally Verified Control-Flow Integrity Micro-Policy}
 \label{ch:verified_cfi}
 
-\ch{Btw, you should remind the reader that everything in this chapter
-  was formalized in Coq, and the development is available upon request
-  or whatever we might even make it public before you submit.}
 \nick{rephrased the intro, old one in comment. Still needs some iterations.}
 
-In this chapter we develop our main results. In particular, we used
-Coq to prove a property capturing the notion of \CFI, similar to what
-was proposed by Abadi \ETAL in \cite{AbadiBEL09}, for the concrete
-machine running monitor code that implements the micro-policy of
-\cref{sec:cfi_fine}. 
+In this chapter we develop our main results. In particular, we prove a
+property capturing the notion of \CFI, similar to what was proposed by
+Abadi \ETAL in \cite{AbadiBEL09}, for the concrete machine running
+monitor code that implements the micro-policy of \cref{sec:cfi_fine}.
 
 In order to obtain this result we propose a generic preservation
 theorem that states that the \CFI property is preserved, under certain
 assumptions, by $\lbrace 0,1 \rbrace$-backward simulation. This
 allowed us to structure our proofs in a modular way and to avoid a
 direct - and several times more complex - proof of \CFI on the
-concrete machine. Furthermore this preservation theorem, allowed us to
-obtain a proof for \CFI for the Concrete machine by using the
-micro-policies framework of \cref{sec:framework} in order to easily
-obtain a $\lbrace 0,1 \rbrace$-backward simulation between the
-Concrete and the Symbolic machine. As a result the proof effort
-required, was considerably reduced, as we essentially had to do most
-of our reasoning at the Symbolic machine level.
+concrete machine. Furthermore it allowed us to obtain a proof for \CFI
+for the Concrete machine by leveraging the micro-policies framework of
+\cref{sec:framework} in order to easily obtain a $\lbrace 0,1
+\rbrace$-backward simulation between the Concrete and the Symbolic
+machine. As a result the proof effort required, was considerably
+reduced, as we essentially had to do most of our reasoning at the
+Symbolic level.
 
 The reusable nature of our preservation theorem led us to add one more
 level of abstraction, by providing an Abstract machine that has \CFI
-by construction and therefore the proof of the \CFI property for this
-Abstract machine is trivial. Additionally we proved a 1-backward
-simulation between the Symbolic and the Abstract machine, which
-allowed us to invoke the generic preservation theorem in order to
-transfer the \CFI property from the Abstract to the Symbolic machine
-and consequently to the Concrete machine by invoking the preservation
-theorem for a second time.
+by construction and therefore a trivial proof of the \CFI property.
+We proved a 1-backward simulation between the Symbolic and the
+Abstract machine, which allowed us to invoke the preservation theorem
+in order to transfer the \CFI property from the Abstract to the
+Symbolic machine and consequently to the Concrete machine by invoking
+the preservation theorem for a second time.
 
-Finally, in addition to the easily obtainable backward refinement between
-the Concrete and the Abstract machine, we prove a 1-forward
-simulation between the Abstract and the Symbolic machine. These refinement
-proofs provide us with additional assurance in the correctness of
-our micro-policy.
+Finally, we prove a 1-forward simulation between the Abstract and the
+Symbolic machine and thus have a complete two-way refinement between
+the Concrete and the Abstract machine. These refinement proofs provide
+us with additional assurance in the correctness of our micro-policy.
 
-\nick{mention in the end (here) that our proofs can be found somewhere?}
+\nick{mention in the end (here) that our proofs can be found somewhere}
 
 % We proved in Coq that the concrete machine running monitor code that
 % implements the micro-policy of \cref{sec:cfi_fine} Using the
@@ -76,7 +70,7 @@ our micro-policy.
   \begin{center}
     \begin{tikzpicture}
       [machine/.style={rectangle,draw=teal!80,text=black,very thick,minimum height=1cm},
-       cfi/.style={rectangle,draw,thick,dashed,draw=teal!80,text=black},
+       cfi/.style={rectangle,draw,thick,draw=teal!80,text=black,fill=teal!10},
        >=stealth]
 
       % abstract
@@ -84,16 +78,16 @@ our micro-policy.
 
       % symbolic-rule
       \node (symbolic label) [below=2.5cm of abstract] {Symbolic Machine};
-      \node [rectangle,draw,dashed,-,thick,fill=teal!20,rounded corners]
+      \node [rectangle,draw,thick,fill=teal!20,rounded corners]
             (symbolic rules) [right=of symbolic label] {CFI Micro-Policy};
       \begin{pgfonlayer}{background}
-        \node [machine,fill=teal!10,fit={(symbolic label) (symbolic rules)}]
+        \node [machine,dashed,fill=teal!10,fit={(symbolic label) (symbolic rules)}]
               (symbolic) {};
       \end{pgfonlayer}
-      \node [cfi,dashed,right=of symbolic,fill=teal!10] (symbolic cfi) {CFI Property};
+      \node [cfi,right=of symbolic] (symbolic cfi) {CFI Property};
 
       %abstract cfi
-      \node [cfi,fill=teal!10] (abstract cfi)  at (abstract -| symbolic cfi) {CFI Property};
+      \node [cfi] (abstract cfi)  at (abstract -| symbolic cfi) {CFI Property};
       \draw [thick] (abstract) to (abstract cfi);
 
       %symbolic cfi
@@ -106,13 +100,13 @@ our micro-policy.
       % concrete
       \node (concrete label) [below=2.5cm of symbolic label] {Concrete
         Machine};
-      \node [rectangle,draw,dashed,thick,-,fill=teal!20,rounded corners]
+      \node [rectangle,draw,thick,fill=red!30,rounded corners]
             (fault handler) [right=of concrete label] {CFI Policy Monitor};
       \begin{pgfonlayer}{background}
-        \node [machine,fill=teal!10,fit={(concrete label) (fault handler)}]
+        \node [machine,dashed,fill=teal!10,fit={(concrete label) (fault handler)}]
               (concrete) {};
       \end{pgfonlayer}
-      \node [cfi,dashed,fill=teal!10] (concrete cfi) at (concrete -| symbolic cfi) {CFI Property};
+      \node [cfi] (concrete cfi) at (concrete -| symbolic cfi) {CFI Property};
       % \draw [thick,dashed] (concrete) to (concrete cfi);
 
       \draw [<->,thick]
@@ -120,7 +114,7 @@ our micro-policy.
             -- node [left] {Simulates}
             (abstract.center |- symbolic.north);
 
-      \draw [<->,thick]
+      \draw [<->,thick,dashed]
             (abstract.center |- symbolic.south)
             -- node [left] {Simulates}
             (abstract.center |- concrete.north);
@@ -130,109 +124,116 @@ our micro-policy.
               (symbolic cfi)
               to[] node [right] {Preserved}
               (concrete cfi);
+
+      % \draw [draw=red!60,thick,->]
+      %       (symbolic rules.center |- symbolic rules.south)
+      %       -- node [right] {Compiled to}
+      %        (symbolic rules.center |- fault handler.north);
     \end{tikzpicture}
   \end{center}
-\caption{Diagram explaining proof structure\ch{This diagram would
-  already be very useful in the intro}}
+\caption{Diagram explaining proof structure}
 \label{proof_structure}
 \end{figure}
 
-\TODO{Think about labels, what should be dashed and not and how to improve diagram.}
+\Cref{proof_structure} visualizes our proof structure.
+Dashes correspond to theorems and definitions provided by
+the micro-policies framework, red colored objects correspond
+to assumptions we make and the rest to our proofs and definitions.
 
-\section{Representing control-flow graphs}\label{sec:cfi_tags}
+% \section{Representing control-flow graphs}\label{sec:cfi_tags}
 
-Our approach for enforcing \CFI, as explained in \cref{sec:cfi_fine},
-requires that we encode the nodes in the control-flow graph in terms
-of identifiers, which in turn are used to tag all sources and targets
-of indirect control-flows.\ch{Give the main idea first, before
-  going into the gory details: we
-  represent a graph as a characteristic function: id to id to bool}
+% Our approach for enforcing \CFI, as explained in \cref{sec:cfi_fine},
+% requires that we encode the nodes in the control-flow graph in terms
+% of identifiers, which in turn are used to tag all sources and targets
+% of indirect control-flows.\ch{Give the main idea first, before
+%   going into the gory details: we
+%   represent a graph as a characteristic function: id to id to bool}
 
-\ch{I'm starting to wonder whether the level of Coqiness in this
-  subsection is in any way justified. To me it seems like super low
-  level details that nobody will ever care about, and which are not
-  used in any way by the informal statements that follow. So I think
-  that this whole section could be shrunk to the definition of the id
-  to id to bool function, where id a sub-word that's defined somehow
-  in Coq, we don't care, but then it doesn't need to be a section of
-  it's own, but a little note right before you use the cfg the first
-  time. On a similar note, I would remove context annotations with cfi\_id
-  from the other Coq listings.}
+% \ch{I'm starting to wonder whether the level of Coqiness in this
+%   subsection is in any way justified. To me it seems like super low
+%   level details that nobody will ever care about, and which are not
+%   used in any way by the informal statements that follow. So I think
+%   that this whole section could be shrunk to the definition of the id
+%   to id to bool function, where id a sub-word that's defined somehow
+%   in Coq, we don't care, but then it doesn't need to be a section of
+%   it's own, but a little note right before you use the cfg the first
+%   time. On a similar note, I would remove context annotations with cfi\_id
+%   from the other Coq listings.}
 
-\ch{To express identifiers in Coq ...}%
-At this point we take a detour, to point out an important design point
-of the micro-policies framework and our \CFI micro-policy.  Throughout
-both developments, a heavily parametric and modular approach was
-taken. This parametric design is enabled by the use of the
-\emph{Section} and \emph{Type Classes} mechanisms of Coq. As an
-example, the node identifiers, along with a number of properties we
-require of them are expressed by the following interface (defined in
-terms of a type class):
+% \ch{To express identifiers in Coq ...}%
+% At this point we take a detour, to point out an important design point
+% of the micro-policies framework and our \CFI micro-policy.  Throughout
+% both developments, a heavily parametric and modular approach was
+% taken. This parametric design is enabled by the use of the
+% \emph{Section} and \emph{Type Classes} mechanisms of Coq. As an
+% example, the node identifiers, along with a number of properties we
+% require of them are expressed by the following interface (defined in
+% terms of a type class):
 
-\lstheader{id_class}{Interface of node identifiers}
-Context {t : machine_types}.
+% \lstheader{id_class}{Interface of node identifiers}
+% Context {t : machine_types}.
 
-Class cfi_id := {
-  id         : eqType;
+% Class cfi_id := {
+%   id         : eqType;
 
-  word_to_id : word t -> option id;
-  id_to_word : id -> word t;
+%   word_to_id : word t -> option id;
+%   id_to_word : id -> word t;
 
-  id_to_wordK : forall x, word_to_id (id_to_word x) = Some x;
-  word_to_idK : forall w x, word_to_id w = Some x -> id_to_word x = w
+%   id_to_wordK : forall x, word_to_id (id_to_word x) = Some x;
+%   word_to_idK : forall w x, word_to_id w = Some x -> id_to_word x = w
 
-}.
-\end{lstlisting}
+% }.
+% \end{lstlisting}
 
-The \emph{Context} command on the top of the code above, allows us to
-\textit{assume} that there exists an instance of this interface.
-In fact, the \emph{machine\_types} argument is just another type class,
-serving as a specification of the various types of the machine (\EG the word
-size). This approach allowed us to abstract away from various details and
-structure our proofs in a clean way.
-In addition, we can easily instantiate a different machine with minimal changes
-in our proofs and definitions (\EG instantiate the machine with a different word
-size).
+% The \emph{Context} command on the top of the code above, allows us to
+% \textit{assume} that there exists an instance of this interface.
+% In fact, the \emph{machine\_types} argument is just another type class,
+% serving as a specification of the various types of the machine (\EG the word
+% size). This approach allowed us to abstract away from various details and
+% structure our proofs in a clean way.
+% In addition, we can easily instantiate a different machine with minimal changes
+% in our proofs and definitions (\EG instantiate the machine with a different word
+% size).
 
-However, one drawback is that one wrong specification in a type class would
-disallow us to instantiate it and would require that we go back and change
-all parts that used this wrong specification (\EG in our case, the
-\emph{cfi\_id} class was widely used). Therefore one should be careful
-when doing heavy use of such mechanisms.
+% However, one drawback is that one wrong specification in a type class would
+% disallow us to instantiate it and would require that we go back and change
+% all parts that used this wrong specification (\EG in our case, the
+% \emph{cfi\_id} class was widely used). Therefore one should be careful
+% when doing heavy use of such mechanisms.
 
-Returning to the identifiers, looking at the definition in \cref{id_class},
-we require that the type of the identifiers \id is an Eqtype (has decidable
-boolean equality) and that there exists conversion functions between elements
-of type \word and \id, satisfying some constraints.
+% Returning to the identifiers, looking at the definition in \cref{id_class},
+% we require that the type of the identifiers \id is an Eqtype (has decidable
+% boolean equality) and that there exists conversion functions between elements
+% of type \word and \id, satisfying some constraints.
 
-\nick{Should I give some intuition, as to why word\_to\_id is partial? Is it
-obvious?}
+% \nick{Should I give some intuition, as to why word\_to\_id is partial? Is it
+% obvious?}
 
-As mentioned in \cref{sec:cfi_fine}, we check for violations of the
-control-flow with respect to a binary relation (on the identifiers)
-\CFG which represents the set of allowed (indirect) jumps. We can
-extend this relation to precisely describe the control-flow of a
-program, by lifting \CFG to a relation \SUCC{} on machine states, that
-includes the set of allowed targets for the rest of the
-instructions. In our Coq development we assumed a translation of
-the allowed jumps in form of a function on two identifiers.
+% As mentioned in \cref{sec:cfi_fine}, we check for violations of the
+% control-flow with respect to a binary relation (on the identifiers)
+% \CFG which represents the set of allowed (indirect) jumps. We can
+% extend this relation to precisely describe the control-flow of a
+% program, by lifting \CFG to a relation \SUCC{} on machine states, that
+% includes the set of allowed targets for the rest of the
+% instructions. In our Coq development we assumed a translation of
+% the allowed jumps in form of a function on two identifiers.
 
 
-\lstheader{cfg}{Function on ids representing the set of allowed jumps}
-Variable cfg : id -> id -> bool.
-\end{lstlisting}
+% \lstheader{cfg}{Function on ids representing the set of allowed jumps}
+% Variable cfg : id -> id -> bool.
+% \end{lstlisting}
 
-In addition we defined a function valid\_jmp (referred to with the
-notation \J) that expresses the set of allowed jumps between words, by
-using the \emph{word\_to\_id} function.
+% In addition we defined a function valid\_jmp (referred to with the
+% notation \J) that expresses the set of allowed jumps between words, by
+% using the \emph{word\_to\_id} function.
 
-\lstheader{valid_jmp}{Function on words representing the set of allowed jumps}
-Definition valid_jmp w1 w2 :=
-  match word_to_id w1, word_to_id w2 with
-    | Some id1, Some id2 => cfg id1 id2
-    | _, _ => false
-  end.
-\end{lstlisting}
+% \lstheader{valid_jmp}{Function on words representing the set of allowed jumps}
+% Definition valid_jmp w1 w2 :=
+%   match word_to_id w1, word_to_id w2 with
+%     | Some id1, Some id2 => cfg id1 id2
+%     | _, _ => false
+%   end.
+% \end{lstlisting}
 
 \section{Control-Flow Integrity Property}\label{sec:cfi_property}
 
@@ -247,15 +248,27 @@ halt. This does not have any impact on the security effectiveness of our
 mechanism, it does however lead to a more complex definition and therefore
 more complex proofs.
 
-The definition of \CFI is further parameterized by an attacker model. We
-model the attacker as a step relation (\stepa{}{}{}). Intuitively the attacker is
-allowed to change any \emph{user-level} data but not the code of the program and
-the \pc, as well as the tags in the case of a tagged machine.
-This limitations ensures that an attacker cannot directly circumvent the monitor
-protection mechanism and our user-level policies (\NWC , \NXD and \CFI). To
-account for attacker steps, the stepping relation is extended as the union of
-the normal step relation (\stepn{}{}), as defined by the machine semantics, and
-the attacker step relation (\stepa{}{}{}), as defined by the attacker model.
+We draw the identifiers used to tag instructions from a set of
+sub-word sized elements, for which there is a partial conversion
+function to words ($word\_to\_id$).
+We represent the set of allowed indirect jumps, as a characteristic
+function on identifiers ($id \rightarrow id \rightarrow bool$), called
+\CFG. We can extend this relation to precisely describe the
+control-flow of a program, by extending \CFG to a function \SUCC{} on
+machine states, that represents the set of allowed targets for all the
+instructions. 
+
+The definition of \CFI is further parameterized by an attacker
+model. We model the attacker as a step relation
+(\stepa{}{}{}). Intuitively the attacker is allowed to change any
+\emph{user-level} data but not the code of the program and the \pc, as
+well as the tags in the case of a tagged machine.  This limitations
+ensures that an attacker cannot directly circumvent the monitor
+protection mechanism and our user-level policies (\NWC , \NXD and
+\CFI). To account for attacker steps, the stepping relation is
+extended as the union of the normal step relation (\stepn{}{}), as
+defined by the machine semantics, and the attacker step relation
+(\stepa{}{}{}), as defined by the attacker model.
 
 \begin{figure}[htb!]
 \centering
@@ -281,30 +294,25 @@ invariants that are preserved through execution (\EG the initial tagging scheme
 for the memory). Finally we define a stopping predicate on an execution trace
 that states that the machine is coming to a halt with respect to normal steps.
 
-Since we want to instantiate the above parameters in a different way for
-each of our machines, it makes sense to wrap them in a type class which
-we will instantiate for each machine to get the corresponding definition
-of \CFI.
+Collecting the above parameters we can define a generic \CFI machine
+that we will later instantiate with the Abstract, the Symbolic and the
+Concrete machine.
 
-\lstheader{cfi_machine}{Interface of a cfi\_machine}
-Class cfi_machine := {
-  state : Type;
-  initial : state -> Prop;
+\begin{definition}[CFI Machine]
+\label{cfi_machine}
+A \CFI machine is a machine parameterized by, a set of states
+(\textit{S}), an initial state predicate (\textit{initial}), a step
+relation (\stepn{}{}), an attacker step relation (\stepa{}{}{}), a
+function that denotes the allowed control-flows for all instructions
+(\SUCC{}) and a stopping predicate (\textit{stopping}).
+\end{definition}
 
-  step : state -> state -> Prop;
-  step_a : state -> state -> Prop;
-
-  succ : state -> state -> bool;
-  stopping : list state -> Prop
-}.
-\end{lstlisting}
-
-For a machine of type cfi\_machine we give the following definitions:
+For a \CFI machine we give the following definitions:
 
 \begin{definition}[Trace has CFI]\label{traceHasCfi}
   We say that an execution trace $s_0 \to s_1 \to \ldots \to s_n$ {\em has CFI}
   if for all $ i \in [0,\ldots,n)$ if \stepn{s_i}{s_{i+1}} then
-  $(s_i,s_{i+1}) \in$ \SUCC .
+  $(s_i,s_{i+1}) \in$ \SUCC{}.
 \end{definition}
 
 \nick{The word relation for succ and cfg is strange since they are
@@ -377,10 +385,12 @@ happened, as expected by the execution of a Store
 instruction. Control-flow violations in the \NWC setting our machine
 is executing, can only occur from \emph{indirect} jump instructions,
 in our case the Jump and Jal instructions. Upon execution of a Jump or
-Jal instruction, we consult \J (see \cref{valid_jmp}) to check
-whether the change of control-flow is legal. If the jump is not
-allowed according to \J then the jump is taken but the \ok bit is set
-to false, which will halt the machine in the next step, as it is only
+Jal instruction, we consult the \CFG function to check whether the
+change of control-flow is allowed. We do that through a function \J
+that converts the words to identifiers and then invokes the \CFG
+function on them. If the conversion fails or if it is now allowed
+according to \CFG then the jump is taken but the \ok bit is set to
+false, which will halt the machine in the next step, as it is only
 allowed to step when the \ok bit is set to true. Otherwise the \ok bit
 will remain true.
 
@@ -400,8 +410,7 @@ will remain true.
   \ii{ok} = (\pc,\pc') \in \Jm
   }{\step{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
     \acfistat{\imem}{\dmem}{\reg'}{\pc'}{\ii{ok}}}}
-\caption{Step rule\chrev{s}\ch{plural of rule is rules}
-  for Jump and Jal instruction of abstract machine}
+\caption{Step rules for Jump and Jal instruction of Abstract machine}
 \end{figure}
 
 As the abstract machine serves as a specification to a machine with
@@ -624,8 +633,7 @@ distinction between data and executable instructions is made through
 tags, in a fashion similar to what was shown in
 \cref{sec:nwc_nxd,sec:cfi_fine}.  We instantiate the symbolic machine,
 according to the aforementioned sections, with a set of tags
-\TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}} where id is drawn from the
-class of identifiers \cref{id_class}.
+\TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}}.
 
 \lstheader{cfi_tags}{Coq definition of Symbolic tags}
 Context {ids : @cfi_id t}.
@@ -1374,61 +1382,58 @@ In order to obtain the concrete tags, we need to wrap the symbolic
 tags with the monitor self-protection tags (\USERname, \ENTRYname,
 \MONITOR) and provide an encoding to words of these tags.
 
-We instantiate the \id type of cfi\_id class (\cref{id_class}) as
-bit-fields of size 28-bits. That means, that we can uniquely identify
-up to $2^{28}$ instructions. Trying to tag more instructions than
-this, would break the symbolic
+We use 28 bits for the identifiers. That means, that we can uniquely
+identify up to $2^{28}$ instructions. Trying to tag more instructions
+than this, would break the symbolic
 invariant \labelcref{instructions_tagged}, because by the simulation
-relation between the concrete and symbolic machines, the
-two machines follow the same tagging scheme for \USERname and \ENTRYname tags.
+relation between the concrete and symbolic machines, the two machines
+follow the same tagging scheme for \USERname and \ENTRYname tags.
 
 Defining the conversion functions \footnote{Numbers in the Coq
   definitions are off by one (\EG 27 means 28), for reasons relating
   to the underlying words library \TODO{cite library}} between
-\textit{words} and \textit{ids} is straight forward. We make the
-simply choice, to convert \textit{words} to \textit{ids} only if they
-are equal or less than the maximum word our 28-bit \textit{ids} can
+words and identifiers is straight forward. We make the
+simply choice, to convert words to identifiers only if they
+are equal or less than the maximum word our 28-bit identifiers can
 fit. Note that this does not mean we reduce the addressable space to
 28-bits. You can use addresses higher than $2^{28}$ to place contents
 tagged as \DATAname or \MONITOR or even \INSTR{$\bot$} but not
 instructions with an identifier.
 
-The conversion from \textit{ids} to \textit{words} is trivial by
+The conversion from identifiers to words is trivial by
 expanding the id to 32-bit words by adding zeros to the high bits.
 
-\nick{Do the above make sense to you?}
+% \lstheader{id_conversion}{Coq definitions of conversion functions for ids and words}
+% Definition id_size := Word.int 27.
+% Definition id := [eqType of id_size].
+% Definition bound : word t :=
+%   Word.repr ((Word.max_unsigned 27) + 1)%Z. (*29 bits*)
 
-\lstheader{id_conversion}{Coq definitions of conversion functions for ids and words}
-Definition id_size := Word.int 27.
-Definition id := [eqType of id_size].
-Definition bound : word t :=
-  Word.repr ((Word.max_unsigned 27) + 1)%Z. (*29 bits*)
+% Definition word_to_id (w : word t) : option id_size :=
+%   if (Word.ltu w bound) then Some (Word.castu w) else None.
 
-Definition word_to_id (w : word t) : option id_size :=
-  if (Word.ltu w bound) then Some (Word.castu w) else None.
+% Definition id_to_word (x : id) : word t :=
+%   Word.castu x.
+% \end{lstlisting}
 
-Definition id_to_word (x : id) : word t :=
-  Word.castu x.
-\end{lstlisting}
+% Finally we prove the two properties required by cfi\_id,
+% \textit{id\_to\_wordK} and \textit{word\_to\_idK}. We can now
+% instantiate cfi\_id with 28-bit sized \textit{ids}.
 
-Finally we prove the two properties required by cfi\_id,
-\textit{id\_to\_wordK} and \textit{word\_to\_idK}. We can now
-instantiate cfi\_id with 28-bit sized \textit{ids}.
-
-\lstheader{cfi_id28}{cfi\_id instance with 28-bit sized \textit{ids}}
-Instance ids : cfi_id := {|
- id := id;
- word_to_id := word_to_id;
- id_to_word := id_to_word
-|}.
-Proof.
-  - by apply id_to_wordK.
-  - by apply word_to_idK.
-Defined.
-\end{lstlisting}
+% \lstheader{cfi_id28}{cfi\_id instance with 28-bit sized \textit{ids}}
+% Instance ids : cfi_id := {|
+%  id := id;
+%  word_to_id := word_to_id;
+%  id_to_word := id_to_word
+% |}.
+% Proof.
+%   - by apply id_to_wordK.
+%   - by apply word_to_idK.
+% Defined.
+% \end{lstlisting}
 
 When using identifiers of 28-bits, we can encode the symbolic tags using
-30 bits, with an encoding like the one in \cref{tag_encoding}, where
+30-bits, with an encoding like the one in \cref{tag_encoding}, where
 the two least-significant bits are used to distinguish between \DATA,
 \INSTR{$\bot$} and \INSTR{\id}, and the 28 higher-bits are the \id
 in the last case and zero otherwise.

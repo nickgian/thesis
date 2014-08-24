@@ -52,29 +52,26 @@ The main contribution of this thesis is the formalization and
 verification in Coq of a dynamic monitor enforcing CFI, based on a
 generic hardware-software security mechanism.
 
-A direct proof that the mechanism correctly enforces CFI would be
-complex and would probably be less structured and less
-reusable. Instead we chose to prove correctness by
-\emph{refinement}. As a first step, we introduce an abstract machine
-that has CFI by construction. We provide a specification for the
-dynamic monitor and consequently prove a two-way (backward and
-forward) simulation between the abstract machine and a concrete
-machine running a monitor that satisfies our specification. This
-result shows that the concrete machine precisely emulates all
-behaviors of the \emph{correct by design} abstract machine.
+To this end, we used Coq to model a powerful attacker (\IE able to
+execute buffer overflows) and proved that the mechanism enforces
+\CFI even in the presence of such an attacker. In particular
+we proved a variant of the \CFI property proposed by Abadi~\ETAL
+\cite{AbadiBEL09}.
 
-Furthermore, we provide a precise attacker model and prove in Coq that
-every step of the concrete machine has CFI even in the presence of the
-attacker. In particular we prove a variant of the CFI property
-proposed by Abadi~\ETAL\cite{AbadiBEL09}.
-%
-We do that by using a novel generic result, stating
-that under certain assumptions CFI is preserved by backward simulation.
+We managed to avoid tackling a direct and complex proof of this
+theorem, by first defining an abstract machine that has \CFI by
+construction, proving a simulation between the concrete and the
+abstract machine and then transfering the \CFI property from the
+abstract to the concrete level through a generic preservation theorem
+that states that under certain assumptions \CFI is preserved by
+backward simulation.
 
-\ch{Is there anything missing here?}\ch{Yes, this is a good
-  start for a short ``Contributions'' paragraph, what's missing
-  is a more detailed explanation of the main challenges and solutions
-  proposed in this thesis.}
+Additionally, we proved a two-way refinement, between a concrete
+machine running the \CFI dynamic monitor and the abstract machine that
+has \CFI by construction and acts as a specification to \CFI, showing
+that the concrete machine emulates all behaviors of the
+``correct-by-design'' abstract machine.
+
 
 \section{Thesis Outline}\label{sec:outline}
 \Cref{ch:policies} of this thesis briefly describes the motivation for

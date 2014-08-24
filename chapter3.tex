@@ -2,10 +2,6 @@
 
 \ch{The beginning of this chapter is very rough. Jumping from one thing
   to the other without any logical connection.}
-\nick{The structure you proposed for this chapter is not clear to me.
-Lose the related work title completely?
-Or keep the related work section and break the rest into
-3 subsections (fine-grained,coarse-grained,verification)?}
 
 Restricting the control-flow of a program in some way has been proven
 as an effective technique to mitigate a wide range of attacks.  For
@@ -25,15 +21,6 @@ restricting the control-flow on returns.
 \section{Related Work}
 
 \subsection{Balancing between performance and security}\label{sec:security_cfi}
-
-\ch{Before bashing Abadi too much, you should remark the huge
-  distinction between their formalization and property, in which they
-  consider fine-grained CFI (or at least a generic property that can
-  be instantiated to both fine-grained and coarse-grained?), and their
-  implementation in which they enforce a very coarse grained thing.
-  Alternatively, make sure you mention very explicitly (e.g. in a
-  footnote or a parenthesis) that all this is about their
-  implementation, not their theory which is discussed later on.}
 
 Abadi \ETAL~\cite{abadi2005} first proposed a technique to enforce
 \CFI based on Inlined Reference Monitors (IRMs). In particular, the
@@ -100,6 +87,40 @@ offered by such an action.
 Many implementations that attempt to do fine-grained \CFI also require that
 identifiers used to mark nodes in the CFG are unique.
 
+\subsection{Formal verification of Control-Flow Integrity}\label{sec:cfi_verif}
+
+In \cite{AbadiBEL09} Abadi \ETAL extended their original paper, with
+-among other things- a more detailed formal study of \CFI. Their
+formalization regarded a much simpler machine than the x86 omitting
+all the complexity of modern systems. The machine has a few
+instructions, a separate data memory and instruction memory which by
+the operational semantics of the machine are non-executable and
+non-writable respectively (enforcing \NXD and \NWC by construction),
+and a small set of registers. Moreover, their attacker model permits
+arbitrary changes to the data memory, arbitrary changes to all the
+registers but a few distinguished ones that are used during the
+dynamic checks and no changes to the instruction memory.  The authors
+proof that under some assumptions every step respects the control-flow
+graph even in the presence of an attacker as powerful as the one
+described above. Their formal study served as a guideline for the
+implementation, but as it is done on paper their proofs cannot be
+machine checked. Furthermore, their formalization omits less
+interesting but important details such as instruction encoding and
+decoding which as shown in \cite{MorrisettTTTG12} are far from trivial
+for the x86.
+
+Machine-checked formal verification efforts include \cite{ZhaoLSR11},
+which is a SFI formalization for the ARM architecture that also
+enforces \CFI. Their formalization was developed using the HOL
+theorem prover and a program logic framework they created. However
+their benchmarks report a 240\% runtime overhead. The authors of
+\cite{CriswellDA14} claim partial proofs for a \CFI enforcement
+mechanism focused on the kernel of an operating system. Their runtime
+overhead can also reach 100\%.
+
+\section{Micro-Policies for Control-Flow Integrity}
+\label{sec:cfi_policies}
+
 \subsection{Coarse-grained CFI Micro-Policy}\label{sec:cfi_coarse}
 
 \ch{Turn this into a paragraph that comes when talking about
@@ -154,46 +175,15 @@ ineffective since attacks against it has already been demonstrated in
 \cite{outofcontrol_ieeesp2014}. Instead we are going to focus on
 implementing and formalizing a fine-grained \CFI micro-policy.
 
-
-\subsection{Formal verification of Control-Flow Integrity}\label{sec:cfi_verif}
-
-In \cite{AbadiBEL09} Abadi \ETAL extended their original paper, with
--among other things- a more detailed formal study of \CFI. Their
-formalization regarded a much simpler machine than the x86 omitting
-all the complexity of modern systems. The machine has a few
-instructions, a separate data memory and instruction memory which by
-the operational semantics of the machine are non-executable and
-non-writable respectively (enforcing \NXD and \NWC by construction),
-and a small set of registers. Moreover, their attacker model permits
-arbitrary changes to the data memory, arbitrary changes to all the
-registers but a few distinguished ones that are used during the
-dynamic checks and no changes to the instruction memory.  The authors
-proof that under some assumptions every step respects the control-flow
-graph even in the presence of an attacker as powerful as the one
-described above. Their formal study served as a guideline for the
-implementation, but as it is done on paper their proofs cannot be
-machine checked. Furthermore, their formalization omits less
-interesting but important details such as instruction encoding and
-decoding which as shown in \cite{MorrisettTTTG12} are far from trivial
-for the x86.
-
-Machine-checked formal verification efforts include \cite{ZhaoLSR11},
-which is a SFI formalization for the ARM architecture that also
-enforces \CFI. Their formalization was developed using the HOL
-theorem prover and a program logic framework they created. However
-their benchmarks report a 240\% runtime overhead. The authors of
-\cite{CriswellDA14} claim partial proofs for a \CFI enforcement
-mechanism focused on the kernel of an operating system. Their runtime
-overhead can also reach 100\%.
-
-\section{Micro-Policy for Fine-Grained Control-Flow Integrity}
+\subsection{Micro-Policy for Fine-Grained Control-Flow Integrity}
 \label{sec:cfi_fine}
 
-The PUMP hardware allows us to avoid taking the difficult decision between
-performance and security. As shown in \cite{pump_asplos2015}, we can enforce a
-\emph{fine-grained} \CFI policy with an average runtime overhead of less than 3\%
-(maximum overhead of less than 10\%), on the SPEC2006 benchmarks.
-\nick{again here, what should I say about overheads and what should I cite?}
+
+The PUMP hardware allows us to avoid taking the difficult decision
+between performance and security. As shown in follow-up (unpublished)
+work to \cite{pump_hasp2014}, we can enforce a \emph{fine-grained}
+\CFI policy with an average runtime overhead of less than 3\% (maximum
+overhead of less than 10\%), on the SPEC2006 benchmarks.
 
 We follow the standard approach and require both \NXD and \NWC in
 order to correctly enforce \CFI. We designed a composed micro-policy
@@ -232,19 +222,14 @@ tag all other instructions. The rules to enforce \NWC and \NXD are
 intuitively the same and only change to account for the splitting of
 the \INSTRname tag.
 
-\nick{if/when we move coarse-grained to appendix, then we don't follow
-the same idea...}\ch{for now let's try to incorporate the coarse-grained
-  micro-policy in 3.1.1 and have an explicit reference to that subsubsection
-  here}
-
-We follow the same idea as with coarse-grained \CFI\ch{from 3.1.1},
-propagating the
-instruction tag of instructions that are sources of indirect flows to
-the tag on the \pc of the next state and upon execution of the next
-instruction, checking that the tag on the \pc and on the instruction
-are in some relation. In the case of coarse-grained \CFI we required
-that they match but for fine-grained \CFI we require that they are in
-the \CFG relation.
+We follow the same idea as with coarse-grained \CFI in
+\cref{sec:cfi_grained}, propagating the instruction tag of
+instructions that are sources of indirect flows to the tag on the \pc
+of the next state and upon execution of the next instruction, checking
+that the tag on the \pc and on the instruction are in some
+relation. In the case of coarse-grained \CFI we required that they
+match but for fine-grained \CFI we require that they are in the \CFG
+relation.
 
 % \begin{figure}[!htpb]
 % \begin{align}

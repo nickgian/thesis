@@ -1,7 +1,22 @@
 %% English Abstract
 \begin{abstract}
-The purpose of this diploma thesis is to present a novel, hardware-assisted, formally verified implementation of low-level security policies, such as Control-Flow Integrity and Call Stack Protection. Contrary to existing
-\TODO{write an abstract}
+
+  Control-Flow Integrity is an effective security policy, able to
+  thwart all attacks that attempt to hijack the control-flow of a
+  program. We use Coq to formally reason about the effectiveness of a
+  dynamic monitor enforcing \CFI, based on a novel software-hardware
+  security mechanism. In particular, we prove that even in the
+  presence of a powerful attacker, the mechanism enforces
+  \CFI. 
+  Furthermore, we prove by refinement that a machine running a
+  correct implementation of the dynamic monitor, precisely emulates
+  all behaviors of an abstract machine that has \CFI by construction.
+
+  % A wide-range of software attacks attempt to hijack the control-flow
+  % of the program in order to alter its behavior. These kind of attacks
+  % can be effectively thwarted by a security policy called Control-Flow
+  % Integrity, which enforces that execution of a program follows
+  % a statically computed control-flow graph.
 
 \begin{keywordseng}
 control-flow, security, verification, tagged architectures
