@@ -1,5 +1,11 @@
 \documentclass[xcolor=table]{beamer}
 
+\makeatletter
+\definecolor{beamer@blendedblue}{RGB}{0, 145, 95} % changed this
+
+\usefonttheme{professionalfonts} % using non standard fonts for beamer
+\usepackage{fontspec}
+\setmainfont{Gill Sans}
 %TIKZ
 
 \usepackage{graphicx}
@@ -119,6 +125,7 @@
       \end{itemize}
 }
 
+%1st run : 70sec
 \frame{
 \frametitle{Motivation}
 Modern computers are vulnerable to a wide-range of attacks.
@@ -161,22 +168,22 @@ attacker code
 % \end{minipage}
 }
 
-
+%1st run: 53sec
 \frame{
 \frametitle{Control-Flow Integrity}
-Constraints all execution paths by a statically computed control-flow graph.
+Constraints all execution paths to follow a statically computed control-flow graph.
 \begin{itemize} 
-\item Effectiveness (and efficiency) determined by precision of the CFG.
-  \begin{itemize}
-    \item \textit{Coarse-grained} CFI uses a conservative CFG 
-      (\EG instructions are either jump targets or not)
-    \end{itemize} 
 \item Formally provable that CFI defends against attackers who have control over the memory and registers of the machine
   \begin{itemize}
     \item Buffer overflows
     \item Jump-to-libc
     \item Pointer subterfuge
     \end{itemize}
+\item Effectiveness (and efficiency) determined by precision of the CFG.
+  \begin{itemize}
+    \item \textit{Coarse-grained} CFI uses a conservative CFG 
+      (\EG instructions are either jump targets or not)
+    \end{itemize} 
 \item Well studied defense technique
   \begin{itemize}
     \item Original CFI for x86 plus formal (but not machine-checked) study by Abadi \ETAL
@@ -186,6 +193,7 @@ Constraints all execution paths by a statically computed control-flow graph.
 \end{itemize}
 }
 
+%50 sec
 \frame{ 
 \frametitle{Contributions} 
   Formalized and verified, using the
@@ -197,7 +205,7 @@ Constraints all execution paths by a statically computed control-flow graph.
   the CFI dynamic monitor and an abstract machine that has CFI by
   construction \pause
 \end{itemize}
-\textbf{Challenge:} Avoid direct proof of CFI property on low-level machine
+\textbf{Challenge:} Avoid direct proof of CFI property on concrete machine
 }
 
 \frame{
@@ -206,9 +214,9 @@ Constraints all execution paths by a statically computed control-flow graph.
   \begin{itemize}
   \setlength{\itemsep}{1pt}
     \item Associate meta-data (tags) to each machine word
-    \item Check invariants on meta-data and propagate them accordingly
+    \item Use rules to check invariants on meta-data and propagate them
   \end{itemize}
-\end{block}
+\end{block}\pause
 
 \begin{block}{Efficient hardware-software implementation}
 \begin{itemize}
@@ -216,12 +224,12 @@ Constraints all execution paths by a statically computed control-flow graph.
   \item Hardware propagates the meta-data according to software rules (policy monitor)
   \item Hardware rule cache for common-case efficiency
 \end{itemize}
-\end{block}
+\end{block}\pause
 
 \begin{block}{Verification framework}
 \begin{itemize}
   \setlength{\itemsep}{1pt}
-  \item Models above hardware-software mechanism
+  \item Models hardware-software mechanism from above
   \item Intermediate step (Symbolic machine) abstracts away from low-level hardware details
   \item $\lbrace 0,1 \rbrace$-backward simulation between Concrete and Symbolic
 \end{itemize}
@@ -230,14 +238,13 @@ Constraints all execution paths by a statically computed control-flow graph.
 
 \frame{
 \frametitle{CFI Micro-policy}
-\framesubtitle{Tags}
 Build on top of non-writable code (NWC) and non-executable data (NXD) micro-policy.
 \begin{block}{Set of tags}
   \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}}
 \end{block}
 \begin{block}{Initial tagging scheme}
   \begin{itemize}
-  \item Sources/targets of indirect control-flows tagged using their address (\textit{addr})
+  \item Sources/targets of indirect control-flows (according to CFG) tagged using their address (\textit{addr})
     \INSTR{\textit{addr}}
   \item All other instructions tagged $\INSTR{\bot}$
   \item Non-executable data tagged \DATA.
@@ -341,11 +348,12 @@ $(100,500) \in \CFGm$?
 \begin{frame}
 \frametitle{CFI Concrete Machine}
 \begin{itemize}
-\item Wraps symbolic tags around tags for self-protection
+\item Wraps symbolic tags around tags of self-protection mechanism
   \begin{itemize}
-    \item \textit{User (enc ut)} where $ut \in \mathcal{T}$
+    \item \textit{User ut} where $ut \in \mathcal{T}$
     \item \textit{Monitor} for policy-monitor data
-    \item \textit{Entry (enc ut)} for calling privileged monitor services from user code
+    \item \textit{Entry ut} for calling privileged monitor services from user code
+    \item We provide encoding function from (wrapped) tags to machine words
     \end{itemize}
 \item \textit{Policy monitor} is a \emph{correct} implementation of the transfer function in machine code
 \end{itemize}
@@ -354,6 +362,7 @@ $(100,500) \in \CFGm$?
 %Abstract Machine
 \frame{
 \frametitle{CFI Abstract Machine}
+The Abstract Machine acts as a specification for CFI
 \begin{itemize}
 \item Instructions fetched from fixed instruction memory (NWC, NXD)
 \item State includes \ok bit as indication of a violation. The machine is stuck if it is set to false.
