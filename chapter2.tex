@@ -334,12 +334,12 @@ transfer function and the tag propagation works at each step.
   }
 \bigskip
 
-%Jump
+%Jal
 \infrule[Jal]{
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jal}~r \\
   \rd{\reg}{r} {=} \atom{w}{t_w} \andalso
   \rd{\reg}{ra} {=} \atom{w\old}{t\old} \\
-  \frule{\ii{Jal}}{\tpc}{\ti}{t_w}{t\old}{} {\tpc'}{-} \\
+  \frule{\ii{Jal}}{\tpc}{\ti}{t_w}{t\old}{} {\tpc'}{\targ{res}} \\
   \reg' = \upd{\reg}{ra}{\atom{pc + 1}{\targ{res}}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg'}{\atom{w}{\tpc'}}{int}}

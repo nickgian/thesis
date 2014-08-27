@@ -2,11 +2,14 @@
 
 \section{Future Work}
 
-There are many directions still left to explore before we can consider
-our work done. Some of them include writing the \CFI monitor code and
-verifying it, increasing precision by enforcing call-stack protection,
-scaling to more complex architectures and looking for ways to enforce
-\CFI-like policies on self modifying programs.
+In this thesis we formalized and verified a dynamic monitor for \CFI,
+by providing a specification for it and evaluating its effectiveness
+against potential attackers. There are many directions still left to
+explore before we can consider our work done. Some of them include
+writing the \CFI monitor code and verifying it, increasing precision
+by enforcing call-stack protection, scaling to more complex
+architectures (\EG ARM) and looking for ways to enforce \CFI-like policies on
+self modifying programs.
 
 \subsection{Writing and Verifying Monitor Code}
 
@@ -103,11 +106,14 @@ should be allowed or not.
 
 Concerning the formal verification of such a micro-policy, an
 ambitious goal would be to prove refinement between the concrete
-machine running a dynamic monitor for call-stack protection and
-an abstract machine with a separate protected-call stack. This however,
-would result in a complex refinement relation due to the fact that
-the concrete machine would have to execute some book-keeping instructions
-which the abstract machine would not.
+machine running a dynamic monitor for call-stack protection and an
+abstract machine with a separate protected-call stack. While this
+abstract machine provides an intuitive specification for call-stack
+protection, it would result in a complex refinement relation due to
+the fact that the concrete machine would have to execute some
+book-keeping instructions which the abstract machine would not.
+
+\nick{very rough ending}
 
 
 

@@ -231,7 +231,7 @@ relation.
 \bigskip
 
 \infrule[Flow/NoCheck]{
-  op \in \lbrace \textit{Jump},\textit{Jal} \rbrace
+  \ii{op} \in \lbrace \textit{Jump},\textit{Jal} \rbrace
   }{
   \frule{\ii{op}}{\DATA}{\INSTR{dst}}{}{}{} {\INSTR{dst}}{-}
   }
@@ -252,21 +252,21 @@ relation.
 \bigskip
 
 \infrule[Rest/Check]{
-  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store}
+  \textit{op} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store}
   \rbrace \andalso (src,dst) \in \CFGm
   }{
-  \frule{\textit{opcode}}{\INSTR{src}}{\INSTR{dst}}{}{}{} {\DATA}{-}
+  \frule{\textit{op}}{\INSTR{src}}{\INSTR{dst}}{}{}{} {\DATA}{-}
   }
 \bigskip
 
 \infrule[Rest/NoCheck]{
-  \textit{opcode} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store}
+  \textit{op} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store}
   \rbrace \andalso
   \textit{ti} \in \lbrace \INSTR{dst}, \INSTR{\bot} \rbrace
   }{
-  \frule{\textit{opcode}}{\DATA}{\textit{ti}}{}{}{} {\DATA}{-}
+  \frule{\textit{op}}{\DATA}{\textit{ti}}{}{}{} {\DATA}{-}
   }
-\caption{Rules enforcing fine-grained \CFI\strikeout{, \NXD and \NWC}}
+\caption{Rules enforcing fine-grained \CFI}
 \end{figure}
 
 We note in the above rules that the tag on the \PCname is \DATAname when

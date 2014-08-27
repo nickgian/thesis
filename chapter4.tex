@@ -311,7 +311,7 @@ For a \CFI machine we give the following definitions:
 
 \begin{definition}[Trace has CFI]\label{traceHasCfi}
   We say that an execution trace $s_0 \to s_1 \to \ldots \to s_n$ {\em has CFI}
-  if for all $ i \in [0,\ldots,n)$ if \stepn{s_i}{s_{i+1}} then
+  if for all $ i \in [0,n)$ if \stepn{s_i}{s_{i+1}} then
   $(s_i,s_{i+1}) \in$ \SUCC{}.
 \end{definition}
 
@@ -927,8 +927,6 @@ by one on the symbolic machine. Intuitively the above theorems show
 that the symbolic machine precisely emulates all behaviors of
 the abstract machine.
 
-\TODO{Could use some help on improving the text above}
-
 \begin{definition}[1-Backward Simulation]
 \label{simulation_LH}
   A low-level machine simulates a high-level machine with respect to a
@@ -1090,7 +1088,7 @@ We start with some helpful lemmas about registers and memory
 updates. These lemmas serve as the basis for proving simulation for
 instructions that change the registers or the memory. The
 corresponding Coq definitions and proofs can be found.
-\TODO{cite appendix}
+\TODO{cite source code/remove this}
 
 \begin{lemma}[Registers Update Backward Simulation]
 \label{refine_registers_upd}
@@ -1386,7 +1384,7 @@ follow the same tagging scheme for \USERname and \ENTRYname tags.
 
 Defining the conversion functions \footnote{Numbers in the Coq
   definitions are off by one (\EG 27 means 28), for reasons relating
-  to the underlying words library \TODO{cite library}} between
+  to the underlying words library} between
 words and identifiers is straight forward. We make the
 simply choice, to convert words to identifiers only if they
 are equal or less than the maximum word our 28-bit identifiers can
@@ -1440,7 +1438,7 @@ in the last case and zero otherwise.
     Symbolic Tag   & Encoding \\ \hline
     \DATA           & 0        \\ \hline
     \INSTR{$\bot$}     & 1        \\ \hline
-    \INSTR{\id} & $4x+2$    \\ \hline
+    \INSTR{\id} & $4\id+2$    \\ \hline
     \end{tabular}
   \caption{Encoding of Symbolic Tags}
   \label{tag_encoding}
@@ -1801,9 +1799,42 @@ be stopping.
 \item There is an optional suffix of monitor steps (\stepn{}{}) and
   all states in the suffix are monitor steps.
 \end{itemize}
-\end{definition}
 
-\TODO{Diagram showing stopping?}
+\begin{center}
+\begin{tikzpicture}
+  [scale=.8,auto=left,shorten >=1pt,every node/.style={circle,fill=teal!30,font=\small},->,>=stealth]
+  \node (nv) [style={fill=red!60}] at (0,0)  {$s^C_v$};
+  \node (na1) at (2,0)  {$s^C_1$};
+  \node (nadots) [draw=none,style={fill=white}] at (4,0)  {$\ldots$};
+  \node (na2) at (6,0)  {$s^C_2$};
+  \node (nm1) at (8,0)  {$s^C_3$};
+  \node (nmdots) [draw=none,style={fill=white}] at (10,0)  {$\ldots$};
+  \node (nm2) at (12,0)  {$s^C_n$};
+
+\node (nulabel) [rectangle,fill=white,font=\small] at (3,-1) {User Mode};
+\node (na2label) [fill=none] at (6,-1) {};
+
+\node (nmlabel) [rectangle,fill=white,font=\small] at (10,-1) {Monitor Mode};
+\node (nm2label) [fill=none] at (12,-1) {};
+
+\draw[-,dashed,very thin] (nv) |- (nulabel);
+\draw[-,dashed,very thin] (nulabel.east) |- (na2label.center);
+\draw[-,dashed,very thin] (na2label.center) |- (na2.south);
+
+\draw[-,dashed,very thin] (nm1) |- (nmlabel);
+\draw[-,dashed,very thin] (nmlabel.east) |- (nm2label.center);
+\draw[-,dashed,very thin] (nm2label.center) |- (nm2.south);
+
+\path[thick, every node/.style={}]
+(nv) edge [very near end,above] node {a} (na1)
+(na1) edge [very near end,above] node {a} (nadots)
+(nadots) edge [very near end,above] node {a} (na2)
+(na2) edge [very near end,above] node {n} (nm1)
+(nm1) edge [very near end,above] node {n} (nmdots)
+(nmdots) edge [very near end,above] node {n} (nm2);
+\end{tikzpicture} \\
+\end{center}
+\end{definition}
 
 \section{Generic Preservation Theorem}
 \label{sec:cfi_preservation}
@@ -1942,37 +1973,38 @@ relation on execution traces. We define this trace refinement relation
 inductively and we say that two traces are in refinement if they
 are built this way.
 
-\lstheader{refine_traces}{Inductive definition of trace refinement\ch{
-  Could write these rules nicer in LaTeX?}}
-Inductive refine_traces :
-  list (@state amachine) -> list (@state cmachine) -> Prop :=
-| TRNil : forall ast cst,
-            refine_state ast cst ->
-            refine_traces [ast] [cst]
-| TRNormal0 : forall ast cst cst' axs cxs,
-    step cst cst' ->
-    check cst cst' = false ->
-    refine_state ast cst ->
-    refine_state ast cst' ->
-    refine_traces (ast :: axs) (cst' :: cxs) ->
-    refine_traces (ast :: axs) (cst :: cst' :: cxs)
-| TRNormal1 : forall ast ast' cst cst' axs cxs,
-    step cst cst' ->
-    step ast ast' ->
-    refine_state ast cst ->
-    refine_state ast' cst' ->
-    refine_traces (ast' :: axs) (cst' :: cxs) ->
-    refine_traces (ast :: ast' :: axs) (cst :: cst' :: cxs)
-| TRAttacker : forall ast ast' cst cst' axs cxs,
-    ~step cst cst' ->
-    step_a cst cst' ->
-    step_a ast ast' ->
-    refine_state ast cst ->
-    refine_state ast' cst' ->
-    refine_traces (ast' :: axs) (cst' :: cxs) ->
-    refine_traces (ast :: ast' :: axs) (cst :: cst' :: cxs).
-\end{lstlisting}
-\TODO{make these inference rules}
+\begin{figure}[ht]
+\infrule[TRNil]{
+  s^H \sim s^L
+  }{ s^H \simtr{} s^L }
+\bigskip
+
+\infrule[TRNormal0]{
+  \stepn{s^L_1}{s^L_2} \andalso \neg check~s^L_1~s^L_2 \\[0.4em]
+  s^H_1 \sim s^L_1 \andalso s^H_2 \sim s^L_2 \\[0.4em]
+  s^H_1 \cdot tr^H \simtr{} s^L_2 \cdot tr^L
+  }{
+    s^H_1 \cdot tr^H \simtr{} s^L_1 \cdot s^L_2 \cdot tr^L}
+\bigskip
+
+\infrule[TRNormal1]{
+  \stepn{s^L_1}{s^L_2} \andalso \stepn{s^H_1}{s^H_2} \\[0.4em]
+   s^H_1 \sim s^L_1 \andalso s^H_2 \sim s^L_2 \\[0.4em]
+   s^H_2 \cdot tr^H \simtr{} s^L_2 \cdot tr^L
+  }{
+    s^H_1 \cdot s^H_2 \cdot tr^H \simtr{} s^L_1 \cdot s^L_2 \cdot tr^L}
+\bigskip
+
+\infrule[TRAttacker]{
+  \stepa{s^L_1}{s^L_2}{} \andalso \stepa{s^H_1}{s^H_2}{} \andalso s^L_1 \not \to_n s^L_2\\[0.4em]
+   s^H_1 \sim s^L_1 \andalso s^H_2 \sim s^L_2 \\[0.4em]
+   s^H_2 \cdot tr^H \simtr{} s^L_2 \cdot  tr^L
+  }{
+    s^H_1 \cdot s^H_2 \cdot tr^H \simtr{} s^L_1 \cdot s^L_2 \cdot tr^L}
+\caption{Trace refinement relation}
+\label{refine_traces}
+\end{figure}
+
 
 In \cref{refine_traces} we distinguish between three separate cases,
 from which we may build two traces that are in refinement.
@@ -1980,22 +2012,22 @@ from which we may build two traces that are in refinement.
 \item [] \textbf{Zero Step.} If the low-level machine takes an
   unchecked step, $\stepn{s^L_1}{s^L_2}$ and for a high-level machine
   state $s^H$ it holds that $s^H \sim s^L_1$ and $s^H \sim s^L_2$ then
-  if traces $s^H :: tr^H$ and $s^L_2 :: tr^L$ are in refinement, the
-  traces $s^H :: tr^H$ and $s^L_1 :: s^L_2 :: tr^L$ are also in
+  if traces $s^H \cdot tr^H$ and $s^L_2 \cdot tr^L$ are in refinement, the
+  traces $s^H \cdot tr^H$ and $s^L_1 \cdot s^L_2 \cdot tr^L$ are also in
   refinement.
 \item [] \textbf{Normal Step.} If the low-level machine takes a checked step,
   $\stepn{s^L_1}{s^L_2}$ and the high-level machine takes a step
   $\stepn{s^H_1}{s^H_2}$ and $s^H_1 \sim s^L_1$ and $s^H_2 \sim s^L_2$ then
-  if traces $s^H_2 :: tr^H$ and $s^L_2 :: tr^L$ are in refinement, the
-  traces $s^H_1 :: s^H_2 :: tr^H$ and $s^L_1 :: s^L_2 :: tr^L$ are also in
+  if traces $s^H_2 \cdot tr^H$ and $s^L_2 \cdot tr^L$ are in refinement, the
+  traces $s^H_1 \cdot s^H_2 \cdot tr^H$ and $s^L_1 \cdot s^L_2 \cdot tr^L$ are also in
   refinement.
 \item [] \textbf{Attacker Step.} If the low-level machine takes an
   attacker step $\stepa{s^L_1}{s^L_2}{L}$ and additionally $s^L_1 \not
   \to_n s^L2$ and the high-level machine takes an attacker step
   $\stepa{s^H_1}{s^H_2}{H}$ and $s^H_1 \sim s^L_1$ and $s^H_2 \sim
-  s^L_2$ then if traces $s^H_2 :: tr^H$ and $s^L_2 :: tr^L$ are in
-  refinement, the traces $s^H_1 :: s^H_2 :: tr^H$ and $s^L_1 :: s^L_2
-  :: tr^L$ are also in refinement.
+  s^L_2$ then if traces $s^H_2 \cdot tr^H$ and $s^L_2 \cdot tr^L$ are in
+  refinement, the traces $s^H_1 \cdot s^H_2 \cdot tr^H$ and $s^L_1 \cdot s^L_2
+  \cdot tr^L$ are also in refinement.
 \end{itemize}
 
 Notice in the last case that we require that the step from $s^L_1$ to
@@ -2054,8 +2086,8 @@ s^H_2$.
 \label{as_implies_cs}
 If there is a step in the high-level machine $\stepn{s^H_1}{s^H_2}$
 such that $(s^H_1,s^H_2) \not \in \SUCCm{H}$ and if the traces $s^H_2
-:: tr^H$ and $s^L_2 :: tr^L$ are in refinement and $s^H_2 :: tr^H$ is
-a stopping trace for the high-level machine then $s^L_2 :: tr^L$ is a
+\cdot tr^H$ and $s^L_2 \cdot tr^L$ are in refinement and $s^H_2 \cdot tr^H$ is
+a stopping trace for the high-level machine then $s^L_2 \cdot tr^L$ is a
 stopping trace for the low-level machine.
 \end{definition}
 
