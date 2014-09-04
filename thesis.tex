@@ -225,7 +225,7 @@
 \newcommand{\enc}[1]{\ii{enc}~#1}
 \newcommand{\atom}[2]{#1@#2}
 
-\newcommand{\CFI}[0]{\emph{CFI}\xspace}
+\newcommand{\CFI}[0]{CFI\xspace}
 \newcommand{\CFG}[0]{$\mathcal{CFG}$\xspace}
 \newcommand{\CFGm}[0]{\mathcal{CFG}\xspace}
 \newcommand{\J}[0]{$\mathcal{J}$\xspace}
@@ -236,6 +236,13 @@
 \newcommand{\INITIAL}[1]{\textit{initial~#1}\xspace}
 
 \newcommand{\frule}[8]{#1:\{\ifthenelse{\equal{#2}{}}{}{\mathit{PC}{=}#2\ifthenelse{\equal{#3}{}}{}{,}}
+                           \ifthenelse{\equal{#3}{}}{}{\mathit{CI}{=}#3}\ifthenelse{\equal{#4}{}}{}{,}
+                           \ifthenelse{\equal{#4}{}}{}{\mathit{OP}_1{=}#4}\ifthenelse{\equal{#5}{}}{}{,}
+                           \ifthenelse{\equal{#5}{}}{}{\mathit{OP}_2{=}#5}\ifthenelse{\equal{#6}{}}{}{,}
+                           \ifthenelse{\equal{#6}{}}{}{\mathit{MR}{=}#6}
+                           \} \to \{\mathit{PC}'{=}#7, \mathit{RES}{=}#8\}}
+
+\newcommand{\trule}[8]{\textit{transfer}~\{#1,\ifthenelse{\equal{#2}{}}{}{\mathit{PC}{=}#2\ifthenelse{\equal{#3}{}}{}{,}}
                            \ifthenelse{\equal{#3}{}}{}{\mathit{CI}{=}#3}\ifthenelse{\equal{#4}{}}{}{,}
                            \ifthenelse{\equal{#4}{}}{}{\mathit{OP}_1{=}#4}\ifthenelse{\equal{#5}{}}{}{,}
                            \ifthenelse{\equal{#5}{}}{}{\mathit{OP}_2{=}#5}\ifthenelse{\equal{#6}{}}{}{,}
@@ -326,7 +333,8 @@
 % DOCUMENT INFORMATION =========================================================
 
 %\title{}
-\title{Formally Verified Tag-Based Enforcement of\\Control Flow Integrity}
+\title{Τυπική Επαλήθευση Επιβολής \\Ακεραιότητας Ροής-Ελέγχου με Ετικέτες}
+% Formally Verified Tag-Based Enforcement of\\Control Flow Integrity
 % Monitor, Mechanism -- too low level
 % Formally Verified Tag-Based Control Flow Integrity Enforcement
 \author{Νικόλαος Γιανναράκης}

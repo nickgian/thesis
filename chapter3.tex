@@ -1,8 +1,5 @@
 \chapter{Control-Flow Integrity}\label{ch:cfi}
 
-\ch{The beginning of this chapter is very rough. Jumping from one thing
-  to the other without any logical connection.}
-
 Restricting the control-flow of a program in some way has been proven
 as an effective technique to mitigate a wide range of attacks.  For
 example non-executable data (NXD) can be considered as a form of
@@ -11,7 +8,6 @@ any memory region that holds non-executable data. Another popular
 mitigation technique is to protect return addresses on the stack, thus
 restricting the control-flow on returns.
 
-\nick{any ideas for more content here?}
 
 % Moreover it is common that security properties are enforced dynamically by code
 % that is statically injected to the program (\EG Inlined Reference Monitors (IRM)
@@ -61,11 +57,15 @@ The security of the above coarse-grained techniques is evaluated in
 code-reuse attacks against binaries protected by coarse-grained
 \CFI. These attacks illustrate the need for fine-grained \CFI which
 however incurs a high runtime-overhead penalty making deployment of
-such a mechanism unlikely.
+such a mechanism unlikely. 
 
-\ch{There is more recent related work (not formal, but fine-grained):
-\cite{NiuT14} which you should definitely also mention here.}
-\nick{will do so, need to have a look at the paper first}
+A recent and promising attempt on fine-grained CFI called
+\emph{Modular Control-Flow Integrity} \cite{NiuT14} does fine-grained
+CFI with an acceptable runtime overhead (approximately 10\%) and further
+more supports modular compilation (protected and unprotected modules).
+On the downside, it comes with a quite a big toolchain which leaves
+room for bugs in the implementation, but the authors claim that formal
+verification is in their plans for future work on \CFI.
 
 \paragraph{Standard assumptions for effective \CFI}\label{sec:cfi_assumptions}
 
@@ -279,8 +279,7 @@ next step and therefore the machine will certainly halt after a violation.
 If the PUMP hardware fetched the tag on the memory address the machine is
 jumping to and passed it as an argument to input vector, as it does in the
 case of a Store instruction, we would be able to enforce \CFI with no violations
-at all. \TODO{It can't do that for efficiency reasons?}
-
+at all. 
 
 
 

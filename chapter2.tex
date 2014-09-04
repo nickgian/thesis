@@ -1,8 +1,6 @@
 \chapter{Micro-policies: Verified, Hardware-Assisted Monitors}\label{ch:policies}
-Current hardware provides vary limited (coarse-grained)
-security mechanisms \TODO{name some;
-  4 protection rings, page-level memory protection via virtual memory},
-leaving most of the work to the software. This requires that the software
+Current hardware provides very limited
+security mechanisms leaving most of the work to the software. This requires that the software
 performs various sanity-checks during an execution and that it carefully
 maintains various safety and security invariants, a tedious and error-prone task
 that results in security holes and often in high runtime performance penalties.
@@ -36,27 +34,14 @@ instructions are executed and using a set of rules on the metadata to check
 whether a policy is violated and how the tags should be propagated.
 
 Abstractly, these rules form a partial function from a set of
-input tags to a set of output tags\ch{unclear whether this
-  is supposed to be a type or a term; if type then it doesn't
-  match our concrete implementation (just bits) or symbolic abstraction 
-  (where we have a complex dependent type now). It would be better
-  though if this was clearly a (pseudo-Coq) term, and if you used the
-  same notation as in the symbolic rules below: CI, PC, etc. So
-  $\ii{transfer}(\ii{opcode}, \ii{PC}, \ii{CI}, \ldots) = \ii{Some}~\ldots$}
-\nick{then this would not match the syntax we use when defining the rules.
-I think it just captures the type in an (as mentioned) abstract way.
-We could match the notation by using the record notation like
-$$opcode:{PC,CI,...} \rightarrow {PC',RES}$$ but it wouldn't disambiguate
-match in terms of what you are saying. It would still give one notation
-less to worry about and would be something familiar for the examples later}
-$$(opcode,PC,CI,OP1,OP2,MR) \rightarrow (PC',RES)$$
-informally read as, ``if the next instruction to be executed is opcode, the
-current tag of the program counter is PC, the current tag on the
-instruction location is CI and the tags on the operands of the
-instruction are OP1, OP2 and MR then if execution of
-the instruction is allowed the tag on the program counter should be set
-to PC' and any new data created by the instruction should be tagged
-RES.
+input tags to a set of output tags
+$$\ii{transfer}~(\ii{opcode}, \ii{PC}, \ii{CI}, \ii{OP1}, \ii{OP2},\ii{MR}) = \ii{Some}~(PC',RES)$$
+informally read as, ``if the opcode of the next instruction to be executed is
+\textit{opcode}, the current tag of the program counter is \textit{PC}, the current tag
+on the instruction location is \textit{CI} and the tags on the operands of the
+instruction are \textit{OP1}, \textit{OP2} and \textit{MR} then if execution of the instruction
+is allowed the tag on the program counter should be set to $\textit{PC'}$ and any
+new data created by the instruction should be tagged \textit{RES}.
 
 More specific, a micro-policy is made up of the following elements:
 \begin{enumerate}
@@ -96,9 +81,10 @@ wide range of security policies in future computing systems.
 
 In order to demonstrate the mechanism explained above we sketch a
 simply micro-policy that enforces the $W \oplus X$ protection scheme
-described in \cref{sec:motivation}. We achieve this by making all code
-non-writable (\NWC) and all data non-executable (\NXD), omitting the
-formalization to which we will return in \cref{ch:verified_cfi}.
+described in \cref{sec:motivation}, omitting the formalization to
+which we will return in \cref{ch:verified_cfi}. We achieve this by
+making all code non-writable (\NWC) and all data non-executable
+(\NXD).
 
 We use the set of tags \TAGS{\DATA,\INSTRname}. If we initially tag
 all executable regions in memory as \INSTRname and all non-executable
@@ -123,26 +109,18 @@ as \DATAname then we can enforce \NWC and \NXD by two rules of the form
 
 The dashes in the result vector, represent \textit{don't care} values,
 meaning we will not use their values for anything, so any tag (usually
-a default tag set by the policy designer) can be used.\ch{I don't
-really buy your Rest rule then. If I choose the default to be Code
-then this policy is completely broken; while in general the intuition
-of the don't care default tag is that any value would do. So you
-shouldn't be using a don't care for RES I think, but just Data.}
-\nick{but isn't this the case you are describing? you can use Code
-the tag will just get thrown away. Only Store needs to set the result
-tag to DATA. A mov can set the register tag to Code, a load too,
-nobody will care}
-Furthermore, we are omitting from the input vector the fields that are
-unused by the transfer function. For this simple policy, the transfer
-function only uses the tag on the current instruction (\ii{CI}) and in
-the case of a Store instruction the tag on the memory (\ii{MR}), \IE
-the tag on the memory location we are trying to write. If no rule
-applies, the execution of the instruction is disallowed. Informally
-the above rules can be read as ``Execution is allowed only if the tag
-on the current instruction is \INSTRname; if the opcode of the
-instruction is Store, we additionally require that the tag of the
-overwritten memory location is \DATA. In that case the tag on the new
-data on the memory should remain \DATA.''
+a default tag set by the policy designer) can be used. Furthermore, we
+are omitting from the input vector the fields that are unused by the
+transfer function. For this simple policy, the transfer function only
+uses the tag on the current instruction (\ii{CI}) and in the case of a
+Store instruction the tag on the memory (\ii{MR}), \IE the tag on the
+memory location we are trying to write. If no rule applies, the
+execution of the instruction is disallowed. Informally the above rules
+can be read as ``Execution is allowed only if the tag on the current
+instruction is \INSTRname; if the opcode of the instruction is Store,
+we additionally require that the tag of the overwritten memory
+location is \DATA. In that case the tag on the new data on the memory
+should remain \DATA.''
 
 \section{Generic Verification Framework for Micro-Policies}
 \label{sec:framework}
@@ -166,8 +144,6 @@ micro-policy designer and allowing him to use structured objects in
 order to define and reason about the micro-policy, avoiding the
 added complexity of working on machine words.
 
-\nick{still unsure about the right way to put this}
-
 In order to implement the micro-policy at the concrete machine level, one needs
 to additionally provide machine code that implements the transfer function, an
 encoding of tags to words and machine code for any monitor services that the
@@ -182,7 +158,7 @@ providing these two parameters.
 
 For each micro-policy the policy designer should define an abstract
 machine, which serves as a specification to the desired invariants.
-The abstract machine is ``correct'' by construction, meaning that it's
+The abstract machine is correct by construction, meaning that it's
 designed to respect those invariants. Using the symbolic machine as an
 intermediate step to simplify the proofs, by proving a refinement
 between the symbolic and the abstract machine and by utilizing the
@@ -200,14 +176,14 @@ along with a pc register. Of course the abstract machine defined by
 the policy designer can differ in various ways, but more similarities
 with the symbolic machine implies easier proofs of correctness.
 
-\ch{Introduce the (names of the) various machines and
-  how they relate to each-other. Nice diagram?}
+% \ch{Introduce the (names of the) various machines and
+%   how they relate to each-other. Nice diagram?}
 
-\TODO{Write instruction set? maybe not}\ch{Yes, the instruction syntax
-  and informal semantics would be very helpful for understanding rules
-  later on; not clear if this is the right place, or more likely in
-  the Symbolic machine section (where you already have the semantic
-  rules)}
+% \TODO{Write instruction set? maybe not}\ch{Yes, the instruction syntax
+%   and informal semantics would be very helpful for understanding rules
+%   later on; not clear if this is the right place, or more likely in
+%   the Symbolic machine section (where you already have the semantic
+%   rules)}
 
 \subsection{Symbolic Machine}\label{sec:symbolic}
 
@@ -246,7 +222,7 @@ transfer function and the tag propagation works at each step.
 %Nop
 \infrule[Nop]{
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Nop} \\
-  \frule{\ii{Nop}}{\tpc}{\ti}{}{}{} {\tpc'}{-} \\
+  \trule{\ii{Nop}}{\tpc}{\ti}{}{}{} {\tpc'}{-} \\
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg}{\atom{\pc + 1}{\tpc'}}{int}}
   }
@@ -256,7 +232,7 @@ transfer function and the tag propagation works at each step.
 \infrule[Const]{
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Const}~n~r \andalso
   \rd{\reg}{r} {=} \atom{w\old}{t\old} \\
-  \frule{\ii{Const}}{\tpc}{\ti}{t\old}{}{} {\tpc'}{\targ{res}} \\
+  \trule{\ii{Const}}{\tpc}{\ti}{t\old}{}{} {\tpc'}{\targ{res}} \\
   \reg' = \upd{\reg}{r}{n@\targ{res}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
@@ -268,7 +244,7 @@ transfer function and the tag propagation works at each step.
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Mov}~r_p~r_s \\
   \rd{\reg}{r_p} {=} \atom{w}{t_p} \andalso
   \rd{\reg}{r_s} {=} \atom{w\old}{t\old} \\
-  \frule{\ii{Mov}}{\tpc}{\ti}{t_p}{t\old}{} {\tpc'}{\targ{res}} \\
+  \trule{\ii{Mov}}{\tpc}{\ti}{t_p}{t\old}{} {\tpc'}{\targ{res}} \\
   \reg' = \upd{\reg}{r_s}{w@\targ{res}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
@@ -281,8 +257,8 @@ transfer function and the tag propagation works at each step.
   \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
   \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
   \rd{\reg}{r_t} {=} \atom{w\old}{t\old} \\
-  \frule{\ii{Binop op}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{\targ{res}} \\
-  \reg' = \upd{\reg}{r_t}{(w_p{op}w_s@\targ{res}}
+  \trule{\ii{Binop op}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{\targ{res}} \\
+  \reg' = \upd{\reg}{r_t}{w_p~op~w_s@\targ{res}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
   }
@@ -294,8 +270,8 @@ transfer function and the tag propagation works at each step.
   \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
   \rd{\mem}{w_p} {=} \atom{w}{\targ{mem}} \andalso
   \rd{\reg}{r_s} {=} \atom{w\old}{t\old} \\
-  \frule{\ii{Load}}{\tpc}{\ti}{t_p}{\targ{mem}}{t\old} {\tpc'}{\targ{res}} \\
-  \reg' = \upd{\reg}{r_s}{(w@\targ{res}}
+  \trule{\ii{Load}}{\tpc}{\ti}{t_p}{\targ{mem}}{t\old} {\tpc'}{\targ{res}} \\
+  \reg' = \upd{\reg}{r_s}{w@\targ{res}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg'}{\atom{\pc + 1}{\tpc'}}{int}}
   }
@@ -307,7 +283,7 @@ transfer function and the tag propagation works at each step.
   \rd{\reg}{r_p} {=} \atom{w_p}{t_p} \andalso
   \rd{\reg}{r_s} {=} \atom{w_s}{t_s} \andalso
   \rd{\mem}{w_p} {=} \atom{w\old}{t\old} \\
-  \frule{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
+  \trule{\ii{Store}}{\tpc}{\ti}{t_p}{t_s}{t\old} {\tpc'}{t_d'} \\
   \mem' = \upd{\mem}{w_p}{\atom{w_s}{t_d'}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem'}{\reg}{\atom{\pc + 1}{\tpc'}}{int}}
@@ -318,7 +294,7 @@ transfer function and the tag propagation works at each step.
 \infrule[Jump]{
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jump}~r \andalso
   \rd{\reg}{r} {=} \atom{w}{t_w} \\
-  \frule{\ii{Jump}}{\tpc}{\ti}{t_w}{}{} {\tpc'}{-}
+  \trule{\ii{Jump}}{\tpc}{\ti}{t_w}{}{} {\tpc'}{-}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg}{\atom{w}{\tpc'}}{int}}
   }
@@ -328,9 +304,10 @@ transfer function and the tag propagation works at each step.
 \infrule[Bnz]{
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Bnz}~r~n \andalso
   \rd{\reg}{r} {=} \atom{w}{t_w} \\
-  \frule{\ii{Bnz}}{\tpc}{\ti}{t_w}{}{} {\tpc'}{-}
+  \trule{\ii{Bnz}}{\tpc}{\ti}{t_w}{}{} {\tpc'}{-}\\
+  \pc' \leftarrow if~w = 0~then~ \pc \mathrel{+} 1 ~ else~\pc \mathrel{+} n
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
-  {\astat{\mem}{\reg}{\atom{w}{\tpc'}}{int}}
+  {\astat{\mem}{\reg}{\atom{\pc'}{\tpc'}}{int}}
   }
 \bigskip
 
@@ -339,7 +316,7 @@ transfer function and the tag propagation works at each step.
   \mem[\pc] = \atom{i}{\ti} \andalso \ii{decode}~i = \ii{Jal}~r \\
   \rd{\reg}{r} {=} \atom{w}{t_w} \andalso
   \rd{\reg}{ra} {=} \atom{w\old}{t\old} \\
-  \frule{\ii{Jal}}{\tpc}{\ti}{t_w}{t\old}{} {\tpc'}{\targ{res}} \\
+  \trule{\ii{Jal}}{\tpc}{\ti}{t_w}{t\old}{} {\tpc'}{\targ{res}} \\
   \reg' = \upd{\reg}{ra}{\atom{pc + 1}{\targ{res}}}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{int}}
   {\astat{\mem}{\reg'}{\atom{w}{\tpc'}}{int}}
@@ -350,9 +327,9 @@ transfer function and the tag propagation works at each step.
 \infrule[Service]{
   \mem[\pc] = \varnothing \andalso
   \ii{get\_service}~\pc = (\ti,f) \\
-  \frule{\ii{Service}}{\tpc}{\ti}{}{}{} {\tpc'}{-} \\
-  f~\acfistat{\mem}{\reg}{\pc}{\extra}{}=
-    \acfistat{\mem'}{\reg'}{\pc'}{\extra}{}
+  \trule{\ii{Service}}{\tpc}{\ti}{}{}{} {\tpc'}{-} \\
+  f~\astat{\mem}{\reg}{\pc}{\extra}=
+    \astat{\mem'}{\reg'}{\pc'}{\extra'}
   }{\step{\astat{\mem}{\reg}{\atom{\pc}{\tpc}}{\extra}}
   {\astat{\mem'}{\reg'}{\atom{\pc'}{\tpc'}}{\extra'}}
   }
@@ -379,7 +356,6 @@ Definition transfer ivec : option ovec :=
   | mkIVec _ _ _ _ => None
   end.
 \end{lstlisting}
-\nick{heavily abusing notation with \_ on result vectors}
 
 \section{A Programmable Unit for Metadata Processing}\label{sec:pump}
 
@@ -430,7 +406,7 @@ particular, implementations of dynamic typing, memory safety for
 heap-based data, control flow integrity and taint tracking are
 described, evaluated against a specific threat model and
 benchmarked. The benchmarks are done using a simulation of the
-described hardware and the authors have achieved low overhead (~3\% on
+described hardware and the authors have achieved low overhead (\~3\% on
 average) for each of the policies named above.
 
 Compared to other software solutions for enforcing security policies,
@@ -529,7 +505,7 @@ and registers. The \pc is tagged with \MONITOR when a monitor
 execution takes place and \USER{\ii{st}} when user-code is executed. The tag
 \ENTRY{\ii{st}} is used to tag the first instruction of a monitor service and
 serves as an indication that execution will continue under the privileged
-\MONITOR mode. \nick{especially the last phrase can be tweaked}
+\MONITOR mode.
 
 The miss handler is a composed policy monitor that protects itself
 from \USERname code and that enforces a desired micro-policy.  One
@@ -537,4 +513,3 @@ important thing to note is that the miss handler for the concrete
 machine can take an arbitrary number of steps before deciding whether
 no violation occurred and returning to \USERname mode, unlike the
 symbolic \TRANSFER function that does not need to take any steps.
-\nick{mention here what happens if a violation happened?}

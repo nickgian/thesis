@@ -21,7 +21,7 @@ security of computing systems a variety of low-level mitigation
 techniques \cite{Cowan:1998:SAA:1267549.1267554,PaX,Erlingsson07}
 have been proposed, however these are mostly ad-hoc solutions designed
 to prevent specific known attacks, rather than enforcing a security
-policy by preventing a well-defined class of attacks, thus making it
+policy that prevents a well-defined class of attacks, thus making it
 hard to reason about their effectiveness. In fact most of these
 mitigation techniques can be circumvented by attackers
 \cite{Szekeres2013}, which has lead to a continuous ``chase'' between
@@ -37,13 +37,14 @@ attackers have been using code-reuse attacks (e.g. return/jump -
 oriented programming) that allows them to chain together existing
 pieces of code to achieve malicious behavior without directly
 introducing new code.  Abadi~\ETAL\cite{abadi2005} introduced a
-property called Control Flow Integrity (CFI), which provides effective
-protection against control-flow hijacking attacks. CFI enforces that
-any execution of a program will respect a statically computed control
-flow graph (CFG), thus thwarting all attacks that attempt to alter
-the control-flow of a program, irregardless if the attacker
-tries to redirect the control-flow to attacker injected code or
-to an existing piece of code. \ch{missing references throughout}
+security property called Control Flow Integrity (CFI), which when it
+holds, provides effective protection against control-flow hijacking
+attacks. CFI enforces that any execution of a program will respect a
+statically computed control flow graph (CFG), thus thwarting all
+attacks that attempt to alter the control-flow of a program,
+irregardless if the attacker tries to redirect the control-flow to
+attacker injected code or to an existing piece of
+code. % \ch{missing references throughout}
 
 \section{Contributions}\label{sec:contributions}
 %could also be just a \paragraph
@@ -70,7 +71,7 @@ Additionally, we proved a two-way refinement, between a concrete
 machine running the \CFI dynamic monitor and the abstract machine that
 has \CFI by construction and acts as a specification to \CFI, showing
 that the concrete machine emulates all behaviors of the
-``correct-by-design'' abstract machine.
+correct by construction abstract machine.
 
 
 \section{Thesis Outline}\label{sec:outline}
@@ -88,45 +89,44 @@ the design choices of our approach regarding enforcement of \CFI.
 in order to formally reason about the security properties of the \CFI policy and
 our approach to enforcing it.
 
-Chapter 5.. conclusions, future work? Appendix with code and/or step
-relations etc.?
+In \cref{ch:conclusion} we discuss potential future directions for our work.
 
-\section{What needs to be done}
+% \section{What needs to be done}
 
-\begin{enumerate}
-\item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
-  \ch{the abstract is the most important part of your thesis (\IE
-    the part everyone will read), so start working on it soon,
-    so that you can iterate a couple of times.}
-\item \ch{The intro is a good start, but still quite weak: it gives
-    only some motivation, but it's explaining only very briefly what
-    this thesis is about (more like an abstract than an intro). One
-    way to improve this is to work on your talk, and bring that
-    high-level explanation into the intro (a couple more pages, with
-    diagrams etc).}
-\item Re-read and polish the whole thing
-\item Optimize figure placement - once comments are removed and content is settled
-  \ch{I almost never did this; try not to over-constrain LaTeX and it will
-    usually do a good job; for large figures setting p allows LaTeX to
-    display them on a whole page, which is usually a good idea. I've done
-    this for Fig 2.2. and it worked great.}
-  \nick{I agree especially since this is going to be printed and turned into a ``book''
-    but what's really bothering latex is one line of text and then figure/listing
-    and this happens a lot in chapter 4}
-\item mention types on tags and DATA tag on registers
-\item More things on concrete preservation?
-\item A summary on the conclusions?
-\item Call-stack protection in future work
-\item Have a look at latest related work
-\item think about appendix if we need one
-\item think about diagrams, do we want more (\EG stopping for concrete machine)
-\item Unified numbering? Theorems,figures,table all having one counter. Last time
-  I tried to do this it failed. And it seems strange!
-  \ch{I think theorems can have different counter from figures.
-    I would call tables also figures; or if you meat listings, those
-    can have a separate counter.
-  I would use the same counter for
-  theorems, lemmas, definitions, etc.}
-\item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
-\item Decide capitalization. Symbolic or symbolic machine, enforce it through out the document.
-\end{enumerate}
+% \begin{enumerate}
+% \item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
+%   \ch{the abstract is the most important part of your thesis (\IE
+%     the part everyone will read), so start working on it soon,
+%     so that you can iterate a couple of times.}
+% \item \ch{The intro is a good start, but still quite weak: it gives
+%     only some motivation, but it's explaining only very briefly what
+%     this thesis is about (more like an abstract than an intro). One
+%     way to improve this is to work on your talk, and bring that
+%     high-level explanation into the intro (a couple more pages, with
+%     diagrams etc).}
+% \item Re-read and polish the whole thing
+% \item Optimize figure placement - once comments are removed and content is settled
+%   \ch{I almost never did this; try not to over-constrain LaTeX and it will
+%     usually do a good job; for large figures setting p allows LaTeX to
+%     display them on a whole page, which is usually a good idea. I've done
+%     this for Fig 2.2. and it worked great.}
+%   \nick{I agree especially since this is going to be printed and turned into a ``book''
+%     but what's really bothering latex is one line of text and then figure/listing
+%     and this happens a lot in chapter 4}
+% \item mention types on tags and DATA tag on registers
+% \item More things on concrete preservation?
+% \item A summary on the conclusions?
+% \item Call-stack protection in future work
+% \item Have a look at latest related work
+% \item think about appendix if we need one
+% \item think about diagrams, do we want more (\EG stopping for concrete machine)
+% \item Unified numbering? Theorems,figures,table all having one counter. Last time
+%   I tried to do this it failed. And it seems strange!
+%   \ch{I think theorems can have different counter from figures.
+%     I would call tables also figures; or if you meat listings, those
+%     can have a separate counter.
+%   I would use the same counter for
+%   theorems, lemmas, definitions, etc.}
+% \item Take care of first parts (abstract, thanksgiving, keywords, outline, etc.)
+% \item Decide capitalization. Symbolic or symbolic machine, enforce it through out the document.
+% \end{enumerate}

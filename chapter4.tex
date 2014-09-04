@@ -1,8 +1,6 @@
 \chapter{Formally Verified Control-Flow Integrity Micro-Policy}
 \label{ch:verified_cfi}
 
-\nick{rephrased the intro, old one in comment. Still needs some iterations.}
-
 In this chapter we develop our main results. In particular, we prove a
 property capturing the notion of \CFI, similar to what was proposed by
 Abadi \ETAL in \cite{AbadiBEL09}, for the concrete machine running
@@ -10,7 +8,7 @@ monitor code that implements the micro-policy of \cref{sec:cfi_fine}.
 
 In order to obtain this result we propose a generic preservation
 theorem that states that the \CFI property is preserved, under certain
-assumptions, by $\lbrace 0,1 \rbrace$-backward simulation. This
+assumptions, by a $\lbrace 0,1 \rbrace$-backward simulation. This
 allowed us to structure our proofs in a modular way and to avoid a
 direct - and several times more complex - proof of \CFI on the
 concrete machine. Furthermore it allowed us to obtain a proof for \CFI
@@ -22,20 +20,22 @@ reduced, as we essentially had to do most of our reasoning at the
 Symbolic level.
 
 The reusable nature of our preservation theorem allowed us to use the
-Symbolic machine as an intermediate step between an Abstract machine
-that has \CFI by construction and therefore a trivial proof of the
-\CFI property.  We proved a 1-backward simulation between the Symbolic
-and the Abstract machine, which allowed us to invoke the preservation
-theorem in order to transfer the \CFI property from the Abstract to
-the Symbolic machine and consequently to the Concrete machine by
-invoking the preservation theorem for a second time.
+Symbolic machine as an intermediate step in our proofs. In particular
+we introduced an Abstract machine that has \CFI by construction and
+therefore a trivial proof of the \CFI property.  We proved a
+1-backward simulation between the Symbolic and the Abstract machine,
+which allowed us to invoke the preservation theorem in order to
+transfer the \CFI property from the Abstract to the Symbolic machine
+and consequently to the Concrete machine by invoking the preservation
+theorem for a second time.
 
 Finally, we prove a 1-forward simulation between the Abstract and the
 Symbolic machine and thus have a complete two-way refinement between
 the Concrete and the Abstract machine. These refinement proofs provide
 us with additional assurance in the correctness of our micro-policy.
 
-\nick{mention in the end (here) that our proofs can be found somewhere}
+Our Coq development will be open sourced in the near future and is
+currently available at request.
 
 % We proved in Coq that the concrete machine running monitor code that
 % implements the micro-policy of \cref{sec:cfi_fine} Using the
@@ -74,7 +74,7 @@ us with additional assurance in the correctness of our micro-policy.
        >=stealth]
 
       % abstract
-      \node [machine,fill=teal!10] (abstract) {Abstract Machine};
+      \node [machine,fill=teal!10] (abstract) {CFI Abstract Machine};
 
       % symbolic-rule
       \node (symbolic label) [below=2.5cm of abstract] {Symbolic Machine};
@@ -92,15 +92,15 @@ us with additional assurance in the correctness of our micro-policy.
 
       %symbolic cfi
       \draw [thick] (symbolic) to (symbolic cfi);
-      \draw [->,thick]
+        \draw [->,thick]
               (abstract cfi)
-              to node [right] {Preserved}
+              to node [right,text width=3cm] {Preserved\\by backward \\simulation}
               (symbolic cfi);
 
       % concrete
       \node (concrete label) [below=2.5cm of symbolic label] {Concrete
         Machine};
-      \node [rectangle,draw,thick,fill=red!30,rounded corners]
+      \node [rectangle,draw,thick,fill=gray!20,rounded corners]
             (fault handler) [right=of concrete label] {CFI Policy Monitor};
       \begin{pgfonlayer}{background}
         \node [machine,dashed,fill=teal!10,fit={(concrete label) (fault handler)}]
@@ -121,9 +121,9 @@ us with additional assurance in the correctness of our micro-policy.
 
       \draw [thick] (concrete) to (concrete cfi);
       \draw [->,thick]
-              (symbolic cfi)
-              to[] node [right] {Preserved}
-              (concrete cfi);
+        (symbolic cfi)
+        to [] node [right,text width=3cm] {Preserved\\by backward\\simulation}
+        (concrete cfi);
 
       % \draw [draw=red!60,thick,->]
       %       (symbolic rules.center |- symbolic rules.south)
@@ -137,7 +137,7 @@ us with additional assurance in the correctness of our micro-policy.
 
 \Cref{proof_structure} visualizes our proof structure.
 Dashes correspond to theorems and definitions provided by
-the micro-policies framework, red colored objects correspond
+the micro-policies framework, gray colored objects correspond
 to assumptions we make and the rest to our proofs and definitions.
 
 % \section{Representing control-flow graphs}\label{sec:cfi_tags}
@@ -240,17 +240,18 @@ to assumptions we make and the rest to our proofs and definitions.
 Our formalization includes a definition of \CFI, similar to the one found in
 \cite{AbadiBEL09}, which we prove to be true of all our machines. The need for a
 new definition arises from fundamental differences between our enforcement
-mechanism on the concrete mechanism and the one used by Abadi \ETAL. In
-particular, our enforcement-mechanism does not prevent a violation, instead
-it can detect it after it has occurred by taking an arbitrary number of
+mechanism on the concrete machine and the one used by Abadi \ETAL In
+particular, our enforcement mechanism does not prevent a violation, instead
+it can only detect it after it has occurred by taking an arbitrary number of
 ``protected'' (monitor mode) steps before eventually bringing the machine to a
 halt. This does not have any impact on the security effectiveness of our
-mechanism, it does however lead to a more complex definition and therefore
+mechanism, it does however lead to more complex definitions and therefore
 more complex proofs.
 
 We draw the identifiers used to tag instructions from a set of
 sub-word sized elements, for which there is a partial conversion
-function to words ($word\_to\_id$).
+function from words ($word\_to\_id$), as well as a total conversion
+function from identifiers to words ($id\_to\_word$).
 We represent the set of allowed indirect jumps, as a characteristic
 function on identifiers ($id \rightarrow id \rightarrow bool$), called
 \CFG. We can extend this relation to precisely describe the
@@ -292,7 +293,7 @@ We define a predicate \INITIAL{s}, where s is a machine state, that
 states that s is an initial state. We use this predicate to express some
 invariants that are preserved through execution (\EG the initial tagging scheme
 for the memory). Finally we define a stopping predicate on an execution trace
-that states that the machine is coming to a halt with respect to normal steps.
+that characterizes execution traces after a control-flow violation.
 
 Collecting the above parameters we can define a generic \CFI machine
 that we will later instantiate with the Abstract, the Symbolic and the
@@ -314,9 +315,6 @@ For a \CFI machine we give the following definitions:
   if for all $ i \in [0,n)$ if \stepn{s_i}{s_{i+1}} then
   $(s_i,s_{i+1}) \in$ \SUCC{}.
 \end{definition}
-
-\nick{The word relation for succ and cfg is strange since they are
-booleans, is it ok, or does it confuse you, making you believe they are Props?}
 
 The above definition corresponds to the one found in \cite{AbadiBEL09}, however
 it is stronger in the sense that it requires that steps that are in the
@@ -362,55 +360,106 @@ field is the instruction memory, the second the data memory, the third the
 registers, the fourth is the pc register and the fifth is the \ok bit.
 
 \subsection{Operational semantics}\label{sec:abstract_semantics}
-Below is the step rule for the Store instruction, illustrating both \NWC and
-\NXD. Notice that the instruction is fetched by the instruction memory and
-the store is done on the data memory.
 
-\begin{figure}[!htb]
+In \cref{abs_semantics} we define the operational semantics of the Abstract Machine.
+Notice that the machine can only step when the \ok bit is set to true (\IE no control-flow
+violation has occurred). All executed instructions are fetched from
+the instruction memory, thus the machine has \NXD by construction. Moreover
+the rule for Store instructions, mandates that all memory writes are done on the
+data memory, thus enforcing \NWC by construction.
+
+Upon execution of an indirect jump (Jump/Jal), we consult the \CFG
+function to check whether the change of control-flow is allowed. We do
+that through a function \J that converts the words to identifiers and
+then invokes the \CFG function on them. If the conversion fails or if
+the flow is now allowed according to \CFG then the jump is taken but
+the \ok bit is set to false, which will halt the machine in the next
+step, as it is only allowed to step when the \ok bit is set to
+true. Otherwise the \ok bit will remain true.
+
+\begin{figure}[htpb]
+\infrule[Nop]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Nop}
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg}{\pc+1}{\ii{true}}}}
+\bigskip
+
+\infrule[Const]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Const}~n~r \\
+  \reg' = \upd{\reg}{r}{n} \andalso
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg'}{\pc+1}{\ii{true}}}}
+\bigskip
+
+\infrule[Mov]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Mov}~r_p~r_s \\
+  \rd{\reg}{r_p} {=} w_p \andalso
+  \reg' = \upd{\reg}{r_s}{w_p}
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg'}{\pc+1}{\ii{true}}}}
+\bigskip
+
+\infrule[Binop]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Binop}~op~r_p~r_s~r_t \\
+  \rd{\reg}{r_p} {=} w_p \andalso
+  \rd{\reg}{r_s} {=} w_s \andalso
+  \reg' = \upd{\reg}{r_t}{w_p~op~w_s}
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg'}{\pc+1}{\ii{true}}}}
+\bigskip
+
+\infrule[Load]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Load}~r_p~r_s \\
+  \rd{\reg}{r_p} {=} w_p \andalso
+  \rd{\imem}{w_p} {=} w \lor \rd{\dmem}{w_p} {=} w \\
+  \reg' = \upd{\reg}{r_s}{w}
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg'}{\pc+1}{\ii{true}}}}
+\bigskip
+
 \infrule[Store]{
-  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Store}~r_p~r_s \andalso
-  \rd{\reg}{r_p} = p \\
-  \rd{\reg}{r_s} = w \andalso
-  \dmem' = \upd{\dmem}{p}{w}
-  }{\step{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
-    \acfistat{\imem}{\dmem'}{\reg'}{\pc+1}{\ii{true}}}}
-\caption{Step rule for Store instruction of abstract machine}
-\end{figure}
-
-In the above rule, the \ok bit is true for both the starting and the
-resulting state. In fact, the machine can take a step only when the
-\ok bit is set to true. In the above rule, the \ok bit is set to true
-in the resulting state, indicating that no control-flow violation has
-happened, as expected by the execution of a Store
-instruction. Control-flow violations in the \NWC setting our machine
-is executing, can only occur from \emph{indirect} jump instructions,
-in our case the Jump and Jal instructions. Upon execution of a Jump or
-Jal instruction, we consult the \CFG function to check whether the
-change of control-flow is allowed. We do that through a function \J
-that converts the words to identifiers and then invokes the \CFG
-function on them. If the conversion fails or if it is now allowed
-according to \CFG then the jump is taken but the \ok bit is set to
-false, which will halt the machine in the next step, as it is only
-allowed to step when the \ok bit is set to true. Otherwise the \ok bit
-will remain true.
-
-\begin{figure}[!htpb]
-\infrule[Jal]{
-  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Jal}~r \andalso
-  \rd{\reg}{r} = \pc' \\
-  \reg' = \upd{\reg}{\ra}{pc+1} \andalso
-  \ii{ok} = (\pc,\pc') \in \Jm
-  }{\step{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
-    \acfistat{\imem}{\dmem}{\reg'}{\pc'}{\ii{ok}}}}
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Store}~r_p~r_s \\
+  \rd{\reg}{r_p} {=} w_p \andalso
+  \rd{\reg}{r_s} {=} w_s \\
+  \dmem' = \upd{\dmem}{w_p}{w_s}
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem'}{\reg}{\pc+1}{\ii{true}}}}
 \bigskip
 
 \infrule[Jump]{
-  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Jump}~r \andalso
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Jump}~r \\
   \rd{\reg}{r} = \pc' \andalso
   \ii{ok} = (\pc,\pc') \in \Jm
-  }{\step{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg}{\pc'}{\ii{ok}}}}
+\bigskip
+
+\infrule[Jal]{
+  \imem[\pc] = i \andalso \ii{decode}~i = \ii{Jal}~r \\
+  \rd{\reg}{r} = \pc' \andalso
+  \reg' = \upd{\reg}{\ra}{pc+1} \andalso
+  \ii{ok} = (\pc,\pc') \in \Jm
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
     \acfistat{\imem}{\dmem}{\reg'}{\pc'}{\ii{ok}}}}
-\caption{Step rules for Jump and Jal instruction of Abstract machine}
+\bigskip
+
+\infrule[Bnz]{
+  \mem[\pc] = i \andalso \ii{decode}~i = \ii{Bnz}~r~n \andalso
+  \rd{\reg}{r} {=} w \\
+  \pc' \leftarrow if~w = 0~then~ \pc \mathrel{+} 1 ~ else~\pc \mathrel{+} n
+   }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem}{\reg'}{\pc'}{\ii{true}}}}
+\bigskip
+
+\infrule[Service]{
+  \pc \not\in \ii{dom(\imem)} \andalso \pc \not\in \ii{dom(\dmem)} \andalso
+  \ii{get\_service}~\pc = (addr,f) \\
+  f~\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}=
+    \acfistat{\imem}{\dmem'}{\reg'}{\pc'}{\ii{true}}
+  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
+    \acfistat{\imem}{\dmem'}{\reg'}{\pc'}{\ii{true}}}}
+\caption{Operational Semantics of the Abstract Machine}
+\label{abs_semantics}
 \end{figure}
 
 As the abstract machine serves as a specification to a machine with
@@ -429,23 +478,10 @@ of a monitor service is done simply by jumping to it's address, there
 is no separate instruction. As with all other instructions, execution
 of the monitor service is only allowed if the \ok bit is set to true.
 
-\begin{figure}[htb!]
-\infrule[Service]{
-  \pc \not\in \ii{dom(\imem)} \andalso \pc \not\in \ii{dom(\dmem)} \andalso
-  \ii{get\_service}~\pc = (addr,f) \\
-  f~\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}=
-    \acfistat{\imem}{\dmem'}{\reg'}{\pc'}{\ii{true}}
-  }{\stepn{\acfistat{\imem}{\dmem}{\reg}{\pc}{\ii{true}}}{
-    \acfistat{\imem}{\dmem'}{\reg'}{\pc'}{\ii{true}}}}
-\caption{Step rule for monitor services of abstract machine}
-\end{figure}
-
-\TODO{put all rules here in a large figure}
-
 \subsection{Attacker model}\label{sec:abstract_attacker}
 
 The attacker for the abstract machine is allowed to change the
-contents of the data memory and the registers \chrev{at any time}
+contents of the data memory and the registers at any time,
 but not the rest of the state.
 
 \begin{figure}[ht]
@@ -472,7 +508,7 @@ Below we give a specification of the \SUCC{A} function for the abstract machine,
 in the form of inference rules.
 A function is defined in the actual Coq development.
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
 \infrule[IndirectFlows]{
   \imem[\pc] = i
   \andalso \ii{decode}~i \in \lbrace \ii{Jal~r}, \ii{Jump~r} \rbrace
@@ -531,8 +567,8 @@ defining a predicate on execution traces:
 \item All steps in the trace are attacker steps (\stepa{}{}{})
 \end{enumerate}
 \end{definition}
-\ch{Why not give this thing a name/notation? Like this it seems
-  like informal handweaving, not a real definition}
+% \ch{Why not give this thing a name/notation? Like this it seems
+%   like informal handweaving, not a real definition}
 
 \subsection{CFI proof for the Abstract Machine}\label{abstract_proof}
 
@@ -540,7 +576,7 @@ Regarding initial states, we only require that the \ok bit is set to
 true.  We can now instantiate the class of the machines defined in
 \cref{cfi_machine}, with the abstract machine and prove that the
 abstract machine has \CFI according to \cref{cfi}.  We first prove a
-helpful lemma, which states a step that is both a normal and an
+helpful lemma, which states that a step that is both a normal and an
 attacker step is always safe according to the \SUCC{A} function. The
 intuition behind this, is that attacker steps retain the \ok bit while
 a normal step that violates the control-flow would change the \ok bit
@@ -575,9 +611,9 @@ The abstract machine has the \CFI property stated by \cref{cfi}.
     of a single step \step{st}{st'}. We proceed with case analysis on
     the step.
     \begin{itemize}
-    \item \textbf{Attacker Step} By \cref{attacker_no_v} we
-      note that an attacker step cannot be a normal step outside the
-      \SUCC{A} relation. Thus in this case the whole trace has \CFI
+    \item \textbf{Attacker Step} By \cref{attacker_no_v} we note that
+      an attacker step cannot also be a normal step that is disallowed
+      by \SUCC{A}. Thus in this case the whole trace has \CFI
       according to \cref{traceHasCfi}.
     \item \textbf{Normal Step} By case analysis, if
       $(\mathit{st},\mathit{st'}) \in \SUCCm{A}$ then trivially the
@@ -700,7 +736,7 @@ Although, the rules in \cref{sec:cfi_fine} were fairly simply,
 expressing them using Gallina's pattern matching increased their
 size. We also experimented, with different ways of writing the
 transfer function but we decided to stick with the definition above as
-it's the most straightforward. It's worth to note that bugs in the
+it is the most straightforward. It is worth to note that bugs in the
 above definition were easily made apparent when proving theorems
 involving the transfer function. In fact, an ``interesting''
 experiment was to re-define the above function in a different way and
@@ -760,8 +796,8 @@ extending the set of allowed jumps \CFG.
   \mem[\pc'] = \atom{\textit{i}'}{(\INSTR{dst})} \\
     (\textit{src},\textit{dst}) \in \CFGm
   }{
-  (\acfistat{\mem}{\reg}{\pc}{\extra}{},
-  \acfistat{\mem}{\reg}{\pc'}{\extra}{}) \in \SUCCm{S}}
+  (\astat{\mem}{\reg}{\pc}{\extra},
+  \astat{\mem}{\reg}{\pc'}{\extra}) \in \SUCCm{S}}
 \bigskip
 
 \infrule[IndirectFlows2]{
@@ -771,35 +807,35 @@ extending the set of allowed jumps \CFG.
     \andalso \textit{get\_service}~\pc = (\INSTR{dst},f) \\
     (\textit{src},\textit{dst}) \in \CFGm
   }{
-  (\acfistat{\mem}{\reg}{\pc}{\extra}{},
-  \acfistat{\mem}{\reg}{\pc'}{\extra}{}) \in \SUCCm{S}}
+  (\astat{\mem}{\reg}{\pc}{\extra},
+  \astat{\mem}{\reg}{\pc'}{\extra}) \in \SUCCm{S}}
 \bigskip
 
 \infrule[ConditionalFlows]{
-  \mem[\pc] = \atom{\textit{i}}{(\INSTR{_})}
+  \mem[\pc] = \atom{\textit{i}}{(\INSTR{\_})}
   \andalso \textit{decode~i} = \ii{Bnz~r~imm}\\
    (\pc' = \pc + 1) \vee (\pc' = \pc + imm)
   }{
-  (\acfistat{\mem}{\reg}{\pc}{\extra}{},
-  \acfistat{\mem}{\reg}{\pc'}{\extra}{}) \in \SUCCm{S}}
+  (\astat{\mem}{\reg}{\pc}{\extra},
+  \astat{\mem}{\reg}{\pc'}{\extra}) \in \SUCCm{S}}
 \bigskip
 
 \infrule[NormalFlows]{
-  \mem[\pc] = \atom{\textit{i}}{(\INSTR{_})}
+  \mem[\pc] = \atom{\textit{i}}{(\INSTR{\_})}
   \andalso
   \ii{decode}~i \not\in \lbrace \ii{Jal~r}, \ii{Jump~r}, \ii{Bnz~r~imm},
   \varnothing \rbrace
   \\ \pc' = \pc + 1
   }{
-  (\acfistat{\mem}{\reg}{\pc}{\extra}{},
-  \acfistat{\mem'}{\reg'}{\pc'}{\extra}{}) \in \SUCCm{S}}
+  (\astat{\mem}{\reg}{\pc}{\extra},
+  \astat{\mem'}{\reg'}{\pc'}{\extra}) \in \SUCCm{S}}
 \bigskip
 
 \infrule[ServiceFlows]{
   \mem[\pc] = \varnothing \andalso \textit{get\_service}~\pc = (\ti',f)\\
   }{
-  (\acfistat{\mem}{\reg}{\pc}{\extra}{},
-  \acfistat{\mem'}{\reg'}{\pc'}{\extra'}{}) \in \SUCCm{S}}
+  (\astat{\mem}{\reg}{\pc}{\extra},
+  \astat{\mem'}{\reg'}{\pc'}{\extra'}) \in \SUCCm{S}}
 \caption{Allowed control-flows for instructions of the symbolic machine}
 \label{fig:symbolic_succ}
 \end{figure}
@@ -817,7 +853,7 @@ the symbolic and the abstract machine.
 
 \begin{definition}[Instructions Tagged]\label{instructions_tagged}
   ~ For all addresses \textit{addr} in the memory such that
-  $$\mem[\mathit{addr}] = \atom{\mathit{i}}{\INSTR{id}}$$ \textit{addr}
+  $$\rd{mem}{addr} = \atom{i}{\INSTR{id}}$$ it holds that \textit{addr}
   is in the domain of \emph{word\_to\_id} and additionally
   $$word\_to\_id ~\mathit{addr} = \mathit{id}$$
 \end{definition}
@@ -825,41 +861,47 @@ the symbolic and the abstract machine.
 \begin{definition}[Entry Points Tagged]\label{entry_tagged}
   ~ For all addresses \textit{addr} such that
   \begin{align*}
-  & \mem[addr] = \varnothing\\
+  & \rd{mem}{addr} = \varnothing\\
   & get\_service~addr = (\mathit{it},f)\\
   & \mathit{it} = \INSTR{id}
   \end{align*}
-  \textit{addr} is in the domain of \emph{word\_to\_id} and additionally
+  it holds that \textit{addr} is in the domain of \emph{word\_to\_id} and additionally
   $$word\_to\_id ~\mathit{addr} = \mathit{id}$$
 \end{definition}
 
 \begin{definition}[Valid Jumps Tagged]\label{valid_jmp_tagged}
   For all addresses \textit{saddr, taddr} such that
   $$(\mathit{saddr},\mathit{taddr}) \in \Jm$$ it holds that
-  $$\exists \mathit{i}, \mem[saddr] = \atom{\mathit{i}}{\INSTR{(word\_to\_id~saddr)}} $$
+  $$\exists \mathit{i}, \rd{mem}{saddr} = \atom{i}{\INSTR{(word\_to\_id~saddr)}} $$
   and either $$\exists \mathit{i'}, \mem[taddr]
-  =\atom{\mathit{i'}}{\INSTR{word\_to\_id~taddr}}$$ or
+  =\atom{i'}{\INSTR{word\_to\_id~taddr}}$$ or
   \begin{align*}
-  & \mem[taddr] = \varnothing\\
-  & \exists (\mathit{it},f), get\_service~addr = (\mathit{it},f)\\
+  & \rd{mem}{taddr} = \varnothing\\
+  & \exists (\mathit{it},f), ~ get\_service~addr = (\mathit{it},f)\\
   & \mathit{it} = \INSTR{(word\_to\_id~taddr)}
   \end{align*}
 \end{definition}
 
-Additionally we need two (\TODO{Or three}) more invariants for forward
+\begin{definition}[Registers Tagged]\label{registers_tagged}
+  ~ For all register sets \textit{regs} and registers \textit{r} such that
+  $$\rd{regs}{r} = \atom{v}{ut}$$ it holds that
+  $$\rd{regs}{r} = \atom{v}{\DATA}$$
+\end{definition}
+
+Additionally we need two more invariants for forward
 simulation. These two invariants enforce that all Jump and Jal instructions
 are tagged with a unique identifier.
 
 \begin{definition}[Jumps Tagged]\label{jumps_tagged}
   For all addresses \textit{addr} and instructions \textit{i} such
-  that $\rd{mem}{addr}=i@\INSTR{x}$ and $decode~i = Jump r$, it holds that
-  $$\exists id, word\_to\_id addr = id \land x = id$$
+  that $\rd{mem}{addr}=\atom{i}{\INSTR{x}}$ and $decode~i = Jump~r$, it holds that
+  $$\exists id, word\_to\_id~addr = id \land x = id$$
 \end{definition}
 
 \begin{definition}[Jals Tagged]\label{jals_tagged}
   For all addresses \textit{addr} and instructions \textit{i} such
-  that $\rd{mem}{addr}=i@\INSTR{x}$ and $decode~i = Jal r$, it holds that
-  $$\exists id, word\_to\_id addr = id \land x = id$$
+  that $\rd{mem}{addr}=\atom{i}{\INSTR{x}}$ and $decode~i = Jal~r$, it holds that
+  $$\exists id, word\_to\_id~addr = id \land x = id$$
 \end{definition}
 
 We define a predicate \emph{initial} that determines whether a symbolic
@@ -867,7 +909,7 @@ state is an initial state.
 
 \begin{definition}[Symbolic Initial States]\label{symbolic_initial_pred}
   ~ A symbolic state $s^S$ is an initial state ($initial^S ~ s^S$) if
-  \cref{instructions_tagged,entry_tagged,valid_jmp_tagged,jumps_tagged,jals_tagged}
+  \cref{instructions_tagged,entry_tagged,valid_jmp_tagged,registers_tagged,jumps_tagged,jals_tagged}
   hold for $s^S$ and additionally the tag on the \pc is set to
   \DATAname.
 \end{definition}
@@ -943,14 +985,14 @@ We visualize the above definition with the following diagram:
     \begin{tikzpicture}
       \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
       {
-        s^L_1 & s^L_2 \\
-        s^H_1 & s^H_2 \\};
+        s^H_1 & s^H_2 \\
+        s^L_1 & s^L_2 \\};
       \path[->]
       (m-1-1) edge [snake it,-] node  {} (m-2-1)
-      edge [above] node [below] {} (m-1-2)
-      (m-2-1.east|-m-2-2) edge [dashed] node {}
+      edge [above,dashed] node [below] {} (m-1-2)
+      (m-2-1.east|-m-2-2) edge [] node {}
       node {} (m-2-2)
-      (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
+      (m-1-2) edge [snake it,-,dashed] node {} (m-2-2);
     \end{tikzpicture}
   \end{center}
 \vspace{-\smallskipamount}
@@ -960,7 +1002,7 @@ We visualize the above definition with the following diagram:
 \begin{definition}[1-Forward Simulation]
 \label{fwd_simulation_LH}
   A high-level machine simulates a low-level machine with respect to a
-  $simulation~relation~\sim$ between low-level machine states and
+  $simulation~relation \sim$ between low-level machine states and
   high-level machine states, if $s^H_1 \sim s_1^L$ and
   \stepn{s^H_1}{s^H_2} implies that there exists $s^L_2$ such that,
   $s^H_2 \sim s^L_2$ and \stepn{s^L_1}{s^L_2}.
@@ -994,7 +1036,7 @@ component of the state.
   An abstract instruction memory \imem is in simulation with a
   symbolic memory \mem, if for all words \textit{w, x} it holds
   that
-  $$(\exists~\mathit{it}, ~ \rd{\mem}{\mathit{w}} =
+  $$(\exists~\mathit{it \in \lbrace id,\bot\rbrace}, ~ \rd{\mem}{\mathit{w}} =
   \atom{x}{(\INSTR{\mathit{it}})})
   \iff \rd{\imem}{\mathit{w}} = \mathit{x}$$
 \end{definition}
@@ -1004,7 +1046,7 @@ component of the state.
   An abstract register set \textit{areg} is in simulation with a
   symbolic register set \textit{sreg}, if for all registers \textit{r} and words
   \textit{x} it holds that
-  $$ \rd{\mathit{sreg}}{\mathit{r}} = \atom{x}{\DATA})
+  $$ \rd{\mathit{sreg}}{\mathit{r}} = \atom{x}{\DATA}
   \iff \rd{\mathit{areg}}{\mathit{r}} = \mathit{x}$$
 \end{definition}
 
@@ -1048,7 +1090,7 @@ violation in the symbolic machine and vice-versa.
 
 We give one more definition of correctness, for the case of monitor
 services. The intuition is the same, but because monitor services
-live outside the addressable memory of the machines, it's statement
+live outside the addressable memory of the machines, its statement
 needs to be adapted a bit.
 
 \begin{definition}[Monitor Service Correctness]
@@ -1067,7 +1109,7 @@ needs to be adapted a bit.
     \end{align*}
 \end{definition}
 
-The simulation relation ($\sim$) is defined as the conjunction of
+The simulation relation ($\sim_{AS}$) is defined as the conjunction of
 \cref{refine_dmemory,refine_imemory,refine_registers,refine_pc,refine_correctness,refine_correctness_sc}
 and the invariants
 \labelcref{instructions_tagged,entry_tagged,valid_jmp_tagged}.
@@ -1075,20 +1117,19 @@ and the invariants
 \subsubsection{Proving 1-backward simulation for normal steps}
 \label{sec:backward_SA_normal}
 
-Proving a 1-backward simulation for normal steps is relatively
-straight-forward, mostly thanks to the fact that the symbolic
-machine abstracts away many details of the concrete machine
-that would make the proofs more tedious. Additionally we do
-not have to provide such proofs for any monitor service as
-we did not use any. Therefore we will only have to reason
-about the small set of instructions that the symbolic
-and the abstract machine share.
+Once we have the definition of the simulation relation, proving a
+1-backward simulation for normal steps is relatively straight-forward,
+thanks to the fact that the symbolic machine abstracts away
+many details of the concrete machine that would make the proofs more
+tedious. Additionally we do not have to provide such proofs for any
+monitor service as we did not use any. Therefore we will only have to
+reason about the small set of instructions that the symbolic and the
+abstract machine share.
 
 We start with some helpful lemmas about registers and memory
 updates. These lemmas serve as the basis for proving simulation for
 instructions that change the registers or the memory. The
 corresponding Coq definitions and proofs can be found.
-\TODO{cite source code/remove this}
 
 \begin{lemma}[Registers Update Backward Simulation]
 \label{refine_registers_upd}
@@ -1127,8 +1168,9 @@ the high-level machine is the Abstract machine.
 
 \begin{theorem}[1-Backward Simulation Symbolic-Abstract]
 \label{simulation_SA}
-\Cref{simulation_LH} holds for the Symbolic (low-level) and
-the Abstract (high-level) machines.
+\Cref{simulation_LH} holds for the Symbolic (low-level) and the
+Abstract (high-level) machines when the two machines are related by
+$\sim_{AS}$.
 \end{theorem}
 
 \subsubsection{Proving 1-backward simulation for attacker steps}
@@ -1141,7 +1183,7 @@ that steps now refer to attacker steps.
 \begin{definition}[1-Backward Simulation Attacker]
 \label{simulation_LH_attacker}
   A low-level machine simulates a high-level machine with respect to
-  a $simulation~relation~\sim$ between low-level and high-level machine states,
+  a $simulation~relation\sim$ between low-level and high-level machine states,
   if $s^H_1 \sim s^L_1$ and \stepa{s^L_1}{s^L_2}{L} implies that there
   exists $s^H_2$ such that, $s^H_2 \sim s^L_2$ and \stepa{s^H_1}{s^H_2}{H}.
 \end{definition}
@@ -1197,7 +1239,7 @@ steps. The proof proceeds by using the correctness theorem for the map function.
   For all abstract register sets (\textit{areg})
   and symbolic register sets (\textit{sreg, sreg}'),
   \begin{align*}
-    & \mathit{areg} \sim_{regs} \mathit{reg} \implies \\
+    & \mathit{areg} \sim_{regs} \mathit{sreg} \implies \\
     & \stepa{\mathit{sreg}}{\mathit{sreg}'}{S} \implies \\
     & \mathit{map}~untag\_atom~\mathit{sreg}' \sim_{regs} \mathit{sreg}'
   \end{align*}
@@ -1249,7 +1291,7 @@ Again we can prove a few helpful lemmas that ease the final proof.
   \begin{align*}
     & \mathit{dmem} \sim_{dmem} \mathit{smem} \implies \\
     & \stepa{\mathit{smem}}{\mathit{smem}'}{S} \implies \\
-    & \mathit{map}~untag\_atom~(\mathit{filter}~\mathit{is\_data}~\mathit{sreg}' \sim_{dmem} \mathit{dmem}'
+    & \mathit{map}~untag\_atom~(\mathit{filter}~\mathit{is\_data}~\mathit{sreg}') \sim_{dmem} \mathit{dmem}'
   \end{align*}
 \end{lemma}
 
@@ -1272,7 +1314,7 @@ as well.
 
 In all cases, we have to show that the domains of the abstract
 memories and registers are also preserved. We include here the
-corresponding lemma for the data memory. It's proof was again more
+corresponding lemma for the data memory. Its proof was again more
 complicated, due to the fact that we had to split the symbolic memory.
 
 \begin{lemma}[Attacker preserves data memory domains]
@@ -1294,7 +1336,7 @@ simulation for attacker steps as defined by \cref{simulation_LH_attacker}.
 \label{simulation_SA_attacker}
 \Cref{simulation_LH_attacker} holds for the Symbolic (low-level) and
 the Abstract (high-level) machines when the two machines are related
-by $\sim$.
+by $\sim_{AS}$.
 \end{theorem}
 
 \subsubsection{Proving 1-forward simulation for normal steps}
@@ -1355,7 +1397,8 @@ unique identifier, which we enforce by the invariants
 \begin{theorem}[1-Forward Simulation Abstract-Symbolic]
 \label{fwd_simulation_SA}
 \Cref{fwd_simulation_LH} holds for the Symbolic (low-level) and
-the Abstract (high-level) machines.
+the Abstract (high-level) machines when the two machines are related
+by $\sim_{AS}$.
 \end{theorem}
 
 \section{The Concrete  Machine}\label{sec:concrete_cfi}
@@ -1365,7 +1408,7 @@ monitor, we can utilize the framework of \cref{sec:framework} to
 instantiate the concrete machine and obtain a refinement between the
 concrete and the symbolic machines, we need to provide the encoding of
 symbolic tags. For the concrete machine we only considered a 32-bit
-architecture, but as already mentioned, we could very easily
+architecture, but we could very easily
 instantiate the concrete machine with 64-bit words with minimal
 changes to our proofs.
 
@@ -1624,7 +1667,7 @@ relation.
 In order to prove the simulation, we apply the same technique as in the
 case of Symbolic-Abstract backward simulation for attacker steps, constructing
 attacker steps at the symbolic level from attacker steps in the concrete level
-and additionally showing that the way we build the steps preserve the simulation
+and additionally showing that the way we build the steps preserves the simulation
 relation.
 
 We can construct a symbolic memory and a symbolic set of registers
@@ -1710,7 +1753,7 @@ the control-flow for user mode execution.
   \andalso (\textit{src},\textit{dst}) \in \CFGm
   }{
   (\cstat{\mem}{\reg}{\cache}{\atom{\pc}{\tpc}}{\epc},
-  \cstat{\mem}{\reg}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
+  \cstat{\mem}{\reg'}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
 \bigskip
 
 \infrule[IndirectFlows2]{
@@ -1722,7 +1765,7 @@ the control-flow for user mode execution.
   \textit{decode~i}' = \textit{Nop} \andalso (\textit{src},\textit{dst}) \in \CFGm
   }{
   (\cstat{\mem}{\reg}{\cache}{\atom{\pc}{\tpc}}{\epc},
-  \cstat{\mem}{\reg}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
+  \cstat{\mem}{\reg'}{\cache}{\atom{\pc'}{\tpc'}}{\epc}) \in \SUCCm{C}}
 \bigskip
 
 \infrule[ConditionalFlows]{
@@ -1755,7 +1798,7 @@ the control-flow for user mode execution.
 \subsection{Initial states of the Concrete Machine}
 \label{sec:concrete_initial}
 
-For the concrete machine, we require that it's initial states matches
+For the concrete machine, we require that its initial states matches
 the initial states of the symbolic machine under the simulation
 relation $\sim_U$. This ensures that concrete initial states satisfy
 both the invariants we enforced on symbolic initial states and any
@@ -1775,11 +1818,11 @@ the one for the symbolic or the abstract machine, due to the monitor
 steps. In particular, on the next step after a violation the machine
 will enter monitor mode to determine whether the step is allowed or
 not. The miss handler will take an arbitrary number of steps to
-determine that execution should be disallowed because a violation of
-the policy occurred. This is modeled by disallowing the concrete
-machine to return to user mode.  However, note that it could be the
-case that the machine cannot step at all after a control-flow
-violation, for example if the \pc is outside the memory of the machine.
+determine the violation of the enforced policy. This is modeled by
+disallowing the concrete machine to return to user mode.  However,
+note that it could be the case that the machine cannot step at all
+after a control-flow violation, for example if the \pc is outside the
+memory of the machine.
 
 In addition to the above, there may be attacker steps. These can only
 come immediately after the violating step and before the machine
@@ -1839,13 +1882,13 @@ be stopping.
 \section{Generic Preservation Theorem}
 \label{sec:cfi_preservation}
 
-In this section, we discuss the preservation theorem that we used,
+In this section, we develop the preservation theorem that we used,
 along with the simulation proofs of
 \cref{sec:refinement_SA,sec:refinement_CS}, in order to prove \CFI
 (\cref{cfi}) for the concrete machine.
 
 The statement of the theorem is parameterized by two \CFI machines
-(\cref{cfi_machine}. Moreover, we require that a $\lbrace 0,1
+(\cref{cfi_machine}). Moreover, we require that a $\lbrace 0,1
 \rbrace$-backward simulation between the two machines, holds for
 normal steps and a 1-backward simulation for attacker steps.  The
 $\lbrace 0,1 \rbrace$ simulation for normal steps, stems from the fact
@@ -1866,16 +1909,16 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
         \begin{tikzpicture}
           \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
           {
-            s^L_1 & s^L_2 \\
-        s^H_1 & s^H_2 \\};
-      \path[->]
-      (m-1-1) edge [snake it,-] node {} (m-2-1)
-      edge [above] node [above,very near end,font=\small] {n} (m-1-2)
-      (m-2-1.east|-m-2-2) edge [dashed, above,very near end,font=\small] node {n}
-      node {} (m-2-2)
-      (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
-    \end{tikzpicture}
-       \end{center}
+            s^H_1 & s^H_2 \\
+            s^L_1 & s^L_2 \\};
+          \path[->]
+          (m-1-1) edge [snake it,-] node {} (m-2-1)
+          edge [above] node [above,very near end,dashed,font=\small] {n} (m-1-2)
+          (m-2-1.east|-m-2-2) edge [dashed,above,very near end,font=\small] node {n}
+          node {} (m-2-2)
+          (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
+        \end{tikzpicture}
+      \end{center}
        \caption{1-backward simulation}
      \end{figure}
   \end{minipage}
@@ -1885,14 +1928,14 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
       \begin{center}
         \begin{tikzpicture}
           \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
-          {
+          { s^H\\
             s^L_0 & s^L_1 \\
-            s^H\\};
+          };
           \path[->]
           (m-1-1) edge [snake it,-,above] node {} (m-2-1)
-          (m-1-1.east|-m-1-2) edge [above,font=\small, very near end] node {n}
-          node {} (m-1-2)
-          (m-1-2) edge [snake it,dashed,-] node {} (m-2-1);
+          (m-2-1.east|-m-2-2) edge [above,font=\small, very near end] node {n}
+          node {} (m-2-2)
+          (m-1-1) edge [snake it,dashed,-] node {} (m-2-2);
         \end{tikzpicture}
       \end{center}
       \caption{0-backward simulation}
@@ -1905,12 +1948,12 @@ a $\lbrace 0,1 \rbrace$-backward simulation for the rest.
         \begin{tikzpicture}
           \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
           {
-            s^L_1 & s^L_2 \\
-            s^H_1 & s^H_2 \\};
+            s^H_1 & s^H_2 \\
+            s^L_1 & s^L_2 \\};
           \path[->]
           (m-1-1) edge [snake it,-] node {} (m-2-1)
-          edge [above] node [above,very near end,font=\small] {a} (m-1-2)
-          (m-2-1.east|-m-2-2) edge [dashed, above,very near end,font=\small] node {a}
+          edge [above] node [above,very near end,dashed,font=\small] {a} (m-1-2)
+          (m-2-1.east|-m-2-2) edge [dashed,above,very near end,font=\small] node {a}
           node {} (m-2-2)
           (m-1-2) edge [snake it,dashed,-] node {} (m-2-2);
         \end{tikzpicture}
@@ -2077,63 +2120,19 @@ there is a checked step $\stepn{s^{L}_1}{s^L_2}$, the functions
 
 \begin{definition}[No Attacker Steps on Violation]
 \label{av_no_attacker}
-For a high-level machine step $\stepn{s^H_1}{s^H_2}$ such that
+For a high-level machine step\\ $\stepn{s^H_1}{s^H_2}$ such that
 $(s^H_1,s^H_2) \not \in \SUCCm{H}$ it holds that $s^H_1 \not \to^H_a
 s^H_2$.
 \end{definition}
 
 \begin{definition}[Stopping Predicates]
 \label{as_implies_cs}
-If there is a step in the high-level machine $\stepn{s^H_1}{s^H_2}$
+If there is a step in the high-level machine\\ $\stepn{s^H_1}{s^H_2}$
 such that $(s^H_1,s^H_2) \not \in \SUCCm{H}$ and if the traces $s^H_2
 \cdot tr^H$ and $s^L_2 \cdot tr^L$ are in refinement and $s^H_2 \cdot tr^H$ is
 a stopping trace for the high-level machine then $s^L_2 \cdot tr^L$ is a
 stopping trace for the low-level machine.
 \end{definition}
-
-Again we create an interface for these assumptions using type-classes.
-
-% \lstheader{machine_refinement_specs}{Assumptions under which CFI preservation holds}
-
-% Class machine_refinement_specs := {
-
-%   step_classic : forall (cst cst': @state cmachine),
-%     (step cst cst') \/ (~step cst cst');
-
-%   initial_refine : forall (cst : @state cmachine),
-%     initial cst ->
-%     exists (ast : @state amachine), initial ast /\ refine_state ast cst;
-
-%   cfg_nocheck : forall asi csi csj,
-%     refine_state asi csi ->
-%     step csi csj ->
-%     check csi csj = false ->
-%     succ csi csj = true;
-
-%   cfg_equiv : forall (asi asj : @state amachine) csi csj,
-%     refine_state asi csi ->
-%     refine_state asj csj ->
-%     step asi asj ->
-%     check csi csj = true ->
-%     step csi csj ->
-%     succ csi csj = succ asi asj;
-
-%   av_no_attacker : forall (asi asj : @state amachine) csi,
-%     refine_state asi csi ->
-%     succ asi asj = false ->
-%     step asi asj ->
-%     ~ step_a asi asj;
-
-%   as_implies_cs : forall axs cxs asi asj csi csj,
-%     check csi csj = true ->
-%     succ asi asj = false ->
-%     step asi asj ->
-%     refine_state asi csi ->
-%     refine_traces (asj :: axs) (csj :: cxs) ->
-%     stopping (asj :: axs) ->
-%     stopping (csj :: cxs)
-% }.
-% \end{lstlisting}
 
 Under these assumptions we can now obtain a preliminary result about
 our \CFI definitions.
@@ -2306,10 +2305,6 @@ the high-level trace at the step that violates the control-flow.
 \caption{Splitting trace refinement on violation}
 \end{figure}
 
-\nick{this became kind of heavy with all the subtrace lines. Could lose the
-  whole trace (trH and trL) lines as a first step and use two boxes
-  that enclose the refined subtraces.}
-
 \begin{lemma}[Refine Traces Split]
 \label{refine_traces_split}
 \renewcommand{\baselinestretch}{1.25}\normalsize If the traces $s^H_0
@@ -2346,7 +2341,7 @@ low-level machine also has \CFI under the assumptions
 To prove \CFI for the symbolic machine, we instantiate the
 preservation theorem of \cref{sec:cfi_preservation} with the abstract
 machine as the high-level machine and the symbolic machine as the
-low-level machine. For the symbolic machines all steps are considered
+low-level machine. For the symbolic machine all steps are considered
 checked. Proving
 \cref{backward_simulation_preservation,backward_simulation_a_preservation}
 for the symbolic (low-level) and abstract (high-level) machines is
@@ -2366,10 +2361,9 @@ hold for this instantiation.
   \Cref{step_classic} holds for the Symbolic machine.
 \end{lemma}
 \begin{proof}
-  Decidability for Symbolic normal steps
   In order to decide whether $\stepn{s^S_0}{s^S_1}$ or
   $s^S_0 \not \to_n s^S_1$ we resort to the computational interpretation
-  of the step relation. If $step^S_n s^S_0 = s^S$ then if
+  of the step relation. If $step^S_n ~ s^S_0 = s^S$ then if
   $s^S_1 = s^S$ we obtain $\stepn{s^S_0}{s^S_1}$ otherwise
   we conclude that $s^S_0 \not \to_n s^S_1$.
 \end{proof}
@@ -2415,11 +2409,11 @@ hold for this instantiation.
 \end{lemma}
 \begin{proof}
   The proof proceeds by contradiction.
-  Suppose $s^H_1 \to^H_a s^H_2$ then by \cref{attacker_no_v}
-  we obtain that $(s^H_1,s^H_2) \in \SUCCm{H}$. But we know
-  by the second premise that $(s^H_1,s^H_2) \not \in \SUCCm{H}$,
+  Suppose $s^A_1 \to^A_a s^A_2$ then by \cref{attacker_no_v}
+  we obtain that $(s^A_1,s^A_2) \in \SUCCm{A}$. But we know
+  by the second premise that $(s^A_1,s^A_2) \not \in \SUCCm{A}$,
   therefore we reached a contradiction and it must be that
-  $s^H_1 \not \to^H_a s^H_2$.
+  $s^A_1 \not \to^A_a s^A_2$.
 \end{proof}
 
 \begin{lemma}[Abstract stopping implies Symbolic stopping]
@@ -2440,9 +2434,9 @@ hold for this instantiation.
     Suppose that the state ($s^S$) is not stuck, therefore there
     exists some state $s^S_c$ such that
     $\stepn{s^S}{s^S_c}$. Additionally we know by trace refinement that
-    $s^H \sim s^S$. By 1-backward simulation (checked step) we
-    conclude that there exists some state $s^H_c$ such that
-    $\stepn{s^H}{s^H_c}$. But the abstract trace is stopping and by
+    $s^A \sim_{AS} s^S$. By 1-backward simulation (checked step) we
+    conclude that there exists some state $s^A_c$ such that
+    $\stepn{s^A}{s^A_c}$. But the abstract trace is stopping and by
     \cref{abstract_stopping} all states in it are stuck with respect
     to normal steps. Therefore we reached a contradiction, thus it
     must be that $s^S$ is a stuck state.
@@ -2454,19 +2448,19 @@ hold for this instantiation.
     contradicts with the fact that the abstract machine is stuck
     with respect to normal steps by \cref{abstract_stopping}.
   \item \textbf{Attacker Step} The two traces are now augmented by an
-    attacker step at their beginning ($s^H \to_a s^H_0 \to_a \ldots
-    \to_a s^H_n$ and $s^L \to_a s^L_0 \to \ldots \to s^L_m$). By the
+    attacker step at their beginning ($s^A \to_a s^A_0 \to_a \ldots
+    \to_a s^A_n$ and $s^S \to_a s^S_0 \to \ldots \to s^S_m$). By the
     induction hypothesis we easily obtain that the tail of the
     symbolic trace is stopping. We need to prove that new step is an
     attacker step and that the new state is stuck with respect to
     normal steps. The former is trivial as we are in the case an
-    attacker step is taken. To show that $s^L$ is stuck with
+    attacker step is taken. To show that $s^S$ is stuck with
     respect to normal steps, we once again resort to a contradiction.
 
-    Suppose that there exists some $s^L_c$ such that $s^L \to_n s^L_c$.
-    We additionally know that $s^H \sim s^L$ by the trace refinement
+    Suppose that there exists some $s^S_c$ such that $s^S \to_n s^S_c$.
+    We additionally know that $s^A \sim s^S$ by the trace refinement
     relation. By backward simulation we get that there exists
-    some state $s^H_c$ such that $s^H \to_n s^H_c$. But we know that
+    some state $s^A_c$ such that $s^A \to_n s^A_c$. But we know that
     the abstract trace is stopping, therefore all states in it
     are stuck with respect to normal steps, thus we reached
     a contradiction.
@@ -2571,8 +2565,7 @@ hold for this instantiation of the preservation theorem.
   \Cref{cfg_equiv} holds for the Concrete-Symbolic machines.
 \end{lemma}
 \begin{proof}
-  The proof proceeds by case analysis on the instruction. \nick{this
-    one is not too hard, long and ugly to list..}
+  The proof proceeds by case analysis on the instruction.
 \end{proof}
 
 \begin{lemma}[No Symbolic Attacker Steps on Violation]
@@ -2586,7 +2579,7 @@ hold for this instantiation of the preservation theorem.
   clear contradiction, as $(s^S_1,s^S_2) \not \in \SUCCm{S}$ implies
   that the \pc of the new state is not the one mandated by the
   operational semantics which cannot be because $s^S_1 \to_n
-  s^S_2$. \nick{crappy at explaining the obvious, well done}
+  s^S_2$.
 
   In the case of a jump or jal instruction, it must be that the
   instruction is a self-loop, because $s^S_1 \to^{S}_a s^S_2$
@@ -2606,7 +2599,7 @@ hold for this instantiation of the preservation theorem.
       by $(s^S_1,s^S_2) \not \in SUCCm{S}$ we know that
       $(x,x) \not \in \CFGm$. Therefore by the transfer
       function (\labelcref{transfer_coq}) $s^S_1 \not \to_n s^S_2$.
-      Contradiction.
+      Therefore we reached a contradiction.
     \end{enumerate}
 \end{proof}
 
@@ -2664,11 +2657,6 @@ hold for this instantiation of the preservation theorem.
       to monitor mode. The monitor will detect the violation and take
       a series of steps before eventually halting the machine.
       \end{itemize}
-      \nick{this is super simplified, but the details are so gory..
-      in general the proof of stopping for the concrete machine is very
-    watered down. Perhaps I will return to explain a few things
-  about forming mvectors and the difference between symbolic mvectors
-  and concrete ones}
     \end{itemize}
 \end{proof}
 
