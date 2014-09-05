@@ -66,12 +66,12 @@
 
 \newcounter{ptrnb}
 \newcommand{\cellptr}[1]{
-  \draw[<-,line width=0.7pt] (0,\value{cellnb}) +(2,\value{ptrnb}*0.1) -- +(2.5,\value{ptrnb}*0.45);
-  \draw (2.5,\value{ptrnb}*0.5+\value{cellnb}) node[anchor=west] {#1};
+  \draw[<-,line width=0.7pt] (0,\value{cellnb}) +(-2,\value{ptrnb}*0.1) -- +(-2.5,\value{ptrnb}*0.45);
+  \draw (-2.5,\value{ptrnb}*0.5+\value{cellnb}) node[anchor=east] {#1};
   \addtocounter{ptrnb}{1}
 }
 \newcommand{\celladdr}[1]{
-  \draw (-2,\value{cellnb}) node[anchor=east] {#1};
+  \draw (2,\value{cellnb}) node[anchor=west] {#1};
 }
 \newcommand{\esp}{\cellptr{\%esp}}
 \newcommand{\ebp}{\cellptr{\%ebp}}

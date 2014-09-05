@@ -37,6 +37,7 @@
 \usepackage{amsthm}
 \usepackage{thmtools}
 \usepackage{caption}
+\usepackage{svg}
 \captionsetup[figure]{labelformat=empty}
 
 % \declaretheorem[numberwithin=chapter]{theorem}
@@ -49,7 +50,7 @@
 \newcommand*{\IE}{i.e.,\xspace}
 \newcommand*{\ETC}{etc.\xspace}
 \newcommand*{\ETAL}{{\em et al.}\xspace}
-\newcommand{\atom}[2]{#1@#2}
+\newcommand{\atom}[2]{\tt{#1@#2}}
 
 \newcommand{\mem}[0]{\ii{mem}\xspace}
 \newcommand{\imem}[0]{\ii{im}\xspace}
@@ -129,14 +130,14 @@ attacker code
   mitigation/.style={rectangle,draw=gray!80,text=black,thick,dashed,minimum height=1cm,text width=2.2cm},
   label/.style={rectangle},
   >=stealth]
-  \node (buffer_overflow) [attack] at (0,0)  {Buffer\\overflows};
-  \node (na1) [small_attack] at (1.5,0)  {};
-  \node (na2) [small_attack] at (4,0)  {};
-  \node (na3) [small_attack] at (4,1)  {};
-  \node (na4) [small_attack] at (3.5,-1)  {};
-  \node (na5) [small_attack] at (4.5,-1)  {};
-  \node (na6) [small_attack] at (6.5,0)  {};
-  \node (cfg_hijack) [attack] at (8,0)  {Control-Flow\\Hijacking};
+  \node (buffer_overflow) [attack] at (0,-1)  {Buffer\\overflows};
+  \node (na1) [small_attack] at (1.5,-1)  {};
+  \node (na2) [small_attack] at (4,-1)  {};
+  \node (na3) [small_attack] at (4,-0.5)  {};
+  \node (na4) [small_attack] at (3.5,-1.5)  {};
+  \node (na5) [small_attack] at (4.5,-1.5)  {};
+  \node (na6) [small_attack] at (6.5,-1)  {};
+  \node (cfg_hijack) [attack] at (8,-1)  {Control-Flow\\Hijacking};
   
   \path[->]
   (na1) edge [] node {} (na2)
@@ -160,8 +161,8 @@ attacker code
   \onslide<3->
   { \node (low_level_mitigations) [mitigation,text width=3.5cm] at (4,-3) {Deployed Mitigation\\ Techniques};
     \node [rectangle] (low effectiveness) at (4,-4) {Low Effectiveness};
-    \node (na4m) [small_attack,draw=dkblue!70,fill=dkblue!20] at (3.5,-1)  {};
-    \node (na5m) [small_attack,draw=dkblue!70,fill=dkblue!20] at (4.5,-1)  {};
+    \node (na4m) [small_attack,draw=dkblue!70,fill=dkblue!20] at (3.5,-1.5)  {};
+    \node (na5m) [small_attack,draw=dkblue!70,fill=dkblue!20] at (4.5,-1.5)  {};
     \path[]
     (low_level_mitigations) edge [->,bend left,left,font=\footnotesize] node {ASLR} (na4)
     (low_level_mitigations) edge [->,bend right,right,font=\footnotesize] node {Stack Canaries} (na5);}
@@ -176,8 +177,8 @@ attacker code
               (cfg_hijack);}
 
     
-  \node [rectangle] (cause) at (-1,1) {Cause};
-  \node [rectangle] (effect) at (9,1) {Effect};
+  \node [rectangle] (cause) at (-1,-0.1) {Cause};
+  \node [rectangle] (effect) at (9,-0.1) {Effect};
 \end{tikzpicture}
 \begin{block}{Deployed mitigation techniques}
   \begin{itemize}
@@ -192,10 +193,17 @@ attacker code
 %1st run: 53sec
 \frame{
 \frametitle{Control-Flow Integrity}
-Constraints all execution paths to follow a statically computed control-flow graph.
+\begin{itemize}
+  \item Constraints all execution paths to follow a statically computed control-flow graph.
+  \item Formally provable that CFI defends against attackers who have
+    control over the memory and registers of the machine
+\end{itemize}
 %CFG diagram that kills attacker
-\begin{itemize} 
-\item Formally provable that CFI defends against attackers who have control over the memory and registers of the machine
+}
+
+\frame{
+\frametitle{Security-Performance Tradeoff}
+\begin{itemize}
 \item Effectiveness and efficiency determined by precision of the CFG.
   \begin{itemize}
     \item \textit{Coarse-grained} CFI uses a conservative CFG 
@@ -209,8 +217,10 @@ Constraints all execution paths to follow a statically computed control-flow gra
 }
 
 \frame{
-\frametitle{Micro-policies}
+\frametitle{Micro-Policies}
+\vspace*{8pt}
 \begin{block}{Key Ideas}
+  \vspace*{-4pt}
   \begin{itemize}
   \small
   \setlength{\itemsep}{0.5pt}
@@ -218,8 +228,9 @@ Constraints all execution paths to follow a statically computed control-flow gra
     \item Check security invariants and propagate meta-data using to policy-specific set of rules
   \end{itemize}
 \end{block}\pause
-
+  \vspace*{-6pt}
 \begin{block}{Efficient hardware-software implementation}
+  \vspace*{-4pt}
 \begin{itemize}
   \setlength{\itemsep}{0.5pt}
   \small
@@ -231,8 +242,9 @@ Constraints all execution paths to follow a statically computed control-flow gra
   \item Hardware rule cache for common-case efficiency
 \end{itemize}
 \end{block}\pause
-
+  \vspace*{-6pt}
 \begin{block}{Verification framework}
+  \vspace*{-4pt}
 \begin{itemize}
   \small
   \setlength{\itemsep}{0.5pt}
@@ -307,9 +319,8 @@ Constraints all execution paths to follow a statically computed control-flow gra
             (abstract)
             -- node [left] {Simulates}
             (abstract.center |- symbolic.north);}
-
        \onslide<6-> {
-         \node [color=ForestGreen,scale=1.4] (success) [right=0.1cm of concrete cfi] {\ding{51}};
+         \node [color=ForestGreen,scale=1] (success) [right=0.1cm of concrete cfi] {};
          \draw [thick] (concrete) to (concrete cfi);
          \draw [->,thick]
               (symbolic cfi)
@@ -321,8 +332,7 @@ Constraints all execution paths to follow a statically computed control-flow gra
 }
 
 \frame{
-  \frametitle{CFI Micro-Policy Verification}
-  \framesubtitle{Proof Structure Advantages}
+  \frametitle{CFI Micro-Policy Verification II}
   This proof organization offers significant advantages
   \begin{itemize}
     \item We avoided a complex direct proof of the CFI property
@@ -339,32 +349,33 @@ Constraints all execution paths to follow a statically computed control-flow gra
 }
 
 \frame{
-\frametitle{CFI Micro-policy}
+\frametitle{CFI Micro-Policy}
 Formalized micro-policy includes fine-grained CFI, non-writable code (NWC) and non-executable data (NXD)
 \begin{block}{Set of tags}
   \TAGS{\DATA,\INSTR{\ii{id}}, \INSTR{\bot}} %write as ADT
 \end{block}
 \begin{block}{Tagging scheme}
   \begin{itemize}
-  \item Non-executable data are tagged \DATA.
-  \item Sources/targets of indirect control-flows (according to CFG) are tagged \INSTR{\textit{id}}
+  \item Non-executable data are tagged with \DATA.
+  \item Sources/targets of indirect control-flows (according to CFG)
+    are tagged with a unique \textit{id} with \INSTR{\textit{id}}
     \begin{itemize}
       \item We use the address of the instruction as an \textit{id}
     \end{itemize}
-  \item All other instructions are tagged $\INSTR{\bot}$
-  \item The \pc is tagged \INSTR{\ii{id}} or \DATA
-  \item All other registers are tagged \DATA
+  \item All other instructions are tagged with $\INSTR{\bot}$
+  \item The \pc is tagged with \INSTR{\ii{id}} or \DATA
+  \item All other registers are tagged with \DATA
   \end{itemize}
 \end{block}
 }
 
 % make it with pauses. 
-\frame{
-\frametitle{CFI micro-policy}
-\framesubtitle{Example}
+\begin{frame}[fragile]
+\frametitle{CFI Micro-Policy Example}
+
 \begin{table}[h]
-\centering
 \small
+\hspace*{-18em}
 \begin{tabular}{lllcll}
                           &              &             & r                                                &           &           \\ \cline{2-6} 
 \multicolumn{1}{c|}{Regs} & \multicolumn{2}{c|}{$\ldots$} & \multicolumn{1}{c|}{\atom{500}{\DATA}} & \multicolumn{2}{l|}{$\ldots$} \\ \cline{2-6} 
@@ -372,29 +383,37 @@ Formalized micro-policy includes fine-grained CFI, non-writable code (NWC) and n
 \end{table}
 
 \centering
-\begin{minipage}[b]{0.42\linewidth}
-\begin{tikzpicture}[scale=0.6,font=\tiny]
-  \small
-  \stacktop[]{}
-  \cell[]{\atom{Jump r}{\INSTR{100}}} \celladdr{100} \cellptr{\atom{pc}{\DATA}}
-  \stackbottom[]{}
-  \cell[]{\atom{Nop}{\INSTR{500}}} \celladdr{500}
-  \stackbottom[]{}
-\end{tikzpicture}
-\end{minipage}
-\hspace{0.5em}
-\begin{minipage}[b]{0.45\linewidth}
-\begin{tikzpicture}[scale=0.6,font=\tiny]
-  \small
+\begin{minipage}[b]{0.5\linewidth}
+\hspace*{-3em}
+\begin{tikzpicture}[scale=0.6,font=\scriptsize]
   \stacktop[]{}
   \cell[]{\atom{Jump r}{\INSTR{100}}} \celladdr{100} 
+  \only<1>{\cellptr{\atom{pc}{\DATA}}}
   \stackbottom[]{}
-  \cell[]{\atom{Nop}{\INSTR{500}}} \celladdr{500} \cellptr{\atom{pc}{\INSTR{100}}}
+  \cell[]{\atom{Nop}{\INSTR{500}}} \celladdr{500} 
+  \onslide<2->{\cellptr{\atom{pc}{\INSTR{100}}}}
   \stackbottom[]{}
 \end{tikzpicture}
 \end{minipage}
-$(100,500) \in \CFGm$?
-}
+\hspace*{-26pt}
+\begin{minipage}[b]{0.48\linewidth}
+\scriptsize
+\infrule[]{
+  \ii{op} \in \lbrace \ii{Jump}, \ii{Jal} \rbrace
+  }{
+    \ii{op} : \{PC=\DATA,CI=\INSTR{\textit{src}}\} \to (\INSTR{src},-)
+  }
+\bigskip
+\infrule[]{
+  \textit{op} \not \in \lbrace \textit{Jump}, \textit{Jal}, \textit{Store}
+  \rbrace \andalso (src,dst) \in \CFGm
+  }{
+  \textit{op} : \{PC=\INSTR{src},CI=\INSTR{dst}\} \to (\DATA,-)
+  }
+\end{minipage}
+\onslide<3-> {
+$$(100,500) \in \CFGm ?$$}
+\end{frame}
 
 %Abstract Machine
 \frame{
@@ -722,7 +741,7 @@ More complicated than Abadi \ETAL because our mechanism can only detect a violat
 \frame{ 
   \frametitle{Conclusions} 
   We formalized and verified, using the
-  Coq proof assistant, a dynamic monitor for fine-grained CFI.
+  Coq proof assistant, a micro-policy for fine-grained CFI.
   \begin{itemize} 
   \item We provided an attacker model and a proof that all machine
     steps follow the CFG even in the presence of the attacker
@@ -732,7 +751,13 @@ More complicated than Abadi \ETAL because our mechanism can only detect a violat
   \end{itemize}
   
   \begin{itemize}
-    \item Development: 5799 LOC = 1784 spec + 3800 proof + 215 comments
+    \item Development size: 5799 LOC 
+      \begin{itemize} 
+        \setlength{\itemsep}{0.8pt}
+        \item 1784 spec
+        \item 3800 proof
+        \item  215 comments
+        \end{itemize}
     \item Part of ``Micro-Policies : A Framework for Verified,
       Hardware-Assisted Security Monitors'' [Azevedo \ETAL, submitted 2014]
     \end{itemize}
